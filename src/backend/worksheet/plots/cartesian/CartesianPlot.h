@@ -194,6 +194,7 @@ private:
 	QAction* addVerticalAxisAction;
 	QAction* addLegendAction;
 	QAction* addTextLabelAction;
+    QAction* addWorksheetInfoElementAction; // Marker
 	QAction* addCustomPointAction;
 
 	//scaling, zooming, navigation actions
@@ -251,6 +252,7 @@ public slots:
 
 	void addLegend();
 	void addTextLabel();
+    void addWorksheetInfoElement();
 	void addCustomPoint();
 	void scaleAutoTriggered();
 	bool scaleAuto();
