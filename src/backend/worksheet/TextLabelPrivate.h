@@ -63,21 +63,21 @@ public:
 	// see TextLabel::init() for type specific default settings
 	// position in parent's coordinate system, the label gets aligned around this point
 	TextLabel::PositionWrapper position{
-		QPoint(Worksheet::convertToSceneUnits(1, Worksheet::Centimeter), Worksheet::convertToSceneUnits(1, Worksheet::Centimeter)),
-		TextLabel::hPositionCenter, TextLabel::vPositionTop};
+	QPoint(Worksheet::convertToSceneUnits(1, Worksheet::Centimeter), Worksheet::convertToSceneUnits(1, Worksheet::Centimeter)),
+	TextLabel::hPositionCenter, TextLabel::vPositionTop};
 	bool positionInvalid{false};
 
 
-        const CartesianPlot* plot;
-        const CartesianCoordinateSystem* cSystem;
+	const CartesianPlot* plot;
+	const CartesianCoordinateSystem* cSystem;
 	TextLabel::HorizontalAlignment horizontalAlignment{TextLabel::hAlignCenter};
 	TextLabel::VerticalAlignment verticalAlignment{TextLabel::vAlignBottom};
 
 	TextLabel::BorderShape borderShape{TextLabel::NoBorder};
 	QPen borderPen{Qt::black, Worksheet::convertToSceneUnits(1.0, Worksheet::Point), Qt::SolidLine};
 	qreal borderOpacity{1.0};
-        bool m_coordBindingEnable; // if allowed to attach to coord
-        bool m_coordBinding; // actual state
+	bool m_coordBindingEnable; // if allowed to attach to coord
+	bool m_coordBinding; // actual state
 
 	QString name() const;
 	void retransform();

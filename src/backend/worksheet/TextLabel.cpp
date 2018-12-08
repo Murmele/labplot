@@ -454,6 +454,26 @@ QString TextLabelPrivate::name() const {
 }
 
 /*!
+ * \brief TextLabelPrivate::getSize
+ * \return Size and position of the TextLabel in scene coords
+ */
+QRectF TextLabelPrivate::getSize(){
+    float w, h;
+    if (textWrapper.teXUsed) {
+        //image size is in pixel, convert to scene units
+        w = teXImage.width()*teXImageScaleFactor;
+        h = teXImage.height()*teXImageScaleFactor;
+    }
+    else {
+        //size is in points, convert to scene units
+        w = staticText.size().width()*scaleFactor;
+        h = staticText.size().height()*scaleFactor;
+    }
+    float x = position.point.x();
+    float y = position.point.y();
+    return QRectF(x,y,w,h);
+}
+
 /*!
  * \brief TextLabelPrivate::getLogicalPos
  * \return logical position in the plot

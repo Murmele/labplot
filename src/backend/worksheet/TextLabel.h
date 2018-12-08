@@ -107,6 +107,7 @@ public:
     bool isAttachedToCoord() const;
     bool isAttachedToCoordEnabled() const;
 	void setPrinting(bool) override;
+    QRectF getSize();
     QPointF getLogicalPos();
 
 	void retransform() override;
