@@ -186,6 +186,7 @@ signals:
 	void xDataChanged();
 	void yDataChanged();
 	void visibilityChanged(bool);
+    void selected();
 
 	void xColumnChanged(const AbstractColumn*);
 	void yColumnChanged(const AbstractColumn*);

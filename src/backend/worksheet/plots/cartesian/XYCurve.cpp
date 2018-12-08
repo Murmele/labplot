@@ -3030,6 +3030,16 @@ void XYCurvePrivate::updatePixmap() {
 	RESET_CURSOR;
 }
 
+QVariant XYCurvePrivate::itemChange(GraphicsItemChange change, const QVariant & value){
+    // signalize, that the curve was selected. Will be used to create a new WorksheetInfoElement (Marker)
+    if(change == QGraphicsItem::ItemSelectedChange){
+        if(value.toBool()){
+            emit q->selected();
+        }
+    }
+    return QGraphicsItem::itemChange(change,value);
+}
+
 /*!
   Reimplementation of QGraphicsItem::paint(). This function does the actual painting of the curve.
   \sa QGraphicsItem::paint().

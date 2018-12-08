@@ -200,6 +200,12 @@ bool CustomPoint::isVisible() const {
 	return d->isVisible();
 }
 
+void CustomPoint::setParentGraphicsItem(QGraphicsItem* item) {
+    Q_D(CustomPoint);
+    d->setParentItem(item);
+    //d->updatePosition();
+}
+
 void CustomPoint::setPrinting(bool on) {
 	Q_D(CustomPoint);
 	d->m_printing = on;

@@ -240,6 +240,7 @@ set(BACKEND_SOURCES
 	${BACKEND_DIR}/note/Note.cpp
 	${BACKEND_DIR}/worksheet/WorksheetElement.cpp
 	${BACKEND_DIR}/worksheet/TextLabel.cpp
+        ${BACKEND_DIR}/worksheet/WorksheetInfoElement.cpp
 	${BACKEND_DIR}/worksheet/Worksheet.cpp
 	${BACKEND_DIR}/worksheet/WorksheetElementContainer.cpp
 	${BACKEND_DIR}/worksheet/WorksheetElementGroup.cpp
