@@ -480,13 +480,16 @@
    <item row="9" column="5">
     <widget class="KComboBox" name="cbPositionX">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="toolTip">
-      <string>Horizontal position relative to label's parent</string>
+     <property name="iconSize">
+      <size>
+       <width>20</width>
+       <height>20</height>
+      </size>
      </property>
     </widget>
    </item>
@@ -530,6 +533,9 @@
     <widget class="QLabel" name="lBorderOpacity">
      <property name="text">
       <string>Opacity:</string>
+     </property>
+     <property name="text">
+      <string>Offset X:</string>
      </property>
     </widget>
    </item>
@@ -604,20 +610,23 @@
       <string>Distance to the axis tick labels</string>
      </property>
      <property name="suffix">
-      <string> pt</string>
+      <string>°</string>
      </property>
      <property name="minimum">
-      <double>-99.989999999999995</double>
+      <number>-360</number>
+     </property>
+     <property name="maximum">
+      <number>360</number>
      </property>
      <property name="singleStep">
-      <double>0.500000000000000</double>
+      <number>5</number>
      </property>
     </widget>
    </item>
    <item row="13" column="0" colspan="4">
     <widget class="QLabel" name="lHorizontalAlignment">
      <property name="text">
-      <string>Hor. align.:</string>
+      <string>Visible</string>
      </property>
     </widget>
    </item>
@@ -644,7 +653,7 @@
    <item row="24" column="0" colspan="3">
     <widget class="QCheckBox" name="chbVisible">
      <property name="text">
-      <string>Visible</string>
+      <string>Font:</string>
      </property>
     </widget>
    </item>

@@ -39,6 +39,7 @@
 class QBrush;
 class QFont;
 class TextLabelPrivate;
+class CartesianPlot;
 
 class TextLabel : public WorksheetElement {
 	Q_OBJECT
@@ -100,8 +101,13 @@ public:
 	BASIC_D_ACCESSOR_DECL(qreal, borderOpacity, BorderOpacity)
 
 	void setVisible(bool on) override;
+    void setCoordBinding(bool on);
+    bool enableCoordBinding(bool enable, const CartesianPlot *plot = nullptr);
 	bool isVisible() const override;
+    bool isAttachedToCoord() const;
+    bool isAttachedToCoordEnabled() const;
 	void setPrinting(bool) override;
+    QPointF getLogicalPos();
 
 	void retransform() override;
 	void handleResize(double horizontalRatio, double verticalRatio, bool pageResize) override;

@@ -181,6 +181,7 @@ LabelWidget::LabelWidget(QWidget* parent) : QWidget(parent), m_dateTimeMenu(new 
 	connect( ui.sbOffsetY, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, &LabelWidget::offsetYChanged);
 
 	connect( ui.chbVisible, &QCheckBox::clicked, this, &LabelWidget::visibilityChanged);
+    connect(ui.chbBindLogicalPos, &QCheckBox::clicked, this, &LabelWidget::bindingChanged);
 
 	//Border
 	connect(ui.cbBorderShape, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &LabelWidget::borderShapeChanged);
@@ -824,6 +825,15 @@ void LabelWidget::borderOpacityChanged(int value) {
 		label->setBorderOpacity(opacity);
 }
 
+void LabelWidget::bindingChanged(bool checked){
+    if(m_initializing)
+        return;
+
+    for (auto* label : m_labelsList)
+        label->setCoordBinding(checked);
+
+}
+
 //*********************************************************
 //****** SLOTs for changes triggered in TextLabel *********
 //*********************************************************
@@ -946,6 +956,15 @@ void LabelWidget::labelBorderOpacityChanged(float value) {
 	m_initializing = false;
 }
 
+void LabelWidget::labelCartesianPlotParent(bool on){
+    m_initializing = true;
+    ui.chbBindLogicalPos->setVisible(on);
+    if(!on){
+        ui.chbBindLogicalPos->setChecked(false);
+    }
+    m_initializing = false;
+}
+
 //**********************************************************
 //******************** SETTINGS ****************************
 //**********************************************************
@@ -1003,6 +1022,9 @@ void LabelWidget::load() {
 	ui.sbBorderWidth->setValue( Worksheet::convertFromSceneUnits(m_label->borderPen().widthF(), Worksheet::Point) );
 	ui.sbBorderOpacity->setValue( round(m_label->borderOpacity()*100) );
 	GuiTools::updatePenStyles(ui.cbBorderStyle, ui.kcbBorderColor->color());
+
+    ui.chbBindLogicalPos->setVisible(m_label->isAttachedToCoordEnabled());
+    ui.chbBindLogicalPos->setChecked(m_label->isAttachedToCoord());
 
 	m_initializing = false;
 }

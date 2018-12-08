@@ -36,6 +36,8 @@
 #include <QDesktopWidget>
 
 class QGraphicsSceneHoverEvent;
+class CartesianPlot;
+class CartesianCoordinateSystem;
 
 class TextLabelPrivate: public QGraphicsItem {
 public:
@@ -65,12 +67,17 @@ public:
 		TextLabel::hPositionCenter, TextLabel::vPositionTop};
 	bool positionInvalid{false};
 
+
+        const CartesianPlot* plot;
+        const CartesianCoordinateSystem* cSystem;
 	TextLabel::HorizontalAlignment horizontalAlignment{TextLabel::hAlignCenter};
 	TextLabel::VerticalAlignment verticalAlignment{TextLabel::vAlignBottom};
 
 	TextLabel::BorderShape borderShape{TextLabel::NoBorder};
 	QPen borderPen{Qt::black, Worksheet::convertToSceneUnits(1.0, Worksheet::Point), Qt::SolidLine};
 	qreal borderOpacity{1.0};
+        bool m_coordBindingEnable; // if allowed to attach to coord
+        bool m_coordBinding; // actual state
 
 	QString name() const;
 	void retransform();
