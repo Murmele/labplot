@@ -224,6 +224,8 @@ private:
 	QMenu* dataAnalysisMenu{nullptr};
 	QMenu* themeMenu{nullptr};
 
+    bool m_marker;
+
 	Q_DECLARE_PRIVATE(CartesianPlot)
 
 public slots:
