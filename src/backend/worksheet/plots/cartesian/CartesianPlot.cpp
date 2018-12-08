@@ -54,6 +54,7 @@
 #include "backend/worksheet/Worksheet.h"
 #include "backend/worksheet/plots/cartesian/Axis.h"
 #include "backend/worksheet/TextLabel.h"
+#include "backend/worksheet/WorksheetInfoElement.h"
 #include "backend/lib/XmlStreamReader.h"
 #include "backend/lib/commandtemplates.h"
 #include "backend/lib/macros.h"
