@@ -771,6 +771,81 @@ bool XYCurve::columnRemoved(const AbstractColumn* column, const AbstractAspect* 
 	return removed;
 }
 
+// Finds index where x is located and returns the value "index" after the found value
+/*!
+ * \brief XYCurve::getNextValue
+ * Find nearest x value from a value xpos and his y value
+ * \param xpos position for which the next index xpos should be found
+ * \param offset Offset from the index where xpos is. Positive is after the found index, negative is before the found index
+ * \param x x value at the found index
+ * \param y y value at the found index
+ * \param valueFound True when value found, otherwise false
+ */
+void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& valueFound) const{
+    int rowCount = xColumn()->rowCount();
+    double prevValue = 0;
+
+    for (int row = 0; row < rowCount; row++) {
+           if (xColumn()->isValid(row) && yColumn()->isValid(row)){
+               if(row == 0){
+                   prevValue = xColumn()->valueAt(row);
+               }
+
+               double value = xColumn()->valueAt(row);
+               if(abs(value-xpos) <= abs(prevValue-xpos)){ // <= prevents also that row-1 become < 0
+                   if(row < rowCount-1){
+                        prevValue = value;
+                    }else{
+                        valueFound = true;
+                        y = yColumn()->valueAt(row+offset);
+                        x = xColumn()->valueAt(row+offset);
+                        return;
+                    }
+               }else{
+                    valueFound = true;
+                    y = yColumn()->valueAt(row-1+offset);
+                    x = xColumn()->valueAt(row-1+offset);
+                    return;
+               }
+           }
+    }
+    valueFound = false;
+}
+
+
+/*!
+ * \brief XYCurve::y
+ * \param x :value for which y should be found
+ * \param valueFound: returns true if y value found, otherwise false
+ * \return y value from x value
+ */
+double XYCurve::y(double x, bool &valueFound) const{
+	int rowCount = xColumn()->rowCount();
+	double prevValue=0;
+	for (int row = 0; row < rowCount; row++) {
+		   if (xColumn()->isValid(row) && yColumn()->isValid(row)){
+			   if(row == 0){
+				   prevValue = xColumn()->valueAt(row);
+			   }
+
+			   double value = xColumn()->valueAt(row);
+			   if(abs(value-x) <= abs(prevValue-x)){ // <= prevents also that row-1 become < 0
+				   if(row < rowCount-1){
+						prevValue = value;
+					}else{
+						valueFound = true;
+						return yColumn()->valueAt(row);
+					}
+			   }else{
+					valueFound = true;
+					return yColumn()->valueAt(row-1);
+			   }
+		   }
+	}
+	valueFound = false;
+	return 0;
+}
+
 void XYCurve::xColumnAboutToBeRemoved(const AbstractAspect* aspect) {
 	Q_D(XYCurve);
 	if (columnRemoved(d->xColumn, aspect)) {

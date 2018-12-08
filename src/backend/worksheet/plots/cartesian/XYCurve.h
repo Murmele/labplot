@@ -154,6 +154,8 @@ public:
 	void retransform() override;
 	void recalcLogicalPoints();
 	void handleResize(double horizontalRatio, double verticalRatio, bool pageResize) override;
+	double y(double x, bool &valueFound) const;
+    void getNextValue(double xpos, int index, double& x, double& y, bool& valueFound) const;
 
 private slots:
 	void updateValues();
