@@ -427,6 +427,7 @@ void CartesianPlot::initActions() {
 	addHorizontalAxisAction = new QAction(QIcon::fromTheme("labplot-axis-horizontal"), i18n("Horizontal Axis"), this);
 	addVerticalAxisAction = new QAction(QIcon::fromTheme("labplot-axis-vertical"), i18n("Vertical Axis"), this);
 	addTextLabelAction = new QAction(QIcon::fromTheme("draw-text"), i18n("Text Label"), this);
+    addWorksheetInfoElementAction = new QAction(QIcon::fromTheme("draw-text"), i18n("Marker"), this);
 	addCustomPointAction = new QAction(QIcon::fromTheme("draw-cross"), i18n("Custom Point"), this);
 
 	connect(addCurveAction, &QAction::triggered, this, &CartesianPlot::addCurve);
@@ -447,6 +448,7 @@ void CartesianPlot::initActions() {
 	connect(addHorizontalAxisAction, &QAction::triggered, this, &CartesianPlot::addHorizontalAxis);
 	connect(addVerticalAxisAction, &QAction::triggered, this, &CartesianPlot::addVerticalAxis);
 	connect(addTextLabelAction, &QAction::triggered, this, &CartesianPlot::addTextLabel);
+    connect(addWorksheetInfoElementAction, &QAction::triggered, this, &CartesianPlot::addWorksheetInfoElement);
 	connect(addCustomPointAction, &QAction::triggered, this, &CartesianPlot::addCustomPoint);
 
 	//Analysis menu actions
@@ -588,6 +590,7 @@ void CartesianPlot::initMenus() {
 	addNewMenu->addAction(addVerticalAxisAction);
 	addNewMenu->addSeparator();
 	addNewMenu->addAction(addTextLabelAction);
+    addNewMenu->addAction(addWorksheetInfoElementAction);
 	addNewMenu->addSeparator();
 	addNewMenu->addAction(addCustomPointAction);
 
@@ -1192,7 +1195,9 @@ void CartesianPlot::addVerticalAxis() {
 }
 
 void CartesianPlot::addCurve() {
-	addChild(new XYCurve("xy-curve"));
+    XYCurve* curve = new XYCurve("xy-curve");
+    addChild(curve);
+    connect(curve, &XYCurve::selected, this, &CartesianPlot::curveSelected);
 }
 
 void CartesianPlot::addEquationCurve() {
@@ -1201,6 +1206,19 @@ void CartesianPlot::addEquationCurve() {
 
 void CartesianPlot::addHistogram() {
 	addChild(new Histogram("Histogram"));
+}
+/*!
+ * \brief CartesianPlot::curveSelected
+ * Slot which will be called from the XYCurve, when a curve will be selected
+ */
+void CartesianPlot::curveSelected(){
+
+    if(m_marker){
+        m_marker = false;
+        WorksheetInfoElement* marker = new WorksheetInfoElement("Marker", this,qobject_cast<const XYCurve*>(QObject::sender()));
+        this->addChild(marker);
+        marker->setParentGraphicsItem(graphicsItem());
+    }
 }
 
 /*!
@@ -1401,6 +1419,15 @@ void CartesianPlot::addLegend() {
 	//only one legend is allowed -> disable the action
 	if (m_menusInitialized)
 		addLegendAction->setEnabled(false);
+}
+
+/*!
+ * \brief CartesianPlot::addWorksheetInfoElement
+ * Marks cartesianPlot to add a new worksheetInfoElement.
+ * When a curve will be selected, a WorksheetInfoElement will be added and m_marker will be reset
+ */
+void CartesianPlot::addWorksheetInfoElement(){
+    m_marker = 1;
 }
 
 void CartesianPlot::addTextLabel() {

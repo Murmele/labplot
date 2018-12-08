@@ -210,6 +210,7 @@ signals:
 	void yErrorMinusDataChanged();
 	void valuesDataChanged();
 	void visibilityChanged(bool);
+    void selected();
 
 	void xColumnChanged(const AbstractColumn*);
 	void yColumnChanged(const AbstractColumn*);
