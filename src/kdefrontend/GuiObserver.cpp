@@ -41,6 +41,7 @@ Copyright            : (C) 2016 Garvit Khatri (garvitdelhi@gmail.com)
 #include "backend/worksheet/plots/cartesian/Axis.h"
 #include "backend/worksheet/plots/cartesian/CustomPoint.h"
 #include "backend/worksheet/plots/cartesian/Histogram.h"
+#include "backend/worksheet/WorksheetInfoElement.h"
 #include "backend/worksheet/TextLabel.h"
 #ifdef HAVE_CANTOR_LIBS
 #include "backend/cantorWorksheet/CantorWorksheet.h"
@@ -371,9 +372,13 @@ void GuiObserver::selectedAspectsChanged(QList<AbstractAspect*>& selectedAspects
             m_mainWindow->worksheetInfoElementDock = new WorksheetInfoElementDock(m_mainWindow->stackedWidget);
             m_mainWindow->stackedWidget->addWidget(m_mainWindow->worksheetInfoElementDock);
         }
+        QList<WorksheetInfoElement*> list;
+        for(auto* aspect: selectedAspects)
+            list << qobject_cast<WorksheetInfoElement*>(aspect);
 
+        m_mainWindow->worksheetInfoElementDock->setWorksheetInfoElements(list);
         m_mainWindow->stackedWidget->setCurrentWidget(m_mainWindow->worksheetInfoElementDock);
-		break;
+        m_mainWindow->worksheetInfoElementDock->show();
 	case AspectType::MQTTClient:
 #ifdef HAVE_MQTT
 		m_mainWindow->m_propertiesDock->setWindowTitle(i18nc("@title:window", "MQTT Data Source"));

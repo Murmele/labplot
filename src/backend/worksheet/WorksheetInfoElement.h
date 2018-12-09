@@ -27,6 +27,7 @@ public:
     void addCurvePath(QString &curvePath, CustomPoint* custompoint = nullptr);
     bool assignCurve(const QVector<XYCurve*> &curves);
     void removeCurve(XYCurve* curve);
+    CartesianPlot* getPlot();
 
     QGraphicsItem* graphicsItem() const override;
 
