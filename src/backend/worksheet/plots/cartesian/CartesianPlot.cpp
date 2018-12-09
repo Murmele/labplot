@@ -801,6 +801,7 @@ void CartesianPlot::processDropEvent(QDropEvent* event) {
 			continue;
 
 		XYCurve* curve = new XYCurve(column->name());
+        connect(curve, &XYCurve::selected, this, &CartesianPlot::curveSelected);
 		curve->suppressRetransform(true); //suppress retransform, all curved will be recalculated at the end
 		curve->setXColumn(xColumn);
 		curve->setYColumn(column);
@@ -1428,7 +1429,7 @@ void CartesianPlot::addLegend() {
  * When a curve will be selected, a WorksheetInfoElement will be added and m_marker will be reset
  */
 void CartesianPlot::addWorksheetInfoElement(){
-    m_marker = 1;
+    m_marker = true;
 }
 
 void CartesianPlot::addTextLabel() {
@@ -3735,6 +3736,7 @@ bool CartesianPlot::load(XmlStreamReader* reader, bool preview) {
 			}
 		} else if (reader->name() == "xyCurve") {
 			XYCurve* curve = new XYCurve(QString());
+            connect(curve, &XYCurve::selected, this, &CartesianPlot::curveSelected);
 			if (curve->load(reader, preview))
 				addChildFast(curve);
 			else {
