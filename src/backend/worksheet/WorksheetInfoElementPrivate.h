@@ -21,10 +21,12 @@ public:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
     void keyPressEvent(QKeyEvent * event) override;
 
+    void init();
     void updatePosition();
     void setVisible(bool on);
     bool isVisible() const;
     void retransform();
+
 
     bool m_visible;
     bool m_printing;

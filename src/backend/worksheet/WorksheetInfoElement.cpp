@@ -26,6 +26,8 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
     Q_D(WorksheetInfoElement);
     connect(d->label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
     connect(d->point, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
+
+    d->init();
 }
 
 void WorksheetInfoElement::init(){
@@ -99,6 +101,10 @@ WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* o
     point = new CustomPoint(plot, "TestPoint");
     point->setParentGraphicsItem(plot->plotArea()->graphicsItem());
     owner->addChild(point);
+    setVisible(false);
+}
+
+void WorksheetInfoElementPrivate::init(){
 
     setVisible(true);
 
@@ -106,7 +112,6 @@ WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* o
     double value = curves.first()->y(10,valueFound);
     if(valueFound){
         QPointF logicalPos(10,value);
-        QPointF scenePos = cSystem->mapLogicalToScene(logicalPos);
         point->setPosition(logicalPos);
     }
 }
@@ -285,7 +290,7 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event){
         labelPosition.setX(labelPosition.x()+ (x-point->position().x()));
         if(valueFound){
             point->setPosition(pointPosition);
-            label->setPosition(cSystem->mapLogicalToScene(labelPosition));
+            //label->setPosition(cSystem->mapLogicalToScene(labelPosition));
             TextLabel::TextWrapper text;
             text.text = "Value: " + QString::number(y);
             label->setText(text);
