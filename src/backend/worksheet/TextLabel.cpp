@@ -479,7 +479,9 @@ QRectF TextLabelPrivate::getSize(){
  * \return logical position in the plot
  */
 QPointF TextLabelPrivate::getLogicalPos(){
-    return logicalPos;
+    if(m_coordBinding)
+        return logicalPos;
+    return cSystem->mapSceneToLogical(position.point);
 }
 
 /*!
