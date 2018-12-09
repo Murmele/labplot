@@ -3714,7 +3714,16 @@ bool CartesianPlot::load(XmlStreamReader* reader, bool preview) {
 					return false;
 				}
 			}
-		} else if (reader->name() == "plotArea")
+        }else if (reader->name() == "worksheetInfoElement") {
+                WorksheetInfoElement* marker = new WorksheetInfoElement("Marker",this);
+                if(marker->load(reader,preview)){
+                    addChildFast(marker);
+                    marker->setParentGraphicsItem(graphicsItem());
+                }else{
+                    delete marker;
+                    return false;
+                }
+        } else if (reader->name() == "plotArea")
 			m_plotArea->load(reader, preview);
 		else if (reader->name() == "axis") {
 			Axis* axis = new Axis(QString());
