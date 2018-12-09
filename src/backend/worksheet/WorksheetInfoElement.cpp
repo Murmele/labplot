@@ -13,6 +13,13 @@
 #include <QPainter>
 #include <QKeyEvent>
 
+WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot):
+    WorksheetElement(name),
+    d_ptr(new WorksheetInfoElementPrivate(this,plot))
+{
+
+}
+
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot, const XYCurve *curve):
 	WorksheetElement(name, AspectType::WorksheetInfoElement),
     d_ptr(new WorksheetInfoElementPrivate(this,plot,curve))
@@ -24,8 +31,21 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
     graphicsItem()->setFlag(QGraphicsItem::ItemIsFocusable, true);
 
     Q_D(WorksheetInfoElement);
-    connect(d->label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
-    connect(d->point, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
+
+    if(curve){
+        CustomPoint* custompoint = new CustomPoint(plot, "TestPoint");
+        custompoint->setParentGraphicsItem(plot->plotArea()->graphicsItem());
+        connect(custompoint, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
+        addChild(custompoint);
+        struct WorksheetInfoElement::MarkerPoints_T markerpoint = {custompoint, curve, curve->path()};
+        markerpoints.append(markerpoint);
+    }
+    label = new TextLabel("Test");
+    addChild(label);
+    label->enableCoordBinding(true,plot);
+    label->setCoordBinding(true);
+    label->setParentGraphicsItem(plot->plotArea()->graphicsItem());
+    connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
 
     d->init();
 }
@@ -34,6 +54,99 @@ void WorksheetInfoElement::init(){
 
 }
 
+/*!
+ * \brief WorksheetInfoElement::addCurve
+ * Adds a new markerpoint to the plot which is placed on the curve curve
+ * \param curve Curve on which the markerpoints sits
+ * \param custompoint Use existing point, if the project was loaded the custompoint can have different settings
+ */
+void WorksheetInfoElement::addCurve(XYCurve* curve, CustomPoint* custompoint){
+    Q_D(WorksheetInfoElement);
+
+    for(auto markerpoint: markerpoints){
+        if(curve == markerpoint.curve)
+            return;
+    }
+    if(!custompoint){
+        custompoint = new CustomPoint(d->plot, "Markerpoint");
+        custompoint->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
+        connect(custompoint, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
+    }
+    addChild(custompoint);
+    struct MarkerPoints_T markerpoint = {custompoint, curve, curve->path()};
+    markerpoints.append(markerpoint);
+}
+
+/*!
+ * \brief WorksheetInfoElement::addCurvePath
+ * When loading worksheetinfoelement from xml file, there is no information available, which curves are loaded.
+ * So only the path will be stored and after all curves where loaded the curves will be assigned to the WorksheetInfoElement
+ * with the function assignCurve
+ * \param curvePath path from the curve
+ * \param custompoint adding already created custom point
+ */
+void WorksheetInfoElement::addCurvePath(QString &curvePath, CustomPoint* custompoint){
+    Q_D(WorksheetInfoElement);
+
+    for(auto markerpoint: markerpoints){
+        if(curvePath == markerpoint.curvePath)
+            return;
+    }
+    if(!custompoint){
+        custompoint = new CustomPoint(d->plot, "Markerpoint");
+        custompoint->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
+        connect(custompoint, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
+    }
+    addChild(custompoint);
+    struct MarkerPoints_T markerpoint = {custompoint, nullptr, curvePath};
+    markerpoints.append(markerpoint);
+}
+
+/*!
+ * \brief assignCurve
+ * Finds the curve with the path stored in the markerpoints and assigns the pointer to markerpoints
+ * \param curves
+ * \return true if all markerpoints are assigned with a curve, false if one or more markerpoints don't have a curve assigned
+ */
+bool WorksheetInfoElement::assignCurve(const QVector<XYCurve *> &curves){
+
+    for(int i =0; i< markerpoints.length(); i++){
+        for(auto curve: curves){
+            if(markerpoints[i].curvePath == curve->path()){
+                markerpoints[i].curve = curve;
+                break;
+            }
+        }
+    }
+
+    // check if all markerpoints have a valid curve otherwise return false
+    for(auto markerpoint: markerpoints){
+        if(markerpoint.curve == nullptr){
+            return false;
+        }
+    }
+    return true;
+}
+
+/*!
+ * \brief WorksheetInfoElementPrivate::removeCurve
+ * Remove markerpoint from a curve
+ * \param curve
+ */
+void WorksheetInfoElement::removeCurve(XYCurve* curve){
+    for(int i=0; i< markerpoints.length(); i++){
+        if(markerpoints[i].curve == curve){
+            delete markerpoints[i].customPoint;
+            markerpoints.remove(i);
+        }
+    }
+}
+
+/*!
+ * \brief WorksheetInfoElement::labelPositionChanged
+ * Will be called, when the label changes his position
+ * \param position
+ */
 void WorksheetInfoElement::labelPositionChanged(TextLabel::PositionWrapper position){
     Q_UNUSED(position)
     Q_D(WorksheetInfoElement);
@@ -41,14 +154,22 @@ void WorksheetInfoElement::labelPositionChanged(TextLabel::PositionWrapper posit
     d->retransform();
 }
 
+/*!
+ * \brief WorksheetInfoElement::pointPositionChanged
+ * Will be called, when the customPoint changes his position
+ * \param pos
+ */
 void WorksheetInfoElement::pointPositionChanged(QPointF pos){
     Q_UNUSED(pos)
     Q_D(WorksheetInfoElement);
 
     // TODO: Find better solution, this is not a good solution!
-    if(d->point->graphicsItem()->flags().operator&=(QGraphicsItem::ItemSendsGeometryChanges)){
-        d->retransform();
+    for(auto markerpoint: markerpoints){
+        if(markerpoint.customPoint->graphicsItem()->flags().operator&=(QGraphicsItem::ItemSendsGeometryChanges)){
+            d->retransform();
+        }
     }
+
 }
 
 void WorksheetInfoElement::setParentGraphicsItem(QGraphicsItem* item) {
@@ -65,9 +186,19 @@ bool WorksheetInfoElement::isVisible() const{
     Q_D(const WorksheetInfoElement);
     return d->isVisible();
 }
+
+/*!
+ * \brief WorksheetInfoElement::setVisible
+ * Sets the visibility of the WorksheetInfoElement including label and all custom points
+ * \param on
+ */
 void WorksheetInfoElement::setVisible(bool on){
     Q_D(WorksheetInfoElement);
-    d->setVisible(on);
+    for(auto markerpoint: markerpoints){
+        markerpoint.customPoint->setVisible(on);
+    }
+    label->setVisible(on);
+    d->m_visible = on;
 }
 void WorksheetInfoElement::setPrinting(bool on){
     Q_D(WorksheetInfoElement);
@@ -86,33 +217,30 @@ void WorksheetInfoElement::handleResize(double horizontalRatio, double verticalR
 //####################### Private implementation ###############################
 //##############################################################################
 
+WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner,CartesianPlot *plot):
+    q(owner),
+    plot(plot),
+    cSystem( dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem()))
+{
+}
+
 WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner,CartesianPlot *plot, const XYCurve* curve):
     q(owner),
     plot(plot),
     cSystem( dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem()))
 {
-    curves.append(curve);
-    label = new TextLabel("Test");
-    owner->addChild(label);
-    label->enableCoordBinding(true,plot);
-    label->setCoordBinding(true);
-    label->setParentGraphicsItem(plot->plotArea()->graphicsItem());
-    // TODO: connect(d->label, &TextLabel::rotationChanged, d, &WorksheetInfoElementPrivate::retransform);
-    point = new CustomPoint(plot, "TestPoint");
-    point->setParentGraphicsItem(plot->plotArea()->graphicsItem());
-    owner->addChild(point);
-    setVisible(false);
 }
 
 void WorksheetInfoElementPrivate::init(){
 
-    setVisible(true);
+    if(q->markerpoints.length() ==0)
+        return;
 
     bool valueFound;
-    double value = curves.first()->y(10,valueFound);
+    double value = q->markerpoints.first().curve->y(10,valueFound);
     if(valueFound){
         QPointF logicalPos(10,value);
-        point->setPosition(logicalPos);
+        //point->setPosition(logicalPos);
     }
 }
 
@@ -122,17 +250,22 @@ void WorksheetInfoElementPrivate::init(){
  */
 void WorksheetInfoElementPrivate::retransform() {
 
-    point->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
-    label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
-    label->retransform();
-    point->retransform();
-    point->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-    label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+    // TODO: find better solution
+    q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+    q->label->retransform();
+    q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+    for(auto markerpoint: q->markerpoints){
+        markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+        markerpoint.customPoint->retransform();
+        markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+    }
 
-    QPointF pointPos = cSystem->mapLogicalToScene(point->position());
-    QRectF labelSize = label->getSize();
+    // line goes to the fist pointPos
+    // TODO: better would be to direct to the highest point or also possible to make it changeable
+    QPointF pointPos = cSystem->mapLogicalToScene(q->markerpoints[0].customPoint->position());
+    QRectF labelSize = q->label->getSize();
 
-    QPointF labelPos = cSystem->mapLogicalToScene(label->getLogicalPos());//QPointF(labelSize.x(),labelSize.y());
+    QPointF labelPos = cSystem->mapLogicalToScene(q->label->getLogicalPos());//QPointF(labelSize.x(),labelSize.y());
 
     double difference_x = pointPos.x() - labelPos.x();
     double difference_y = pointPos.y() - labelPos.y();
@@ -234,12 +367,6 @@ bool WorksheetInfoElementPrivate::isVisible() const {
     return m_visible;
 }
 
-void WorksheetInfoElementPrivate::setVisible(bool on){
-    label->setVisible(on);
-    point->setVisible(on);
-    m_visible = on;
-}
-
 void WorksheetInfoElementPrivate::updatePosition(){
 
 }
@@ -264,12 +391,18 @@ void WorksheetInfoElementPrivate::paint(QPainter* painter, const QStyleOptionGra
 QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, const QVariant &value){
     if(change == QGraphicsItem::ItemPositionChange){
 
-        point->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
-        label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
-        point->setPosition(cSystem->mapSceneToLogical(value.toPointF()+sceneDeltaPoint));
-        label->setPosition(value.toPointF()+sceneDeltaTextLabel);
-        point->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-        label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+        for(auto markerpoint: q->markerpoints){
+            markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+        }
+        q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+        for(auto markerpoint: q->markerpoints){
+            markerpoint.customPoint->setPosition(cSystem->mapSceneToLogical(value.toPointF()+sceneDeltaPoint));
+        }
+        q->label->setPosition(value.toPointF()+sceneDeltaTextLabel);
+        for(auto markerpoint: q->markerpoints){
+            markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+        }
+        q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
     }
     return QGraphicsItem::itemChange(change, value);
 }

@@ -13,6 +13,7 @@ class XYCurve;
 class WorksheetInfoElementPrivate: public QGraphicsItem
 {
 public:
+    WorksheetInfoElementPrivate(WorksheetInfoElement *owner, CartesianPlot *plot);
     WorksheetInfoElementPrivate(WorksheetInfoElement *owner, CartesianPlot *plot, const XYCurve *curve);
 
     //reimplemented from QGraphicsItem
@@ -31,14 +32,12 @@ public:
     bool m_visible;
     bool m_printing;
 
-    TextLabel* label;
-    CustomPoint* point;
+    CartesianPlot* plot;
+    const CartesianCoordinateSystem* cSystem;
 private:
-    QVector<const XYCurve*> curves;
     WorksheetInfoElement* const q;
 
-    const CartesianPlot* plot;
-    const CartesianCoordinateSystem* cSystem;
+
 
     QPointF sceneDeltaPoint;
     QPointF sceneDeltaTextLabel;
