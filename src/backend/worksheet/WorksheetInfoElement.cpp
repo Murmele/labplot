@@ -143,6 +143,16 @@ void WorksheetInfoElement::removeCurve(XYCurve* curve){
 }
 
 /*!
+ * \brief getPlot
+ * Returns plot, where this marker is used. Needed in the worksheetinfoelement Dock
+ * \return
+ */
+CartesianPlot* WorksheetInfoElement::getPlot(){
+    Q_D(WorksheetInfoElement);
+    return d->plot;
+}
+
+/*!
  * \brief WorksheetInfoElement::labelPositionChanged
  * Will be called, when the label changes his position
  * \param position
