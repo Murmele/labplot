@@ -57,6 +57,7 @@ Copyright            : (C) 2016 Garvit Khatri (garvitdelhi@gmail.com)
 #include "commonfrontend/ProjectExplorer.h"
 #include "kdefrontend/MainWin.h"
 #include "kdefrontend/dockwidgets/AxisDock.h"
+#include "kdefrontend/dockwidgets/WorksheetInfoElementDock.h"
 #include "kdefrontend/dockwidgets/NoteDock.h"
 #include "kdefrontend/dockwidgets/CursorDock.h"
 #include "kdefrontend/dockwidgets/CartesianPlotDock.h"
@@ -369,6 +370,16 @@ void GuiObserver::selectedAspectsChanged(QList<AbstractAspect*>& selectedAspects
 		m_mainWindow->m_propertiesDock->setWindowTitle(i18nc("@title:window", "Notes"));
 		raiseDock(m_mainWindow->notesDock, m_mainWindow->stackedWidget);
 		m_mainWindow->notesDock->setNotesList(castList<Note>(selectedAspects));
+		break;
+	case AspectType::WorksheetInfoElement:
+        m_mainWindow->m_propertiesDock->setWindowTitle(i18nc("@title:window", "Marker"));
+
+        if (!m_mainWindow->worksheetInfoElementDock) {
+            m_mainWindow->worksheetInfoElementDock = new WorksheetInfoElementDock(m_mainWindow->stackedWidget);
+            m_mainWindow->stackedWidget->addWidget(m_mainWindow->worksheetInfoElementDock);
+        }
+
+        m_mainWindow->stackedWidget->setCurrentWidget(m_mainWindow->worksheetInfoElementDock);
 		break;
 	case AspectType::MQTTClient:
 #ifdef HAVE_MQTT

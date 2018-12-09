@@ -14,7 +14,7 @@
 #include <QKeyEvent>
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot, const XYCurve *curve):
-    WorksheetElement(name),
+	WorksheetElement(name, AspectType::WorksheetInfoElement),
     d_ptr(new WorksheetInfoElementPrivate(this,plot,curve))
 {
     graphicsItem()->setFlag(QGraphicsItem::ItemIsMovable, true);
