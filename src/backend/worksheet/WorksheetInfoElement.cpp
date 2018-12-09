@@ -403,8 +403,15 @@ void WorksheetInfoElementPrivate::paint(QPainter* painter, const QStyleOptionGra
     painter->setPen(pen);
     painter->drawLine(connectionLine);
 
+    // draw vertical line if more than one custompoint
+//    if(q->markerpoints.length()>1){
+//        double xPos = q->markerpoints[0].customPoint->position().x();
+//        double yMax = plot->yMax();
+//        double yMin = plot->yMin();
 
-
+//        QLineF line(cSystem->mapLogicalToScene(QPointF(xPos,yMin)),cSystem->mapLogicalToScene(QPointF(xPos,yMax)));
+//        painter->drawLine(line);
+//    }
 }
 QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, const QVariant &value){
     if(change == QGraphicsItem::ItemPositionChange){
