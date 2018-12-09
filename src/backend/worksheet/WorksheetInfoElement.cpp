@@ -417,17 +417,21 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event){
 
         double x,y;
         bool valueFound;
-        curves.first()->getNextValue(point->position().x(),index,x,y,valueFound);
-        QPointF pointPosition(x,y);
-        QPointF labelPosition = label->getLogicalPos();
-        labelPosition.setX(labelPosition.x()+ (x-point->position().x()));
-        if(valueFound){
-            point->setPosition(pointPosition);
-            //label->setPosition(cSystem->mapLogicalToScene(labelPosition));
-            TextLabel::TextWrapper text;
-            text.text = "Value: " + QString::number(y);
-            label->setText(text);
+        QPointF pointPosition;
+        for(auto markerpoint: q->markerpoints){
+            markerpoint.curve->getNextValue(markerpoint.customPoint->position().x(), index,x,y,valueFound);
+            if(valueFound){
+                pointPosition.setX(x);
+                pointPosition.setY(y);
+                markerpoint.customPoint->setPosition(pointPosition);
+            }
         }
+        //QPointF labelPosition = label->getLogicalPos();
+        //labelPosition.setX(labelPosition.x()+ (x-markerpoints[0].first->position().x()));
+        //label->setPosition(cSystem->mapLogicalToScene(labelPosition));
+        TextLabel::TextWrapper text;
+        text.text = "Value: " + QString::number(y);
+        q->label->setText(text);
 
     }
 }
