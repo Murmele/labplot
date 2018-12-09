@@ -442,9 +442,15 @@ void WorksheetInfoElement::save(QXmlStreamWriter* writer) const{
     writeBasicAttributes(writer);
     writeCommentElement(writer);
 
-    d->label->save(writer);
-    d->point->save(writer);
-
+    label->save(writer);
+    QString path;
+    for(auto custompoint: markerpoints){
+        custompoint.customPoint->save(writer);
+        path = custompoint.curve->path();
+        writer->writeStartElement("markerPointCurve");
+        writer->writeAttribute(QLatin1String("curvepath") , path);
+        writer->writeEndElement(); // close "markerPointCurve
+    }
     writer->writeEndElement(); // close "worksheetInfoElement"
 }
 
@@ -455,21 +461,31 @@ bool WorksheetInfoElement::load(XmlStreamReader* reader, bool preview){
     Q_D(WorksheetInfoElement);
 
     while(!reader->atEnd()){
+        reader->readNext();
         if (reader->isEndElement() && reader->name() == "worksheetInfoElement")
             break;
 
-        if (!reader->isStartElement())
+        if (!reader->isStartElement() || reader->name() != "worksheetInfoElement");
             continue;
 
-        if(!d->label->load(reader, preview)){
+        if(!label->load(reader, preview)){
             return false;
         }
-        if(!d->point->load(reader, preview)){
-            return false;
+        while (!(reader->isEndElement() && reader->name() == "worksheetInfoElement")) {
+            reader->readNext();
+            CustomPoint* markerpoint = new CustomPoint(d->plot, "Marker");
+            markerpoint->load(reader,preview);
+            QXmlStreamAttributes attribs;
+            QString path;
+            if(reader->isStartElement() && reader->name() == "markerPointCurve"){
+                attribs = reader->attributes();
+                path = attribs.value("curvepath").toString();
+                addCurvePath(path, markerpoint);
+            }else{
+                delete markerpoint;
+            }
         }
 
     }
     return true;
-
-
 }
