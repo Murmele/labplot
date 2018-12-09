@@ -3535,6 +3535,13 @@ bool CartesianPlot::load(XmlStreamReader* reader, bool preview) {
 		}
 	}
 
+    // assign to all markers the curves they need
+    QVector<WorksheetInfoElement*> elements = children<WorksheetInfoElement>();
+    QVector<XYCurve*> curves = children<XYCurve>();
+    for(auto element: elements){
+        element->assignCurve(curves);
+    }
+
 	if (preview)
 		return true;
 
