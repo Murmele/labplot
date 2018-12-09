@@ -261,9 +261,17 @@ void WorksheetInfoElementPrivate::init(){
 void WorksheetInfoElementPrivate::retransform() {
 
     // TODO: find better solution
+    if(!q->label)
+        return;
+    if(q->markerpoints.isEmpty())
+        return;
+
     q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
     q->label->retransform();
     q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+
+
+
     for(auto markerpoint: q->markerpoints){
         markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
         markerpoint.customPoint->retransform();
