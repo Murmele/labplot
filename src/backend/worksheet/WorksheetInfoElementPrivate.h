@@ -8,8 +8,6 @@ class TextLabel;
 class CustomPoint;
 class CartesianPlot;
 class CartesianCoordinateSystem;
-class QXmlStreamWriter;
-class XmlStreamReader;
 class XYCurve;
 
 class WorksheetInfoElementPrivate: public QGraphicsItem
@@ -22,8 +20,6 @@ public:
     void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget* widget = nullptr) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
     void keyPressEvent(QKeyEvent * event) override;
-    void save(QXmlStreamWriter* writer) const;
-    bool load(XmlStreamReader* reader, bool preview);
 
     void updatePosition();
     void setVisible(bool on);

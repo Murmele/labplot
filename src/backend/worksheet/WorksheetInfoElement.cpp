@@ -6,6 +6,8 @@
 #include "backend/worksheet/WorksheetInfoElementPrivate.h"
 #include "backend/worksheet/plots/cartesian/CustomPoint.h"
 #include "backend/worksheet/TextLabel.h"
+#include "backend/lib/commandtemplates.h"
+#include "backend/lib/XmlStreamReader.h"
 
 #include <QGraphicsScene>
 #include <QPainter>
@@ -297,31 +299,39 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event){
 
 void WorksheetInfoElement::save(QXmlStreamWriter* writer) const{
     Q_D(const WorksheetInfoElement);
-    d->save(writer);
 
-    // TODO: save worksheetinfoelement
+    writer->writeStartElement( "worksheetInfoElement" );
+    writeBasicAttributes(writer);
+    writeCommentElement(writer);
+
+    d->label->save(writer);
+    d->point->save(writer);
+
+    writer->writeEndElement(); // close "worksheetInfoElement"
 }
 
 bool WorksheetInfoElement::load(XmlStreamReader* reader, bool preview){
+    if (!readBasicAttributes(reader))
+        return false;
+
     Q_D(WorksheetInfoElement);
-    if(!d->load(reader, preview))
-        return false;
-    // TODO: load worksheetinfoelement
 
-    return true;
+    while(!reader->atEnd()){
+        if (reader->isEndElement() && reader->name() == "worksheetInfoElement")
+            break;
 
-}
+        if (!reader->isStartElement())
+            continue;
 
-void WorksheetInfoElementPrivate::save(QXmlStreamWriter* writer) const{
-    label->save(writer);
-    point->save(writer);
-}
-bool WorksheetInfoElementPrivate::load(XmlStreamReader* reader, bool preview){
-    if(!label->load(reader, preview)){
-        return false;
-    }
-    if(!point->load(reader, preview)){
-        return false;
+        if(!d->label->load(reader, preview)){
+            return false;
+        }
+        if(!d->point->load(reader, preview)){
+            return false;
+        }
+
     }
     return true;
+
+
 }
