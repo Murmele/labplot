@@ -901,8 +901,7 @@ QVariant TextLabelPrivate::itemChange(GraphicsItemChange change, const QVariant 
 		tempPosition.verticalPosition = TextLabel::vPositionCustom;
 
 		//emit the signals in order to notify the UI.
-		//we don't set the position related member variables during the mouse movements.
-		//this is done on mouse release events only.
+        logicalPos = cSystem->mapSceneToLogical(tempPosition.point);
 		emit q->positionChanged(tempPosition);
 	}
 

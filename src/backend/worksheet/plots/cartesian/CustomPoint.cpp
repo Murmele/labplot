@@ -336,9 +336,8 @@ QVariant CustomPointPrivate::itemChange(GraphicsItemChange change, const QVarian
 
 	if (change == QGraphicsItem::ItemPositionChange) {
 		//emit the signals in order to notify the UI.
-		//we don't set the position related member variables during the mouse movements.
-		//this is done on mouse release events only.
 		const auto* cSystem = dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
+        q->setPosition(cSystem->mapSceneToLogical(value.toPointF()));
 		emit q->positionChanged(cSystem->mapSceneToLogical(value.toPointF()));
 	}
 
