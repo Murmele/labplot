@@ -48,6 +48,7 @@ class Matrix;
 class GuiObserver;
 class AxisDock;
 class CursorDock;
+class WorksheetInfoElementDock;
 class NoteDock;
 class CartesianPlotDock;
 class HistogramDock;
@@ -203,6 +204,7 @@ private:
 	QDockWidget* cursorDock{nullptr};
 	CursorDock* cursorWidget{nullptr};
 	NoteDock* notesDock{nullptr};
+	WorksheetInfoElementDock* worksheetInfoElementDock{nullptr};
 	CartesianPlotDock* cartesianPlotDock{nullptr};
 	CartesianPlotLegendDock* cartesianPlotLegendDock{nullptr};
 	ColumnDock* columnDock{nullptr};
