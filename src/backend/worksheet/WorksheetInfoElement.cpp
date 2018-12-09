@@ -33,14 +33,14 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
     Q_D(WorksheetInfoElement);
 
     if(curve){
-        CustomPoint* custompoint = new CustomPoint(plot, "TestPoint");
+        CustomPoint* custompoint = new CustomPoint(plot, "Markerpoint");
         custompoint->setParentGraphicsItem(plot->plotArea()->graphicsItem());
         connect(custompoint, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
         addChild(custompoint);
         struct WorksheetInfoElement::MarkerPoints_T markerpoint = {custompoint, curve, curve->path()};
         markerpoints.append(markerpoint);
     }
-    label = new TextLabel("Test");
+    label = new TextLabel("Markerlabel");
     addChild(label);
     label->enableCoordBinding(true,plot);
     label->setCoordBinding(true);
@@ -494,18 +494,21 @@ bool WorksheetInfoElement::load(XmlStreamReader* reader, bool preview){
         if (reader->isEndElement() && reader->name() == "worksheetInfoElement")
             break;
 
-        if (!reader->isStartElement() || reader->name() != "worksheetInfoElement");
+        if (!(reader->isStartElement() && reader->name() == "worksheetInfoElement"))
             continue;
-
+        reader->readNext();
+        label = new TextLabel("TextLabel");
         if(!label->load(reader, preview)){
             return false;
         }
+        reader->readNext();
         while (!(reader->isEndElement() && reader->name() == "worksheetInfoElement")) {
             reader->readNext();
             CustomPoint* markerpoint = new CustomPoint(d->plot, "Marker");
             markerpoint->load(reader,preview);
             QXmlStreamAttributes attribs;
             QString path;
+            reader->readNext();
             if(reader->isStartElement() && reader->name() == "markerPointCurve"){
                 attribs = reader->attributes();
                 path = attribs.value("curvepath").toString();
