@@ -825,9 +825,10 @@ void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& 
  * \brief XYCurve::y
  * \param x :value for which y should be found
  * \param valueFound: returns true if y value found, otherwise false
+ * \param x_new: exact x value where y value is
  * \return y value from x value
  */
-double XYCurve::y(double x, bool &valueFound) const{
+double XYCurve::y(double x, double &x_new, bool &valueFound) const{
 	int rowCount = xColumn()->rowCount();
 	double prevValue=0;
 	for (int row = 0; row < rowCount; row++) {
@@ -842,10 +843,12 @@ double XYCurve::y(double x, bool &valueFound) const{
 						prevValue = value;
 					}else{
 						valueFound = true;
+                        x_new = xColumn()->valueAt(row);
 						return yColumn()->valueAt(row);
 					}
 			   }else{
 					valueFound = true;
+                    x_new = xColumn()->valueAt(row);
 					return yColumn()->valueAt(row-1);
 			   }
 		   }
