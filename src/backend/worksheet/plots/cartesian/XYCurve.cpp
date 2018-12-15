@@ -848,7 +848,7 @@ double XYCurve::y(double x, double &x_new, bool &valueFound) const{
 					}
 			   }else{
 					valueFound = true;
-                    x_new = xColumn()->valueAt(row);
+					x_new = xColumn()->valueAt(row-1);
 					return yColumn()->valueAt(row-1);
 			   }
 		   }
