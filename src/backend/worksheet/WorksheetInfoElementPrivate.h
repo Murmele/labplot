@@ -38,10 +38,8 @@ private:
     WorksheetInfoElement* const q;
 
 
-
-    QPointF sceneDeltaPoint;
+    QPointF sceneDeltaPoint; // delta position from worksheetinfoElementPrivate to the first marker point in scene coords
     QPointF sceneDeltaTextLabel;
-
 
     QRectF boundingRectangle; //bounding rectangle of the connection line between CustomPoint and TextLabel
     QLineF connectionLine; // line between CustomPoint and TextLabel
