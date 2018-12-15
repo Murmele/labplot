@@ -31,6 +31,9 @@
 
 #include <QGraphicsItem>
 
+class CustomPoint;
+class CartesianPlot;
+
 class CustomPointPrivate: public QGraphicsItem {
 public:
 	explicit CustomPointPrivate(CustomPoint*, const CartesianPlot*);
