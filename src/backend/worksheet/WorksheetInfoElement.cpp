@@ -8,6 +8,7 @@
 #include "backend/worksheet/TextLabel.h"
 #include "backend/lib/commandtemplates.h"
 #include "backend/lib/XmlStreamReader.h"
+#include "backend/lib/macros.h"
 
 #include <QGraphicsScene>
 #include <QPainter>
