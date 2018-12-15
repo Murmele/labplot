@@ -157,7 +157,7 @@ public:
 
 public slots:
 	void setTheme(const QString&);
-    void curveSelected();
+    void curveSelected(double pos);
 
 private:
 	void init();

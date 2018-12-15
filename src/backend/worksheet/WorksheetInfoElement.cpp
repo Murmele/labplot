@@ -20,7 +20,7 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 
 }
 
-WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot, const XYCurve *curve):
+WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot, const XYCurve *curve, double pos):
 	WorksheetElement(name, AspectType::WorksheetInfoElement),
     d_ptr(new WorksheetInfoElementPrivate(this,plot,curve))
 {
@@ -39,13 +39,30 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
         addChild(custompoint);
         struct WorksheetInfoElement::MarkerPoints_T markerpoint = {custompoint, curve, curve->path()};
         markerpoints.append(markerpoint);
+
+        label = new TextLabel("Markerlabel");
+        addChild(label);
+        label->enableCoordBinding(true,plot);
+        label->setCoordBinding(true);
+        label->setParentGraphicsItem(plot->plotArea()->graphicsItem());
+        TextLabel::TextWrapper text;
+        text.text = "Test";
+        label->setText(text);
+        connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
+
+        // setpos after label was created
+        bool valueFound;
+        double xpos;
+        double y = curve->y(pos,xpos,valueFound);
+        if(valueFound){
+            custompoint->setPosition(QPointF(xpos,y));
+            DEBUG("Custompoint Position set:"<< "(" << xpos << "," << y << ")");
+        }else{
+            custompoint->setPosition(QPointF(0,0));
+            DEBUG("Custompoint Position set:"<< "(" << 0 << "," << 0 << ")");
+        }
     }
-    label = new TextLabel("Markerlabel");
-    addChild(label);
-    label->enableCoordBinding(true,plot);
-    label->setCoordBinding(true);
-    label->setParentGraphicsItem(plot->plotArea()->graphicsItem());
-    connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
+
 
     d->init();
 }

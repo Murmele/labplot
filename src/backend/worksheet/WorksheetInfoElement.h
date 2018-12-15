@@ -17,7 +17,7 @@ class WorksheetInfoElement : public WorksheetElement
     Q_OBJECT
 public:
     WorksheetInfoElement(const QString& name, CartesianPlot *plot);
-    WorksheetInfoElement(const QString& name, CartesianPlot *plot, const XYCurve* curve);
+    WorksheetInfoElement(const QString& name, CartesianPlot *plot, const XYCurve* curve, double pos);
     void setParentGraphicsItem(QGraphicsItem* item);
 
     void save(QXmlStreamWriter*) const override;

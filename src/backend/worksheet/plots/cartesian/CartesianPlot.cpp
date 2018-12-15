@@ -1213,11 +1213,11 @@ void CartesianPlot::addHistogram() {
  * \brief CartesianPlot::curveSelected
  * Slot which will be called from the XYCurve, when a curve will be selected
  */
-void CartesianPlot::curveSelected(){
+void CartesianPlot::curveSelected(double pos){
 
     if(m_marker){
         m_marker = false;
-        WorksheetInfoElement* marker = new WorksheetInfoElement("Marker", this,qobject_cast<const XYCurve*>(QObject::sender()));
+        WorksheetInfoElement* marker = new WorksheetInfoElement("Marker", this,qobject_cast<const XYCurve*>(QObject::sender()),pos);
         this->addChild(marker);
         marker->setParentGraphicsItem(graphicsItem());
     }
