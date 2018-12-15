@@ -191,13 +191,29 @@ void WorksheetInfoElement::pointPositionChanged(QPointF pos){
     Q_UNUSED(pos)
     Q_D(WorksheetInfoElement);
 
+    CustomPoint* point = dynamic_cast<CustomPoint*>(QObject::sender());
+    if(point == nullptr)
+        return;
+
     // TODO: Find better solution, this is not a good solution!
-    for(auto markerpoint: markerpoints){
-        if(markerpoint.customPoint->graphicsItem()->flags().operator&=(QGraphicsItem::ItemSendsGeometryChanges)){
-            d->retransform();
-        }
+	// Problem: pointPositionChanged will also be called outside of itemchange() in custompoint. Don't know why
+    if(!point->graphicsItem()->flags().operator&=(QGraphicsItem::ItemSendsGeometryChanges)){
+        return;
     }
 
+	// caĺculate new y value
+    double x = point->position().x();
+    double x_new;
+    for(int i=0; i<markerpoints.length(); i++){
+        bool valueFound;
+        double y = markerpoints[i].curve->y(x,x_new, valueFound);
+        if(valueFound){
+            markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+			markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
+            markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+        }
+    }
+    d->retransform();
 }
 
 void WorksheetInfoElement::setParentGraphicsItem(QGraphicsItem* item) {
