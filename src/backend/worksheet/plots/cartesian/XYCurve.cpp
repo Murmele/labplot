@@ -940,6 +940,7 @@ void XYCurve::navigateTo() {
 //##############################################################################
 XYCurvePrivate::XYCurvePrivate(XYCurve *owner) : q(owner) {
 	setFlag(QGraphicsItem::ItemIsSelectable, true);
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 	setAcceptHoverEvents(false);
 }
 
@@ -3037,7 +3038,7 @@ QVariant XYCurvePrivate::itemChange(GraphicsItemChange change, const QVariant & 
     // signalize, that the curve was selected. Will be used to create a new WorksheetInfoElement (Marker)
     if(change == QGraphicsItem::ItemSelectedChange){
         if(value.toBool()){
-            emit q->selected();
+            emit q->selected(cSystem->mapSceneToLogical(mousePos).x());
         }
     }
     return QGraphicsItem::itemChange(change,value);

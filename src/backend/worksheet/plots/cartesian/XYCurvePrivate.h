@@ -146,6 +146,7 @@ public:
 private:
 	void contextMenuEvent(QGraphicsSceneContextMenuEvent*) override;
 	void mousePressEvent(QGraphicsSceneMouseEvent*) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant & value) override;
 	void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget* widget = nullptr) override;
 
 	void drawSymbols(QPainter*);
@@ -180,6 +181,7 @@ private:
 	bool m_suppressRecalc{false};
 	bool m_suppressRetransform{false};
 	bool m_printing{false};
+    QPointF mousePos;
 };
 
 #endif
