@@ -32,6 +32,8 @@ public:
     bool m_visible;
     bool m_printing;
 
+	double x_pos;
+
     CartesianPlot* plot;
     const CartesianCoordinateSystem* cSystem;
 private:
@@ -43,6 +45,8 @@ private:
 
     QRectF boundingRectangle; //bounding rectangle of the connection line between CustomPoint and TextLabel
     QLineF connectionLine; // line between CustomPoint and TextLabel
+	QLineF xposLine; // Line which connects all markerpoints, when there are more than 1
+	double xposLineWidth; // drawing linewidth
 };
 
 #endif // WORKSHEETINFOELEMENTPRIVATE_H

@@ -18,7 +18,7 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
     WorksheetElement(name),
     d_ptr(new WorksheetInfoElementPrivate(this,plot))
 {
-
+	setVisible(false);
 }
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot, const XYCurve *curve, double pos):
@@ -56,12 +56,13 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
         double xpos;
         double y = curve->y(pos,xpos,valueFound);
         if(valueFound){
+			d->x_pos = xpos;
             custompoint->setPosition(QPointF(xpos,y));
-            DEBUG("Custompoint Position set:"<< "(" << xpos << "," << y << ")");
         }else{
-            custompoint->setPosition(QPointF(0,0));
-            DEBUG("Custompoint Position set:"<< "(" << 0 << "," << 0 << ")");
+			d->x_pos = 0;
+			custompoint->setPosition(d->cSystem->mapSceneToLogical(QPointF(0,0)));
         }
+		setVisible(true);
     }
 
 
@@ -89,6 +90,10 @@ void WorksheetInfoElement::addCurve(XYCurve* curve, CustomPoint* custompoint){
         custompoint = new CustomPoint(d->plot, "Markerpoint");
         custompoint->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
         connect(custompoint, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
+		bool valueFound;
+		double x_new;
+		double y = curve->y(d->x_pos, x_new, valueFound);
+		custompoint->setPosition(QPointF(x_new,y));
     }
     addChild(custompoint);
     struct MarkerPoints_T markerpoint = {custompoint, curve, curve->path()};
@@ -114,6 +119,7 @@ void WorksheetInfoElement::addCurvePath(QString &curvePath, CustomPoint* customp
         custompoint = new CustomPoint(d->plot, "Markerpoint");
         custompoint->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
         connect(custompoint, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
+		custompoint->setVisible(false);
     }
     addChild(custompoint);
     struct MarkerPoints_T markerpoint = {custompoint, nullptr, curvePath};
@@ -178,7 +184,6 @@ CartesianPlot* WorksheetInfoElement::getPlot(){
 void WorksheetInfoElement::labelPositionChanged(TextLabel::PositionWrapper position){
     Q_UNUSED(position)
     Q_D(WorksheetInfoElement);
-
     d->retransform();
 }
 
@@ -207,6 +212,7 @@ void WorksheetInfoElement::pointPositionChanged(QPointF pos){
     for(int i=0; i<markerpoints.length(); i++){
         bool valueFound;
         double y = markerpoints[i].curve->y(x,x_new, valueFound);
+		d->x_pos = x_new;
         if(valueFound){
             markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 			markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
@@ -264,28 +270,20 @@ void WorksheetInfoElement::handleResize(double horizontalRatio, double verticalR
 WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner,CartesianPlot *plot):
     q(owner),
     plot(plot),
-    cSystem( dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem()))
+	cSystem( dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem())),
+	xposLineWidth(5)
 {
 }
 
-WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner,CartesianPlot *plot, const XYCurve* curve):
+WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner, CartesianPlot *plot, const XYCurve* curve):
     q(owner),
     plot(plot),
-    cSystem( dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem()))
+	cSystem( dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem())),
+	xposLineWidth(5)
 {
 }
 
 void WorksheetInfoElementPrivate::init(){
-
-    if(q->markerpoints.length() ==0)
-        return;
-
-    bool valueFound;
-    double value = q->markerpoints.first().curve->y(10,valueFound);
-    if(valueFound){
-        QPointF logicalPos(10,value);
-        //point->setPosition(logicalPos);
-    }
 }
 
 /*!
@@ -294,30 +292,31 @@ void WorksheetInfoElementPrivate::init(){
  */
 void WorksheetInfoElementPrivate::retransform() {
 
-    // TODO: find better solution
     if(!q->label)
         return;
     if(q->markerpoints.isEmpty())
         return;
 
+    // TODO: find better solution
     q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
     q->label->retransform();
     q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 
 
+    // TODO: find better solution
+	for(auto markerpoint: q->markerpoints){
+		markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+		markerpoint.customPoint->retransform();
+		markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+	}
 
-    for(auto markerpoint: q->markerpoints){
-        markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
-        markerpoint.customPoint->retransform();
-        markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-    }
 
     // line goes to the fist pointPos
     // TODO: better would be to direct to the highest point or also possible to make it changeable
     QPointF pointPos = cSystem->mapLogicalToScene(q->markerpoints[0].customPoint->position());
     QRectF labelSize = q->label->getSize();
 
-    QPointF labelPos = cSystem->mapLogicalToScene(q->label->getLogicalPos());//QPointF(labelSize.x(),labelSize.y());
+	QPointF labelPos = cSystem->mapLogicalToScene(q->label->getLogicalPos());
 
     double difference_x = pointPos.x() - labelPos.x();
     double difference_y = pointPos.y() - labelPos.y();
@@ -327,6 +326,7 @@ void WorksheetInfoElementPrivate::retransform() {
 
     double x,y;
 
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 
     if(w > h){
         // attach to right or left border of the textlabel
@@ -335,6 +335,7 @@ void WorksheetInfoElementPrivate::retransform() {
             // attach to right border of textlabel
             w -= labelSize.width()/2;
             x = pointPos.x() - w/2;
+			xposLine = QLineF(w/2, -h/2, w/2, h/2);
             if(difference_y >0){
                 // point is lower than TextLabel
                 y = labelPos.y()+h/2;
@@ -342,6 +343,7 @@ void WorksheetInfoElementPrivate::retransform() {
                 sceneDeltaPoint = QPointF(w/2,h/2);
                 sceneDeltaTextLabel = QPointF(-w/2-labelSize.width()/2,-h/2);
             }else{
+                // point is higher than TextLabel
                 y = labelPos.y()-h/2;
                 connectionLine = QLineF(-w/2,h/2,w/2,-h/2);
                 sceneDeltaPoint = QPointF(w/2,-h/2);
@@ -352,6 +354,7 @@ void WorksheetInfoElementPrivate::retransform() {
             // attach to left border
             w -= labelSize.width()/2;
             x = pointPos.x()+w/2;
+			xposLine = QLineF(-w/2, -h/2, -w/2, h/2);
             if(difference_y < 0){
                 // point is higher than TextLabel
                 y = pointPos.y()+h/2;
@@ -372,44 +375,53 @@ void WorksheetInfoElementPrivate::retransform() {
             // attach to top border
             h -= labelSize.height()/2;
             y = pointPos.y()+h/2;
+
             if(difference_x > 0){
+				// point is more right than TextLabel
                 x = labelPos.x()+w/2;
                 connectionLine = QLineF(-w/2,h/2,w/2,-h/2);
                 sceneDeltaPoint = QPointF(w/2,-h/2);
                 sceneDeltaTextLabel = QPointF(-w/2,h/2+labelSize.height()/2);
+				xposLine = QLineF(w/2, -h/2, w/2, h/2);
             }else{
+				// point is more left than TextLabel
                 x = pointPos.x()+w/2;
                 connectionLine = QLineF(-w/2,-h/2,w/2,h/2);
                 sceneDeltaPoint = QPointF(-w/2,-h/2);
                 sceneDeltaTextLabel = QPointF(w/2,h/2+labelSize.height()/2);
+				xposLine = QLineF(-w/2, -h/2, -w/2, h/2);
             }
         }else{
             // attach to bottom border
             h -= labelSize.height()/2;
             y = pointPos.y()-h/2;
             if(difference_x > 0){
+				// point is more right than TextLabel
                 x = labelPos.x()+ w/2;
                 connectionLine = QLineF(-w/2,-h/2,w/2,h/2);
                 sceneDeltaPoint = QPointF(w/2,h/2);
                 sceneDeltaTextLabel = QPointF(-w/2,-h/2-labelSize.height()/2);
+				xposLine = QLineF(w/2, -h/2, w/2, h/2);
             }else{
+				// point is more left than TextLabel
                 x = pointPos.x()+w/2;
                 connectionLine = QLineF(-w/2,h/2,w/2,-h/2);
                 sceneDeltaPoint = QPointF(-w/2,h/2);
                 sceneDeltaTextLabel = QPointF(w/2,-h/2-labelSize.height()/2);
+				xposLine = QLineF(-w/2, -h/2, -w/2, h/2);
             }
 
         }
     }
 
-    setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+
     QPointF itemPos(x,y);
     setPos(itemPos);
 
-    boundingRectangle.setX(-w/2);
-    boundingRectangle.setY(-h/2);
-    boundingRectangle.setWidth(w);
-    boundingRectangle.setHeight(h);
+	boundingRectangle.setX(-(w+xposLineWidth)/2);
+	boundingRectangle.setY(-h/2);
+	boundingRectangle.setWidth(w+xposLineWidth);
+	boundingRectangle.setHeight(h);
 
     update(boundingRect());
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
@@ -432,20 +444,18 @@ void WorksheetInfoElementPrivate::paint(QPainter* painter, const QStyleOptionGra
     if(!m_visible)
         return;
 
-    //painter->fillRect(boundingRectangle,QBrush(QColor(255,0,0,128)));
+	painter->fillRect(boundingRectangle,QBrush(QColor(255,0,0,128)));
+
     QPen pen(Qt::black, 5);
     painter->setPen(pen);
     painter->drawLine(connectionLine);
 
-    // draw vertical line if more than one custompoint
-//    if(q->markerpoints.length()>1){
-//        double xPos = q->markerpoints[0].customPoint->position().x();
-//        double yMax = plot->yMax();
-//        double yMin = plot->yMin();
-
-//        QLineF line(cSystem->mapLogicalToScene(QPointF(xPos,yMin)),cSystem->mapLogicalToScene(QPointF(xPos,yMax)));
-//        painter->drawLine(line);
-//    }
+	// draw vertical line, which connects all points together
+	if(q->markerpoints.length()>1){
+		pen = QPen(Qt::black, xposLineWidth);
+		painter->setPen(pen);
+		painter->drawLine(xposLine);
+	}
 }
 QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, const QVariant &value){
     if(change == QGraphicsItem::ItemPositionChange){
@@ -454,18 +464,35 @@ QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, cons
             markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
         }
         q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
-        for(auto markerpoint: q->markerpoints){
-            markerpoint.customPoint->setPosition(cSystem->mapSceneToLogical(value.toPointF()+sceneDeltaPoint));
+        double x = cSystem->mapSceneToLogical(value.toPointF()+sceneDeltaPoint).x();
+        for(int i =0; i < q->markerpoints.length(); i++){
+            bool valueFound;
+            double x_new;
+            double y = q->markerpoints[i].curve->y(x, x_new, valueFound);
+
+            if(valueFound){
+                q->markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
+            }
+
         }
-        q->label->setPosition(value.toPointF()+sceneDeltaTextLabel);
+        double x_label = value.toPointF().x()+sceneDeltaTextLabel.x();
+        double y_label = q->label->position().point.y();
+        q->label->setPosition(QPointF(x_label,y_label));
+
         for(auto markerpoint: q->markerpoints){
             markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
         }
         q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+
+        retransform();
+
+		// retransform sets the new position
+		return pos();
     }
     return QGraphicsItem::itemChange(change, value);
 }
 void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event){
+    TextLabel::TextWrapper text;
     if (event->key() == Qt::Key_Right || event->key() == Qt::Key_Left) {
         int index;
         if(event->key() == Qt::Key_Right){
@@ -477,19 +504,17 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event){
         double x,y;
         bool valueFound;
         QPointF pointPosition;
-        for(auto markerpoint: q->markerpoints){
-            markerpoint.curve->getNextValue(markerpoint.customPoint->position().x(), index,x,y,valueFound);
+        for(int i =0; i< q->markerpoints.length(); i++){
+            q->markerpoints[i].curve->getNextValue(q->markerpoints[i].customPoint->position().x(), index,x,y,valueFound);
             if(valueFound){
                 pointPosition.setX(x);
                 pointPosition.setY(y);
-                markerpoint.customPoint->setPosition(pointPosition);
+				DEBUG("X_old: " << q->markerpoints[i].customPoint->position().x() << "X_new: " << x);
+                q->markerpoints[i].customPoint->setPosition(pointPosition);
             }
         }
-        //QPointF labelPosition = label->getLogicalPos();
-        //labelPosition.setX(labelPosition.x()+ (x-markerpoints[0].first->position().x()));
-        //label->setPosition(cSystem->mapLogicalToScene(labelPosition));
-        TextLabel::TextWrapper text;
-        text.text = "Value: " + QString::number(y);
+//        TextLabel::TextWrapper text;
+//        text.text = "Value: " + QString::number(y);
         q->label->setText(text);
 
     }
@@ -525,6 +550,7 @@ bool WorksheetInfoElement::load(XmlStreamReader* reader, bool preview){
 
     while(!reader->atEnd()){
         reader->readNext();
+        QStringRef text =  reader->text();
         if (reader->isEndElement() && reader->name() == "worksheetInfoElement")
             break;
 
