@@ -369,8 +369,18 @@ void WorksheetInfoElementPrivate::retransform() {
     double h = abs(difference_y);
 
     double x,y;
+	QPointF ymin_scene = cSystem->mapLogicalToScene(QPointF(plot->xMin(),plot->yMin()));
+	QPointF ymax_scene = cSystem->mapLogicalToScene(QPointF(plot->xMin(),plot->yMax()));
+
+	y = abs(ymax_scene.y()-ymin_scene.y())/2;
+
+	QPointF labelPosItemCoords = mapFromParent(labelPos); // calculate item coords from scene coords
+	QPointF pointPosItemCoords = mapFromParent(pointPos); // calculate item coords from scene coords
+
 
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+
+	xposLine = QLineF(pointPosItemCoords.x(), 0, pointPosItemCoords.x(), 2*y);
 
     if(w > h){
         // attach to right or left border of the textlabel
@@ -379,93 +389,89 @@ void WorksheetInfoElementPrivate::retransform() {
             // attach to right border of textlabel
             w -= labelSize.width()/2;
             x = pointPos.x() - w/2;
-			xposLine = QLineF(w/2, -h/2, w/2, h/2);
+
             if(difference_y >0){
                 // point is lower than TextLabel
-                y = labelPos.y()+h/2;
-                connectionLine = QLineF(-w/2,-h/2,w/2,h/2);
-                sceneDeltaPoint = QPointF(w/2,h/2);
-                sceneDeltaTextLabel = QPointF(-w/2-labelSize.width()/2,-h/2);
+				connectionLine = QLineF(-w/2,labelPosItemCoords.y(),w/2,pointPosItemCoords.y());
+				sceneDeltaPoint = QPointF(w/2,pointPosItemCoords.y());
+				sceneDeltaTextLabel = QPointF(-w/2+labelSize.width()/2,labelPosItemCoords.y());
             }else{
                 // point is higher than TextLabel
-                y = labelPos.y()-h/2;
-                connectionLine = QLineF(-w/2,h/2,w/2,-h/2);
-                sceneDeltaPoint = QPointF(w/2,-h/2);
-                sceneDeltaTextLabel = QPointF(-w/2-labelSize.width()/2,h/2);
+				connectionLine = QLineF(-w/2,labelPosItemCoords.y(),w/2,pointPosItemCoords.y());
+				sceneDeltaPoint = QPointF(w/2,pointPosItemCoords.y());
+				sceneDeltaTextLabel = QPointF(-w/2+labelSize.width()/2,labelPosItemCoords.y());
             }
         }else{
             // point is more left than textlabel
             // attach to left border
             w -= labelSize.width()/2;
             x = pointPos.x()+w/2;
-			xposLine = QLineF(-w/2, -h/2, -w/2, h/2);
             if(difference_y < 0){
                 // point is higher than TextLabel
-                y = pointPos.y()+h/2;
-                connectionLine = QLineF(-w/2,-h/2,w/2,h/2);
-                sceneDeltaPoint = QPointF(-w/2,-h/2);
-                sceneDeltaTextLabel = QPointF(w/2+labelSize.width()/2,h/2);
+				//y = pointPos.y()+h/2;
+				connectionLine = QLineF(-w/2,pointPosItemCoords.y(),w/2,labelPosItemCoords.y());
+				sceneDeltaPoint = QPointF(-w/2,pointPosItemCoords.y());
+				sceneDeltaTextLabel = QPointF(w/2+labelSize.width()/2,labelPosItemCoords.y());
             }else{
                 // point is lower than TextLabel
-                y = pointPos.y()-h/2;
-                connectionLine = QLineF(-w/2,h/2,w/2,-h/2);
-                sceneDeltaPoint = QPointF(-w/2,h/2);
-                sceneDeltaTextLabel = QPointF(w/2+labelSize.width()/2,-h/2);
+				//y = pointPos.y()-h/2;
+				connectionLine = QLineF(-w/2,pointPosItemCoords.y(),w/2,labelPosItemCoords.y());
+				sceneDeltaPoint = QPointF(-w/2,pointPosItemCoords.y());
+				sceneDeltaTextLabel = QPointF(w/2+labelSize.width()/2,labelPosItemCoords.y());
             }
         }
     }else{
         // attach to top or bottom border of the textlabel
         if(difference_y < 0){
             // attach to top border
-            h -= labelSize.height()/2;
-            y = pointPos.y()+h/2;
-
             if(difference_x > 0){
 				// point is more right than TextLabel
                 x = labelPos.x()+w/2;
-                connectionLine = QLineF(-w/2,h/2,w/2,-h/2);
-                sceneDeltaPoint = QPointF(w/2,-h/2);
-                sceneDeltaTextLabel = QPointF(-w/2,h/2+labelSize.height()/2);
-				xposLine = QLineF(w/2, -h/2, w/2, h/2);
+				connectionLine = QLineF(-w/2,labelPosItemCoords.y()-labelSize.height()/2,w/2,pointPosItemCoords.y());
+				sceneDeltaPoint = QPointF(w/2,pointPosItemCoords.y());
+				sceneDeltaTextLabel = QPointF(-w/2,labelPosItemCoords.y()+labelSize.height()/2);
             }else{
 				// point is more left than TextLabel
                 x = pointPos.x()+w/2;
-                connectionLine = QLineF(-w/2,-h/2,w/2,h/2);
-                sceneDeltaPoint = QPointF(-w/2,-h/2);
-                sceneDeltaTextLabel = QPointF(w/2,h/2+labelSize.height()/2);
-				xposLine = QLineF(-w/2, -h/2, -w/2, h/2);
+				connectionLine = QLineF(-w/2,pointPosItemCoords.y(),w/2,labelPosItemCoords.y()-labelSize.height()/2);
+				sceneDeltaPoint = QPointF(-w/2,pointPosItemCoords.y());
+				sceneDeltaTextLabel = QPointF(w/2,labelPosItemCoords.y()+labelSize.height()/2);
             }
         }else{
             // attach to bottom border
-            h -= labelSize.height()/2;
-            y = pointPos.y()-h/2;
             if(difference_x > 0){
 				// point is more right than TextLabel
                 x = labelPos.x()+ w/2;
-                connectionLine = QLineF(-w/2,-h/2,w/2,h/2);
-                sceneDeltaPoint = QPointF(w/2,h/2);
-                sceneDeltaTextLabel = QPointF(-w/2,-h/2-labelSize.height()/2);
-				xposLine = QLineF(w/2, -h/2, w/2, h/2);
+				connectionLine = QLineF(-w/2,labelPosItemCoords.y()+labelSize.height()/2,w/2,pointPosItemCoords.y());
+				sceneDeltaPoint = QPointF(w/2,pointPosItemCoords.y());
+				sceneDeltaTextLabel = QPointF(-w/2,labelPosItemCoords.y()-labelSize.height()/2);
             }else{
 				// point is more left than TextLabel
                 x = pointPos.x()+w/2;
-                connectionLine = QLineF(-w/2,h/2,w/2,-h/2);
-                sceneDeltaPoint = QPointF(-w/2,h/2);
-                sceneDeltaTextLabel = QPointF(w/2,-h/2-labelSize.height()/2);
-				xposLine = QLineF(-w/2, -h/2, -w/2, h/2);
-            }
+				connectionLine = QLineF(-w/2,pointPosItemCoords.y(),w/2,labelPosItemCoords.y()+labelSize.height()/2);
+				sceneDeltaPoint = QPointF(-w/2,pointPosItemCoords.y());
+				sceneDeltaTextLabel = QPointF(w/2,labelPosItemCoords.y()-labelSize.height()/2);
+			}
+		}
+	}
 
-        }
-    }
+	DEBUG("SceneDeltaPoint: " << sceneDeltaPoint.x() << ", SceneDeltaTextLabel: " << sceneDeltaTextLabel.x());
+	DEBUG("SceneDeltaPointLogical: " << cSystem->mapSceneToLogical(pos()).x() - cSystem->mapSceneToLogical(pointPos).x() << ", SceneDeltaTextLabelLogical: " << cSystem->mapSceneToLogical(pos()).x() - cSystem->mapSceneToLogical(labelPos).x());
+	//DEBUG("MarkerLogicalPos: " << cSystem->mapSceneToLogical(x) << ", SceneDeltaTextLabel: " << sceneDeltaTextLabel.x());
+	QPointF itemPos;
+	itemPos.setX(x);
+	if(ymax_scene.y() < ymin_scene.y()){
+		itemPos.setY(ymax_scene.y());
 
-
-    QPointF itemPos(x,y);
+	}else{
+		itemPos.setY(ymin_scene.y());
+	}
     setPos(itemPos);
 
 	boundingRectangle.setX(-(w+xposLineWidth)/2);
-	boundingRectangle.setY(-h/2);
+	boundingRectangle.setY(0);
 	boundingRectangle.setWidth(w+xposLineWidth);
-	boundingRectangle.setHeight(h);
+	boundingRectangle.setHeight(2*y);
 
     update(boundingRect());
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
@@ -504,33 +510,35 @@ void WorksheetInfoElementPrivate::paint(QPainter* painter, const QStyleOptionGra
 QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, const QVariant &value){
     if(change == QGraphicsItem::ItemPositionChange){
 
-        for(auto markerpoint: q->markerpoints){
-            markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
-        }
-        q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
-        double x = cSystem->mapSceneToLogical(value.toPointF()+sceneDeltaPoint).x();
-        for(int i =0; i < q->markerpoints.length(); i++){
-            bool valueFound;
-            double x_new;
-            double y = q->markerpoints[i].curve->y(x, x_new, valueFound);
+		for(auto markerpoint: q->markerpoints){
+			markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+		}
+		q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+		double x = cSystem->mapSceneToLogical(value.toPointF()+sceneDeltaPoint).x();
+		for(int i =0; i < q->markerpoints.length(); i++){
+			bool valueFound;
+			double x_new;
+			double y = q->markerpoints[i].curve->y(x, x_new, valueFound);
 
-            if(valueFound){
-                q->markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
-            }
+			if(valueFound){
+				q->markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
+			}else{
+				DEBUG("No value found for Logicalpoint" << i);
+			}
+		}
+		double x_label = value.toPointF().x()+sceneDeltaTextLabel.x();
+		double y_label = q->label->position().point.y();
+		q->label->setPosition(QPointF(x_label,y_label));
 
-        }
-        double x_label = value.toPointF().x()+sceneDeltaTextLabel.x();
-        double y_label = q->label->position().point.y();
-        q->label->setPosition(QPointF(x_label,y_label));
-
-        for(auto markerpoint: q->markerpoints){
-            markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-        }
-        q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+		for(auto markerpoint: q->markerpoints){
+			markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+		}
+		q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 
         retransform();
 
 		// retransform sets the new position
+		DEBUG("WorksheetInfoElementPosX: " << pos().x());
 		return pos();
     }
     return QGraphicsItem::itemChange(change, value);
