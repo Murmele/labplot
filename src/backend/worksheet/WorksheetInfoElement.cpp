@@ -35,6 +35,8 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 
     Q_D(WorksheetInfoElement);
 
+	connect(this, &WorksheetInfoElement::aspectRemoved, this, &WorksheetInfoElement::childRemoved);
+
     if(curve){
         CustomPoint* custompoint = new CustomPoint(plot, "Markerpoint");
         custompoint->setParentGraphicsItem(plot->plotArea()->graphicsItem());
@@ -71,6 +73,17 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 
 
     d->init();
+}
+
+WorksheetInfoElement::~WorksheetInfoElement(){
+	if(label != nullptr){
+		removeChild(label);
+	}
+	for(auto point: markerpoints){
+		if(point.customPoint != nullptr){
+			removeChild(point.customPoint);
+		}
+	}
 }
 
 void WorksheetInfoElement::init(){
@@ -219,6 +232,33 @@ void WorksheetInfoElement::labelPositionChanged(TextLabel::PositionWrapper posit
     Q_UNUSED(position)
     Q_D(WorksheetInfoElement);
     d->retransform();
+}
+
+void WorksheetInfoElement::labelTextChanged(TextLabel::TextWrapper textwrapper){
+
+}
+
+/*!
+ * \brief WorksheetInfoElement::childRemoved
+ * Delete child and remove from markerpoint list if it is a markerpoint. If it is a textlabel delete complete WorksheetInfoElement
+ */
+void WorksheetInfoElement::childRemoved(){
+
+	CustomPoint* point = dynamic_cast<CustomPoint*> (QObject::sender());
+	if(point != nullptr){
+		for(int i =0; i< markerpoints.length(); i++){
+			if(point == markerpoints[i].customPoint){
+				markerpoints.removeAt(i);
+			}
+		}
+	}
+
+	TextLabel* textlabel = dynamic_cast<TextLabel*>(QObject::sender());
+	if(label != nullptr){
+		if(textlabel == label){
+			this->~WorksheetInfoElement();
+		}
+	}
 }
 
 /*!
