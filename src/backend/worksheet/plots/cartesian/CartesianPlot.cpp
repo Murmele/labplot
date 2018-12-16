@@ -781,7 +781,6 @@ void CartesianPlot::processDropEvent(QDropEvent* event) {
 			continue;
 
 		XYCurve* curve = new XYCurve(column->name());
-        connect(curve, &XYCurve::selected, this, &CartesianPlot::curveSelected);
 		curve->suppressRetransform(true); //suppress retransform, all curved will be recalculated at the end
 		curve->setXColumn(xColumn);
 		curve->setYColumn(column);
@@ -1149,7 +1148,6 @@ void CartesianPlot::addVerticalAxis() {
 void CartesianPlot::addCurve() {
     XYCurve* curve = new XYCurve("xy-curve");
     addChild(curve);
-    connect(curve, &XYCurve::selected, this, &CartesianPlot::curveSelected);
 }
 
 void CartesianPlot::addEquationCurve() {
@@ -1431,6 +1429,7 @@ void CartesianPlot::childAdded(const AbstractAspect* child) {
 		connect(curve, &XYCurve::symbolsBrushChanged, this, &CartesianPlot::updateLegend);
 		connect(curve, &XYCurve::symbolsPenChanged, this, &CartesianPlot::updateLegend);
 		connect(curve, SIGNAL(linePenChanged(QPen)), this, SIGNAL(curveLinePenChanged(QPen))); // feed forward linePenChanged, because Worksheet needs because CursorDock must be updated too
+		connect(curve, &XYCurve::selected, this, &CartesianPlot::curveSelected);
 
 		updateLegend();
 		d->curvesXMinMaxIsDirty = true;
