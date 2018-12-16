@@ -51,12 +51,15 @@ public:
 public slots:
     void labelPositionChanged(TextLabel::PositionWrapper position);
     void pointPositionChanged(QPointF pos);
+	void visibilityChanged(bool checked);
 protected:
     WorksheetInfoElementPrivate* const d_ptr;
 private:
     TextLabel* label;
     Q_DECLARE_PRIVATE(WorksheetInfoElement)
     QVector<struct MarkerPoints_T> markerpoints;
+	bool m_menusInitialized;
+
 	// Actions
 	QAction* visibilityAction;
 };
