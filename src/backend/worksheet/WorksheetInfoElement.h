@@ -11,6 +11,8 @@ class CartesianPlot;
 class WorksheetInfoElementPrivate;
 class QGraphicsItem;
 class XYCurve;
+class QAction;
+class QMenu;
 
 class WorksheetInfoElement : public WorksheetElement
 {
@@ -23,10 +25,13 @@ public:
     void save(QXmlStreamWriter*) const override;
     bool load(XmlStreamReader*, bool preview) override;
     void init();
+	void initActions();
+	void initMenus();
     void addCurve(XYCurve* curve, CustomPoint *custompoint= nullptr);
     void addCurvePath(QString &curvePath, CustomPoint* custompoint = nullptr);
     bool assignCurve(const QVector<XYCurve*> &curves);
     void removeCurve(XYCurve* curve);
+	QMenu* createContextMenu();
     CartesianPlot* getPlot();
 
     QGraphicsItem* graphicsItem() const override;
@@ -52,6 +57,8 @@ private:
     TextLabel* label;
     Q_DECLARE_PRIVATE(WorksheetInfoElement)
     QVector<struct MarkerPoints_T> markerpoints;
+	// Actions
+	QAction* visibilityAction;
 };
 
 #endif // WORKSHEETINFOELEMENT_H
