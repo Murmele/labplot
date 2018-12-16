@@ -13,17 +13,19 @@
 #include <QGraphicsScene>
 #include <QPainter>
 #include <QKeyEvent>
+#include <QAction>
+#include <QMenu>
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot):
     WorksheetElement(name),
-    d_ptr(new WorksheetInfoElementPrivate(this,plot))
+	d_ptr(new WorksheetInfoElementPrivate(this,plot)),label(nullptr),m_menusInitialized(false)
 {
 	setVisible(false);
 }
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot, const XYCurve *curve, double pos):
 	WorksheetElement(name, AspectType::WorksheetInfoElement),
-    d_ptr(new WorksheetInfoElementPrivate(this,plot,curve))
+	d_ptr(new WorksheetInfoElementPrivate(this,plot,curve)),label(nullptr),m_menusInitialized(false)
 {
     graphicsItem()->setFlag(QGraphicsItem::ItemIsMovable, true);
     graphicsItem()->setFlag(QGraphicsItem::ItemClipsChildrenToShape, true);
@@ -70,9 +72,39 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 }
 
 void WorksheetInfoElement::init(){
+	graphicsItem()->setFlag(QGraphicsItem::ItemIsMovable, true);
+	graphicsItem()->setFlag(QGraphicsItem::ItemClipsChildrenToShape, true);
+	graphicsItem()->setFlag(QGraphicsItem::ItemIsSelectable, true);
+	graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+	graphicsItem()->setFlag(QGraphicsItem::ItemIsFocusable, true);
+
+	initActions();
+	initMenus();
+}
+
+void WorksheetInfoElement::initActions(){
+	//visibility action
+	visibilityAction = new QAction(i18n("Visible"), this);
+	visibilityAction->setCheckable(true);
+	connect(visibilityAction, &QAction::triggered, this, &WorksheetInfoElement::visibilityChanged);
+}
+
+void WorksheetInfoElement::initMenus(){
 
 }
 
+QMenu* WorksheetInfoElement::createContextMenu() {
+	if (!m_menusInitialized)
+		initMenus();
+
+	QMenu* menu = WorksheetElement::createContextMenu();
+	QAction* firstAction = menu->actions().at(1);
+
+	visibilityAction->setChecked(isVisible());
+	menu->insertAction(firstAction, visibilityAction);
+
+	return menu;
+}
 /*!
  * \brief WorksheetInfoElement::addCurve
  * Adds a new markerpoint to the plot which is placed on the curve curve
