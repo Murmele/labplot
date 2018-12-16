@@ -21,6 +21,7 @@ public:
     WorksheetInfoElement(const QString& name, CartesianPlot *plot);
     WorksheetInfoElement(const QString& name, CartesianPlot *plot, const XYCurve* curve, double pos);
     void setParentGraphicsItem(QGraphicsItem* item);
+	~WorksheetInfoElement();
 
     void save(QXmlStreamWriter*) const override;
     bool load(XmlStreamReader*, bool preview) override;
@@ -51,6 +52,7 @@ public:
 public slots:
     void labelPositionChanged(TextLabel::PositionWrapper position);
     void pointPositionChanged(QPointF pos);
+	void childRemoved();
 	void visibilityChanged(bool checked);
 protected:
     WorksheetInfoElementPrivate* const d_ptr;
