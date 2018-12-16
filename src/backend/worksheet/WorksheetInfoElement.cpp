@@ -65,6 +65,8 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 			custompoint->setPosition(d->cSystem->mapSceneToLogical(QPointF(0,0)));
         }
 		setVisible(true);
+
+		d->retransform();
     }
 
 
@@ -279,9 +281,12 @@ void WorksheetInfoElement::setVisible(bool on){
     for(auto markerpoint: markerpoints){
         markerpoint.customPoint->setVisible(on);
     }
-    label->setVisible(on);
+	if(label)
+		label->setVisible(on);
     d->m_visible = on;
+	d->retransform();
 }
+
 void WorksheetInfoElement::setPrinting(bool on){
     Q_D(WorksheetInfoElement);
     d->m_printing = on;
@@ -293,6 +298,13 @@ void WorksheetInfoElement::retransform(){
 }
 void WorksheetInfoElement::handleResize(double horizontalRatio, double verticalRatio, bool pageResize){
 
+}
+
+//##############################################################################
+//######  SLOTs for changes triggered via QActions in the context menu  ########
+//##############################################################################
+void WorksheetInfoElement::visibilityChanged(bool checked) {
+	setVisible(checked);
 }
 
 //##############################################################################
