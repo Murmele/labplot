@@ -75,6 +75,11 @@ TextLabel::TextLabel(const QString &name, TextLabelPrivate *dd, Type type)
 	init();
 }
 
+TextLabel::TextLabel(const QString &name, CartesianPlot* plot, Type type):WorksheetElement(name),
+	d_ptr(new TextLabelPrivate(this,plot)), m_type(type), visibilityAction(nullptr) {
+	init();
+}
+
 TextLabel::Type TextLabel::type() const {
 	return m_type;
 }
@@ -449,6 +454,29 @@ TextLabelPrivate::TextLabelPrivate(TextLabel* owner) : q(owner) {
 	setAcceptHoverEvents(true);
 }
 
+TextLabelPrivate::TextLabelPrivate(TextLabel* owner, CartesianPlot* plot)
+	: teXRenderSuccessful(false),
+	  positionInvalid(false),
+	  suppressItemChangeEvent(false),
+	  suppressRetransform(false),
+	  m_printing(false),
+	  m_hovered(false),
+	  m_coordBinding(false),
+	  m_coordBindingEnable(false),
+	  plot(plot),
+	  q(owner) {
+
+	if(plot)
+		cSystem = dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
+	else
+		cSystem = nullptr;
+
+	setFlag(QGraphicsItem::ItemIsSelectable);
+	setFlag(QGraphicsItem::ItemIsMovable);
+	setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+	setAcceptHoverEvents(true);
+}
+
 QString TextLabelPrivate::name() const {
 	return q->name();
 }
@@ -481,7 +509,10 @@ QRectF TextLabelPrivate::getSize(){
 QPointF TextLabelPrivate::getLogicalPos(){
     if(m_coordBinding)
         return logicalPos;
-    return cSystem->mapSceneToLogical(position.point);
+	if(cSystem)
+		return cSystem->mapSceneToLogical(position.point);
+
+	return QPointF();
 }
 
 /*!
