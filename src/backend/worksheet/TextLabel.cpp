@@ -387,7 +387,9 @@ void TextLabel::setCoordBinding(bool on){
  */
 bool TextLabel::enableCoordBinding(bool enable, const CartesianPlot* plot){
     Q_D(TextLabel);
-    d->plot = dynamic_cast<const CartesianPlot*>(parentAspect());
+
+	if(!d->plot) // if worksheetinfoelement is parent, it has no cartesianplot
+		d->plot = dynamic_cast<const CartesianPlot*>(parentAspect());
 
     if(d->plot == nullptr){
         if(plot == nullptr){
