@@ -554,7 +554,7 @@ void WorksheetInfoElementPrivate::paint(QPainter* painter, const QStyleOptionGra
 
 	painter->fillRect(boundingRectangle,QBrush(QColor(255,0,0,128)));
 
-    QPen pen(Qt::black, 5);
+	QPen pen(Qt::black, xposLineWidth);
     painter->setPen(pen);
     painter->drawLine(connectionLine);
 
