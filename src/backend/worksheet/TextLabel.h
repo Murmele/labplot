@@ -72,6 +72,7 @@ public:
 	};
 
 	explicit TextLabel(const QString& name, Type type = General);
+	TextLabel(const QString& name,CartesianPlot* plot, Type type = General);
 	~TextLabel() override;
 
 	Type type() const;

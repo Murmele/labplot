@@ -42,6 +42,7 @@ class CartesianCoordinateSystem;
 class TextLabelPrivate: public QGraphicsItem {
 public:
 	explicit TextLabelPrivate(TextLabel*);
+	explicit TextLabelPrivate(TextLabel*, CartesianPlot* plot);
 
 	qreal rotationAngle{0.0};
 	//scaling:
