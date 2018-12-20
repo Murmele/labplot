@@ -21,6 +21,7 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 	d_ptr(new WorksheetInfoElementPrivate(this,plot)),label(nullptr),m_menusInitialized(false),
 	m_suppressChildRemoved(false)
 {
+	init();
 	setVisible(false);
 }
 
@@ -29,15 +30,9 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 	d_ptr(new WorksheetInfoElementPrivate(this,plot,curve)),label(nullptr),m_menusInitialized(false),
 	m_suppressChildRemoved(false)
 {
-    graphicsItem()->setFlag(QGraphicsItem::ItemIsMovable, true);
-    graphicsItem()->setFlag(QGraphicsItem::ItemClipsChildrenToShape, true);
-    graphicsItem()->setFlag(QGraphicsItem::ItemIsSelectable, true);
-    graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-    graphicsItem()->setFlag(QGraphicsItem::ItemIsFocusable, true);
+	init();
 
     Q_D(WorksheetInfoElement);
-
-	connect(this, &WorksheetInfoElement::aspectRemoved, this, &WorksheetInfoElement::childRemoved);
 
     if(curve){
         CustomPoint* custompoint = new CustomPoint(plot, "Markerpoint");
@@ -46,17 +41,6 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
         addChild(custompoint);
         struct WorksheetInfoElement::MarkerPoints_T markerpoint = {custompoint, curve, curve->path()};
         markerpoints.append(markerpoint);
-
-        label = new TextLabel("Markerlabel");
-        addChild(label);
-        label->enableCoordBinding(true,plot);
-        label->setCoordBinding(true);
-        label->setParentGraphicsItem(plot->plotArea()->graphicsItem());
-        TextLabel::TextWrapper text;
-        text.text = "Test";
-        label->setText(text);
-        connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
-
         // setpos after label was created
         bool valueFound;
         double xpos;
@@ -71,10 +55,9 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 		setVisible(true);
 
 		d->retransform();
-    }
-
-
-    d->init();
+	}else{
+		setVisible(false);
+	}
 }
 
 WorksheetInfoElement::~WorksheetInfoElement(){
@@ -89,6 +72,9 @@ WorksheetInfoElement::~WorksheetInfoElement(){
 }
 
 void WorksheetInfoElement::init(){
+
+	Q_D(WorksheetInfoElement);
+
 	graphicsItem()->setFlag(QGraphicsItem::ItemIsMovable, true);
 	graphicsItem()->setFlag(QGraphicsItem::ItemClipsChildrenToShape, true);
 	graphicsItem()->setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -97,6 +83,19 @@ void WorksheetInfoElement::init(){
 
 	initActions();
 	initMenus();
+
+	connect(this, &WorksheetInfoElement::aspectRemoved, this, &WorksheetInfoElement::childRemoved);
+
+	label = new TextLabel("Markerlabel", d->plot);
+	addChild(label);
+	label->enableCoordBinding(true);
+	label->setCoordBinding(true);
+	label->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
+	TextLabel::TextWrapper text;
+	text.text = "Test";
+	label->setText(text);
+	connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
+
 }
 
 void WorksheetInfoElement::initActions(){
