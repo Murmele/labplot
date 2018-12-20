@@ -577,7 +577,14 @@ QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, cons
 		for(int i =0; i < q->markerpoints.length(); i++){
 			bool valueFound;
 			double x_new;
-			double y = q->markerpoints[i].curve->y(x, x_new, valueFound);
+
+			double y;
+			if(q->markerpoints[i].curve){
+				y = q->markerpoints[i].curve->y(x, x_new, valueFound);
+			}else{
+				valueFound = false;
+				y = 0;
+			}
 
 			if(valueFound){
 				q->markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
