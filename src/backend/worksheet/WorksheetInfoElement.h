@@ -52,7 +52,7 @@ public:
 public slots:
     void labelPositionChanged(TextLabel::PositionWrapper position);
     void pointPositionChanged(QPointF pos);
-	void childRemoved();
+	void childRemoved(const AbstractAspect *parent, const AbstractAspect *before, const AbstractAspect *child);
 	void visibilityChanged(bool checked);
 protected:
     WorksheetInfoElementPrivate* const d_ptr;
@@ -61,6 +61,7 @@ private:
     Q_DECLARE_PRIVATE(WorksheetInfoElement)
     QVector<struct MarkerPoints_T> markerpoints;
 	bool m_menusInitialized;
+	bool m_suppressChildRemoved;
 
 	// Actions
 	QAction* visibilityAction;

@@ -18,14 +18,16 @@
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot):
     WorksheetElement(name),
-	d_ptr(new WorksheetInfoElementPrivate(this,plot)),label(nullptr),m_menusInitialized(false)
+	d_ptr(new WorksheetInfoElementPrivate(this,plot)),label(nullptr),m_menusInitialized(false),
+	m_suppressChildRemoved(false)
 {
 	setVisible(false);
 }
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot, const XYCurve *curve, double pos):
 	WorksheetElement(name, AspectType::WorksheetInfoElement),
-	d_ptr(new WorksheetInfoElementPrivate(this,plot,curve)),label(nullptr),m_menusInitialized(false)
+	d_ptr(new WorksheetInfoElementPrivate(this,plot,curve)),label(nullptr),m_menusInitialized(false),
+	m_suppressChildRemoved(false)
 {
     graphicsItem()->setFlag(QGraphicsItem::ItemIsMovable, true);
     graphicsItem()->setFlag(QGraphicsItem::ItemClipsChildrenToShape, true);
@@ -242,9 +244,15 @@ void WorksheetInfoElement::labelTextChanged(TextLabel::TextWrapper textwrapper){
  * \brief WorksheetInfoElement::childRemoved
  * Delete child and remove from markerpoint list if it is a markerpoint. If it is a textlabel delete complete WorksheetInfoElement
  */
-void WorksheetInfoElement::childRemoved(){
+void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const AbstractAspect* before, const AbstractAspect* child){
 
-	CustomPoint* point = dynamic_cast<CustomPoint*> (QObject::sender());
+	if(m_suppressChildRemoved)
+		return;
+
+	if(parent != this)
+		return;
+
+	const CustomPoint* point = dynamic_cast<const CustomPoint*> (child);
 	if(point != nullptr){
 		for(int i =0; i< markerpoints.length(); i++){
 			if(point == markerpoints[i].customPoint){
@@ -252,11 +260,22 @@ void WorksheetInfoElement::childRemoved(){
 			}
 		}
 	}
+	if(markerpoints.empty()){
+		m_suppressChildRemoved = true;
+		removeChild(label);
+		m_suppressChildRemoved = false;
+		remove();
+	}
 
-	TextLabel* textlabel = dynamic_cast<TextLabel*>(QObject::sender());
+	const TextLabel* textlabel = dynamic_cast<const TextLabel*>(child);
 	if(label != nullptr){
 		if(textlabel == label){
-			this->~WorksheetInfoElement();
+			for(auto markerpoint : markerpoints){
+				m_suppressChildRemoved = true;
+				removeChild(markerpoint.customPoint);
+				m_suppressChildRemoved = false;
+			}
+			remove();
 		}
 	}
 }
