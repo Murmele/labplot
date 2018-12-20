@@ -61,14 +61,6 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 }
 
 WorksheetInfoElement::~WorksheetInfoElement(){
-	if(label != nullptr){
-		removeChild(label);
-	}
-	for(auto point: markerpoints){
-		if(point.customPoint != nullptr){
-			removeChild(point.customPoint);
-		}
-	}
 }
 
 void WorksheetInfoElement::init(){
