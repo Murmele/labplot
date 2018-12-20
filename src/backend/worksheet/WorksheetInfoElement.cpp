@@ -682,6 +682,12 @@ void WorksheetInfoElement::save(QXmlStreamWriter* writer) const{
     writeBasicAttributes(writer);
     writeCommentElement(writer);
 
+	//geometry
+	writer->writeStartElement( "geometry" );
+	writer->writeAttribute( "visible", QString::number(d->isVisible()) );
+	writer->writeEndElement();
+
+
     label->save(writer);
     QString path;
     for(auto custompoint: markerpoints){
@@ -700,36 +706,69 @@ bool WorksheetInfoElement::load(XmlStreamReader* reader, bool preview){
 
     Q_D(WorksheetInfoElement);
 
+	CustomPoint* markerpoint = nullptr;
+	bool markerpointFound = false;
+	QXmlStreamAttributes attribs;
+	QString str;
+	KLocalizedString attributeWarning = ki18n("Attribute '%1' missing or empty, default value is used");
+
     while(!reader->atEnd()){
         reader->readNext();
         QStringRef text =  reader->text();
         if (reader->isEndElement() && reader->name() == "worksheetInfoElement")
             break;
 
-        if (!(reader->isStartElement() && reader->name() == "worksheetInfoElement"))
+		if (!reader->isStartElement())
             continue;
-        reader->readNext();
-        label = new TextLabel("TextLabel");
-        if(!label->load(reader, preview)){
-            return false;
-        }
-        reader->readNext();
-        while (!(reader->isEndElement() && reader->name() == "worksheetInfoElement")) {
-            reader->readNext();
-            CustomPoint* markerpoint = new CustomPoint(d->plot, "Marker");
-            markerpoint->load(reader,preview);
-            QXmlStreamAttributes attribs;
-            QString path;
-            reader->readNext();
-            if(reader->isStartElement() && reader->name() == "markerPointCurve"){
-                attribs = reader->attributes();
-                path = attribs.value("curvepath").toString();
-                addCurvePath(path, markerpoint);
-            }else{
-                delete markerpoint;
-            }
-        }
 
+		if(!preview && reader->name() == "comment"){
+			if(!readCommentElement(reader)) return false;
+		}else if(reader->name() == "geometry"){
+			attribs = reader->attributes();
+
+			str = attribs.value("visible").toString();
+			if(str.isEmpty())
+				reader->raiseWarning(attributeWarning.subs("x").toString());
+			else
+				setVisible(str.toInt());
+
+		} else if (reader->name() == "textLabel") {
+			reader->readNext();
+			if(!label){
+				label = new TextLabel("TextLabel", d->plot);
+				this->addChild(label);
+			}
+			if(!label->load(reader, preview)){
+				return false;
+			}
+			label->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
+		} else if (reader->name() == "customPoint") {
+			// Marker must have at least one curve
+			if(markerpointFound){ // must be cleared by markerPointCurve
+				delete markerpoint;
+				return false;
+			}
+			markerpoint = new CustomPoint(d->plot, "Marker");
+			if(!markerpoint->load(reader,preview)){
+				delete  markerpoint;
+				return false;
+			}
+			this->addChild(markerpoint);
+			markerpointFound = true;
+
+		} else if(reader->name() == "markerPointCurve"){
+			markerpointFound = false;
+			QString path;
+			attribs = reader->attributes();
+			path = attribs.value("curvepath").toString();
+			addCurvePath(path, markerpoint);
+		}
     }
+
+	if(markerpointFound){
+		// problem, if a markerpoint has no markerPointCurve
+		delete markerpoint;
+		return false;
+	}
     return true;
 }
