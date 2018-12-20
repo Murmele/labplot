@@ -3538,7 +3538,9 @@ bool CartesianPlot::load(XmlStreamReader* reader, bool preview) {
     QVector<WorksheetInfoElement*> elements = children<WorksheetInfoElement>();
     QVector<XYCurve*> curves = children<XYCurve>();
     for(auto element: elements){
-        element->assignCurve(curves);
+		if(!element->assignCurve(curves)){
+			return false;
+		}
     }
 
 	if (preview)
