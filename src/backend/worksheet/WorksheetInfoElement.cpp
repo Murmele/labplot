@@ -145,6 +145,8 @@ void WorksheetInfoElement::addCurve(XYCurve* curve, CustomPoint* custompoint){
  * When loading worksheetinfoelement from xml file, there is no information available, which curves are loaded.
  * So only the path will be stored and after all curves where loaded the curves will be assigned to the WorksheetInfoElement
  * with the function assignCurve
+ * Assumption: if custompoint!=nullptr then the custompoint was already added to the WorksheetInfoElement previously. Here
+ * only new created CustomPoints will be added to the WorksheetInfoElement
  * \param curvePath path from the curve
  * \param custompoint adding already created custom point
  */
@@ -160,8 +162,8 @@ void WorksheetInfoElement::addCurvePath(QString &curvePath, CustomPoint* customp
         custompoint->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
         connect(custompoint, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
 		custompoint->setVisible(false);
-    }
-    addChild(custompoint);
+		addChild(custompoint);
+	}
     struct MarkerPoints_T markerpoint = {custompoint, nullptr, curvePath};
     markerpoints.append(markerpoint);
 }
