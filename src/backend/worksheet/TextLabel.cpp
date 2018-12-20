@@ -1018,6 +1018,8 @@ void TextLabel::save(QXmlStreamWriter* writer) const {
 	writer->writeAttribute( "verticalAlignment", QString::number(d->verticalAlignment) );
 	writer->writeAttribute( "rotationAngle", QString::number(d->rotationAngle) );
 	writer->writeAttribute( "visible", QString::number(d->isVisible()) );
+	writer->writeAttribute( "enableCoordBinding", QString::number(d->m_coordBindingEnable));
+	writer->writeAttribute( "coordBinding", QString::number(d->m_coordBinding));
 	writer->writeEndElement();
 
 	writer->writeStartElement( "text" );
@@ -1099,6 +1101,19 @@ bool TextLabel::load(XmlStreamReader* reader, bool preview) {
 				reader->raiseWarning(attributeWarning.subs("visible").toString());
 			else
 				d->setVisible(str.toInt());
+
+			str = attribs.value("enableCoordBinding").toString();
+			if(str.isEmpty())
+				reader->raiseWarning(attributeWarning.subs("enableCoordBinding").toString());
+			else
+				enableCoordBinding(str.toInt());
+
+			str = attribs.value("coordBinding").toString();
+			if(str.isEmpty())
+				reader->raiseWarning(attributeWarning.subs("coordBinding").toString());
+			else
+				setCoordBinding(str.toInt());
+
 		} else if (!preview && reader->name() == "text") {
 			d->textWrapper.text = reader->readElementText();
 		} else if (!preview && reader->name() == "format") {
