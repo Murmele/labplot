@@ -366,17 +366,23 @@ void WorksheetInfoElement::visibilityChanged(bool checked) {
 WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner,CartesianPlot *plot):
     q(owner),
     plot(plot),
-	cSystem( dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem())),
 	xposLineWidth(5)
 {
+	if(plot)
+		cSystem =  dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
+	else
+		cSystem = nullptr;
 }
 
 WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner, CartesianPlot *plot, const XYCurve* curve):
     q(owner),
     plot(plot),
-	cSystem( dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem())),
 	xposLineWidth(5)
 {
+	if(plot)
+		cSystem =  dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
+	else
+		cSystem = nullptr;
 }
 
 void WorksheetInfoElementPrivate::init(){
