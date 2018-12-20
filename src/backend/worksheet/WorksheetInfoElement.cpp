@@ -11,6 +11,7 @@
 #include "backend/lib/macros.h"
 
 #include <QGraphicsScene>
+#include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QKeyEvent>
 #include <QAction>
