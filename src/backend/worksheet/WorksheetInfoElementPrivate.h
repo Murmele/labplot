@@ -9,6 +9,7 @@ class CustomPoint;
 class CartesianPlot;
 class CartesianCoordinateSystem;
 class XYCurve;
+class QGraphicsSceneMouseEvent;
 
 class WorksheetInfoElementPrivate: public QGraphicsItem
 {
@@ -21,6 +22,7 @@ public:
     void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget* widget = nullptr) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
     void keyPressEvent(QKeyEvent * event) override;
+	void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 
     void init();
     void updatePosition();

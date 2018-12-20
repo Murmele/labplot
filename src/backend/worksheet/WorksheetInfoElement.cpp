@@ -583,6 +583,48 @@ QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, cons
     }
     return QGraphicsItem::itemChange(change, value);
 }
+
+void WorksheetInfoElementPrivate::mousePressEvent(QGraphicsSceneMouseEvent* event){
+	if(event->button() == Qt::MouseButton::LeftButton){
+
+		if(q->markerpoints.length()>1){
+			if(abs(xposLine.x1()-event->pos().x())< xposLineWidth){
+				setSelected(true);
+				return;
+			}
+		}
+
+		// https://stackoverflow.com/questions/11604680/point-laying-near-line
+		double dx12 = connectionLine.x2()-connectionLine.x1();
+		double dy12 = connectionLine.y2()-connectionLine.y1();
+		double vecLenght = sqrt(pow(dx12,2)+pow(dy12,2));
+		QPointF unitvec(dx12/vecLenght,dy12/vecLenght);
+
+		double dx1m = event->pos().x() - connectionLine.x1();
+		double dy1m = event->pos().y() - connectionLine.y1();
+
+		double dist_segm = abs(dx1m*unitvec.y() - dy1m*unitvec.x());
+		double scalar_product = dx1m*unitvec.x()+dy1m*unitvec.y();
+		DEBUG("DIST_SEGMENT   " << dist_segm << "SCALAR_PRODUCT: " << scalar_product << "VEC_LENGTH: " << vecLenght);
+
+		if(scalar_product > 0){
+			if(scalar_product < vecLenght && dist_segm < 5){
+				event->accept();
+				if(!isSelected()){
+					setSelected(true);
+				}
+				return;
+			}
+		}
+
+		event->ignore();
+		if(isSelected())
+			setSelected(false);
+		return;
+	}
+	QGraphicsItem::mousePressEvent(event);
+}
+
 void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event){
     TextLabel::TextWrapper text;
     if (event->key() == Qt::Key_Right || event->key() == Qt::Key_Left) {
