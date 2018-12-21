@@ -954,7 +954,7 @@ void TextLabelPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event){
     if(m_coordBinding){
         logicalPos = cSystem->mapSceneToLogical(pos());
     }
-    QGraphicsItem::mouseMoveEvent(event);
+    return QGraphicsItem::mouseMoveEvent(event);
 }
 
 void TextLabelPrivate::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
