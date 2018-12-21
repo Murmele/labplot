@@ -249,8 +249,16 @@ BASIC_SHARED_D_READER_IMPL(TextLabel, qreal, borderOpacity, borderOpacity)
 STD_SETTER_CMD_IMPL_F_S(TextLabel, SetText, TextLabel::TextWrapper, textWrapper, updateText);
 void TextLabel::setText(const TextWrapper &textWrapper) {
 	Q_D(TextLabel);
-	if ( (textWrapper.text != d->textWrapper.text) || (textWrapper.teXUsed != d->textWrapper.teXUsed) )
+	if ( (textWrapper.text != d->textWrapper.text) || (textWrapper.teXUsed != d->textWrapper.teXUsed)
+		 || ((d->textWrapper.placeHolder || textWrapper.placeHolder) && (textWrapper.textPlaceHolder != d->textWrapper.textPlaceHolder)))
 		exec(new TextLabelSetTextCmd(d, textWrapper, ki18n("%1: set label text")));
+}
+
+STD_SETTER_CMD_IMPL_F_S(TextLabel, SetPlaceHolderText, TextLabel::TextWrapper, textWrapper, updateText);
+void TextLabel::setPlaceHolderText(const TextWrapper &textWrapper) {
+	Q_D(TextLabel);
+	if ( (textWrapper.textPlaceHolder != d->textWrapper.textPlaceHolder) || (textWrapper.teXUsed != d->textWrapper.teXUsed) )
+		exec(new TextLabelSetPlaceHolderTextCmd(d, textWrapper, ki18n("%1: set label placeholdertext")));
 }
 
 STD_SETTER_CMD_IMPL_F_S(TextLabel, SetTeXFont, QFont, teXFont, updateText);
@@ -1060,7 +1068,12 @@ void TextLabel::save(QXmlStreamWriter* writer) const {
 	writer->writeCharacters( d->textWrapper.text );
 	writer->writeEndElement();
 
+	writer->writeStartElement( "textPlaceHolder");
+	writer->writeCharacters( d->textWrapper.textPlaceHolder);
+	writer->writeEndElement();
+
 	writer->writeStartElement( "format" );
+	writer->writeAttribute( "placeHolder", QString::number(d->textWrapper.placeHolder) );
 	writer->writeAttribute( "teXUsed", QString::number(d->textWrapper.teXUsed) );
 	WRITE_QFONT(d->teXFont);
 	writer->writeAttribute( "fontColor_r", QString::number(d->fontColor.red()) );
@@ -1150,11 +1163,25 @@ bool TextLabel::load(XmlStreamReader* reader, bool preview) {
 
 		} else if (!preview && reader->name() == "text") {
 			d->textWrapper.text = reader->readElementText();
+		} else if (!preview && reader->name() == "textPlaceHolder") {
+			d->textWrapper.textPlaceHolder = reader->readElementText();
 		} else if (!preview && reader->name() == "format") {
 			attribs = reader->attributes();
 
 			READ_INT_VALUE("teXUsed", textWrapper.teXUsed, bool);
 			READ_QFONT(d->teXFont);
+
+			str = attribs.value("placeHolder").toString();
+			if(str.isEmpty())
+				reader->raiseWarning(attributeWarning.subs("teXUsed").toString());
+			else
+				d->textWrapper.placeHolder = str.toInt();
+
+			str = attribs.value("teXUsed").toString();
+			if(str.isEmpty())
+				reader->raiseWarning(attributeWarning.subs("teXUsed").toString());
+			else
+				d->textWrapper.teXUsed = str.toInt();
 
 			str = attribs.value("fontColor_r").toString();
 			if (str.isEmpty())

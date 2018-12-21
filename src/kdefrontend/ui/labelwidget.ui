@@ -19,8 +19,21 @@
        <bold>true</bold>
       </font>
      </property>
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
+    </widget>
+   </item>
+   <item row="3" column="3" colspan="2">
+    <widget class="KFontRequester" name="kfontRequester"/>
+   </item>
+   <item row="16" column="3" colspan="2">
+    <widget class="KComboBox" name="cbVerticalAlignment"/>
+   </item>
+   <item row="6" column="3" colspan="2">
+    <widget class="KColorButton" name="kcbFontColor">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
      <property name="text">
       <string>Text:</string>
@@ -198,6 +211,16 @@
        <widget class="QToolButton" name="tbSymbols">
         <property name="text">
          <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QToolButton" name="tbFontSuperScript">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -438,6 +461,12 @@
      <property name="text">
       <string>Vert. align.:</string>
      </property>
+     <property name="maximum">
+      <number>360</number>
+     </property>
+     <property name="singleStep">
+      <number>5</number>
+     </property>
     </widget>
    </item>
    <item row="13" column="4">
@@ -663,6 +692,11 @@
    <class>KFontRequester</class>
    <extends>QWidget</extends>
    <header>kfontrequester.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KComboBox</class>
+   <extends>QComboBox</extends>
+   <header>kcombobox.h</header>
   </customwidget>
   <customwidget>
    <class>KColorButton</class>
