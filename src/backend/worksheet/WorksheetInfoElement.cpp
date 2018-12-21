@@ -588,6 +588,8 @@ QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, cons
 			}
 
 			if(valueFound){
+				q->markerpoints[i].y = y;
+				q->markerpoints[i].x = x_new;
 				q->markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
 			}else{
 				DEBUG("No value found for Logicalpoint" << i);
@@ -668,6 +670,8 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event){
         for(int i =0; i< q->markerpoints.length(); i++){
             q->markerpoints[i].curve->getNextValue(q->markerpoints[i].customPoint->position().x(), index,x,y,valueFound);
             if(valueFound){
+                q->markerpoints[i].x = x;
+                q->markerpoints[i].y = y;
                 pointPosition.setX(x);
                 pointPosition.setY(y);
 				DEBUG("X_old: " << q->markerpoints[i].customPoint->position().x() << "X_new: " << x);
