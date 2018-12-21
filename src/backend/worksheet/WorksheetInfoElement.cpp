@@ -211,6 +211,38 @@ void WorksheetInfoElement::removeCurve(XYCurve* curve){
 }
 
 /*!
+ * \brief createTextLabelText
+ * create Text which will be shown in the TextLabel
+ * \return
+ */
+TextLabel::TextWrapper WorksheetInfoElement::createTextLabelText(){
+
+    // TODO: save positions of the variables in extra variables to replace faster, because replace takes long time
+	TextLabel::TextWrapper wrapper = label->text();
+
+	QString placeHolderText = wrapper.textPlaceHolder;
+    if(!wrapper.teXUsed){
+        placeHolderText.replace("&amp;(x)",QString::number(markerpoints[0].x));
+    }else{
+        placeHolderText.replace("&(x)",QString::number(markerpoints[0].x));
+    }
+
+	for( int i=0; i< markerpoints.length(); i++){
+
+        QString replace;
+        if(!wrapper.teXUsed)
+            replace = QString("&amp;(");
+        else
+            replace = QString("&(");
+
+        replace+=  markerpoints[i].curve->name() + QString(")");
+		placeHolderText.replace(replace, QString::number(markerpoints[i].y));
+	}
+	wrapper.text = placeHolderText;
+	return wrapper;
+}
+
+/*!
  * \brief getPlot
  * Returns plot, where this marker is used. Needed in the worksheetinfoelement Dock
  * \return
@@ -307,6 +339,7 @@ void WorksheetInfoElement::pointPositionChanged(QPointF pos){
             markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
         }
     }
+	label->setText(createTextLabelText());
     d->retransform();
 }
 
@@ -587,6 +620,8 @@ QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, cons
 				y = 0;
 			}
 
+
+
 			if(valueFound){
 				q->markerpoints[i].y = y;
 				q->markerpoints[i].x = x_new;
@@ -603,6 +638,8 @@ QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, cons
 			markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 		}
 		q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+
+		q->label->setText(q->createTextLabelText());
 
         retransform();
 
@@ -678,9 +715,7 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event){
                 q->markerpoints[i].customPoint->setPosition(pointPosition);
             }
         }
-//        TextLabel::TextWrapper text;
-//        text.text = "Value: " + QString::number(y);
-        q->label->setText(text);
+        q->label->setText(q->createTextLabelText());
 
     }
 }
