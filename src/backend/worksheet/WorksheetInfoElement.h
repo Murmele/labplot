@@ -41,6 +41,8 @@ public:
         CustomPoint* customPoint;
         const XYCurve* curve;
         QString curvePath;
+		double x; // x Value
+		double y; // y Value
     };
 
     bool isVisible() const override;
