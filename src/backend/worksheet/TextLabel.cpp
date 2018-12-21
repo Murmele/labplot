@@ -934,7 +934,8 @@ QVariant TextLabelPrivate::itemChange(GraphicsItemChange change, const QVariant 
 		tempPosition.verticalPosition = TextLabel::vPositionCustom;
 
 		//emit the signals in order to notify the UI.
-        logicalPos = cSystem->mapSceneToLogical(tempPosition.point);
+		if(m_coordBinding)
+			logicalPos = cSystem->mapSceneToLogical(tempPosition.point);
 		emit q->positionChanged(tempPosition);
 	}
 
