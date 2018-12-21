@@ -1069,15 +1069,38 @@ void LabelWidget::load() {
 
 	ui.chbVisible->setChecked(m_label->isVisible());
 
+    // don't show checkbox if Placeholder feature not used
+    bool placeHolder = m_label->text().placeHolder;
+    if(!placeHolder){
+        ui.chbShowPlaceHolderText->setVisible(false);
+        ui.chbShowPlaceHolderText->setEnabled(false);
+        ui.chbShowPlaceHolderText->setChecked(false);
+
+    }else{
+        ui.chbShowPlaceHolderText->setEnabled(true);
+        ui.chbShowPlaceHolderText->setVisible(true);
+        ui.chbShowPlaceHolderText->setChecked(true);
+    }
+
 	//Text/TeX
 	ui.tbTexUsed->setChecked( (bool) m_label->text().teXUsed );
-	if (m_label->text().teXUsed)
-		ui.teLabel->setText(m_label->text().text);
-	else {
-		ui.teLabel->setHtml(m_label->text().text);
-		ui.teLabel->selectAll(); // must be done to retrieve font
-		ui.kfontRequester->setFont(ui.teLabel->currentFont());
-	}
+    if(!placeHolder){
+        if (m_label->text().teXUsed)
+            ui.teLabel->setText(m_label->text().text);
+		else {
+			ui.teLabel->setHtml(m_label->text().text);
+			ui.teLabel->selectAll(); // must be done to retrieve font
+			ui.kfontRequester->setFont(ui.teLabel->currentFont());
+		}
+    }else{
+        if (m_label->text().teXUsed)
+            ui.teLabel->setText(m_label->text().textPlaceHolder);
+		else {
+            ui.teLabel->setHtml(m_label->text().textPlaceHolder);
+			ui.teLabel->selectAll(); // must be done to retrieve font
+			ui.kfontRequester->setFont(ui.teLabel->currentFont());
+		}
+    }
 
 	QTextCharFormat format = ui.teLabel->currentCharFormat(); // don't use colors from the textlabel, but
 	ui.kcbFontColor->setColor(format.foreground().color());
@@ -1120,20 +1143,6 @@ void LabelWidget::load() {
 
     ui.chbBindLogicalPos->setVisible(m_label->isAttachedToCoordEnabled());
     ui.chbBindLogicalPos->setChecked(m_label->isAttachedToCoord());
-
-	// don't show checkbox if Placeholder feature not used
-
-	bool placeHolder = m_label->text().placeHolder;
-
-	if(!placeHolder){
-		ui.chbShowPlaceHolderText->setVisible(false);
-		ui.chbShowPlaceHolderText->setEnabled(false);
-		ui.chbShowPlaceHolderText->setChecked(false);
-
-	}else{
-		ui.chbShowPlaceHolderText->setEnabled(true);
-		ui.chbShowPlaceHolderText->setVisible(true);
-	}
 
 	m_initializing = false;
 }
