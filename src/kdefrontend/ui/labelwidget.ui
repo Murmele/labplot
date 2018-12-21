@@ -51,14 +51,30 @@
        <bold>true</bold>
       </font>
      </property>
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
+    </widget>
+   </item>
+   <item row="3" column="3" colspan="2">
+    <widget class="KFontRequester" name="kfontRequester"/>
+   </item>
+   <item row="16" column="3" colspan="2">
+    <widget class="KComboBox" name="cbVerticalAlignment"/>
+   </item>
+   <item row="6" column="3" colspan="2">
+    <widget class="KColorButton" name="kcbFontColor">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
      <property name="text">
-      <string>Text:</string>
+      <string/>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     <property name="iconSize">
+      <size>
+       <width>20</width>
+       <height>20</height>
+      </size>
      </property>
     </widget>
    </item>
@@ -211,8 +227,8 @@
       <property name="spacing">
        <number>0</number>
       </property>
-      <item row="0" column="0">
-       <widget class="QToolButton" name="tbFontBold">
+      <item row="0" column="2">
+       <widget class="QToolButton" name="tbFontUnderline">
         <property name="text">
          <string/>
         </property>
@@ -231,16 +247,6 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="2">
-       <widget class="QToolButton" name="tbFontUnderline">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="3">
        <widget class="QToolButton" name="tbFontStrikeOut">
         <property name="text">
@@ -251,8 +257,17 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="4">
-       <widget class="QToolButton" name="tbFontSuperScript">
+      <item row="0" column="9">
+       <widget class="QToolButton" name="tbTexUsed">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>TeX mode</string>
+        </property>
         <property name="text">
          <string/>
         </property>
@@ -261,8 +276,8 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="5">
-       <widget class="QToolButton" name="tbFontSubScript">
+      <item row="0" column="0">
+       <widget class="QToolButton" name="tbFontBold">
         <property name="text">
          <string/>
         </property>
@@ -275,6 +290,16 @@
        <widget class="QToolButton" name="tbSymbols">
         <property name="text">
          <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <widget class="QToolButton" name="tbFontSubScript">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -301,25 +326,6 @@
         </property>
        </spacer>
       </item>
-      <item row="0" column="9">
-       <widget class="QToolButton" name="tbTexUsed">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>TeX mode</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item row="1" column="0" colspan="10">
        <widget class="ResizableTextEdit" name="teLabel">
         <property name="sizePolicy">
@@ -333,6 +339,16 @@
           <width>16777215</width>
           <height>16777215</height>
          </size>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QToolButton" name="tbFontSuperScript">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -445,7 +461,7 @@
       <enum>QFrame::NoFrame</enum>
      </property>
      <property name="text">
-      <string>Geometry</string>
+      <string>Vert. align.:</string>
      </property>
     </widget>
    </item>
@@ -473,7 +489,7 @@
    <item row="5" column="0" colspan="4">
     <widget class="QLabel" name="lFontColor">
      <property name="text">
-      <string>Foreground color:</string>
+      <string>Visible</string>
      </property>
     </widget>
    </item>
@@ -485,11 +501,14 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="iconSize">
-      <size>
-       <width>20</width>
-       <height>20</height>
-      </size>
+     <property name="minimum">
+      <number>-360</number>
+     </property>
+     <property name="maximum">
+      <number>360</number>
+     </property>
+     <property name="singleStep">
+      <number>5</number>
      </property>
     </widget>
    </item>
@@ -612,21 +631,12 @@
      <property name="suffix">
       <string>°</string>
      </property>
-     <property name="minimum">
-      <number>-360</number>
-     </property>
-     <property name="maximum">
-      <number>360</number>
-     </property>
-     <property name="singleStep">
-      <number>5</number>
-     </property>
     </widget>
    </item>
    <item row="13" column="0" colspan="4">
     <widget class="QLabel" name="lHorizontalAlignment">
      <property name="text">
-      <string>Visible</string>
+      <string>Rotation:</string>
      </property>
     </widget>
    </item>
@@ -655,6 +665,9 @@
      <property name="text">
       <string>Font:</string>
      </property>
+     <property name="toolTip">
+      <string>Horizontal position relative to label's parent</string>
+     </property>
     </widget>
    </item>
   </layout>
@@ -669,6 +682,11 @@
    <class>KFontRequester</class>
    <extends>QWidget</extends>
    <header>kfontrequester.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KComboBox</class>
+   <extends>QComboBox</extends>
+   <header>kcombobox.h</header>
   </customwidget>
   <customwidget>
    <class>KColorButton</class>

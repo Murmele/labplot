@@ -117,6 +117,7 @@ private slots:
 
 	void visibilityChanged(bool);
     void bindingChanged(bool checked);
+	void showPlaceHolderTextChanged(bool checked);
 
 	//SLOTs for changes triggered in TextLabel
 	void labelTextWrapperChanged(const TextLabel::TextWrapper&);

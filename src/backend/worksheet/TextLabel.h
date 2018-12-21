@@ -45,7 +45,7 @@ class TextLabel : public WorksheetElement {
 	Q_OBJECT
 
 public:
-	enum Type {General, PlotTitle, AxisTitle, PlotLegendTitle};
+	enum Type {General, PlotTitle, AxisTitle, PlotLegendTitle, MarkerLable};
 
 	enum HorizontalPosition {hPositionLeft, hPositionCenter, hPositionRight, hPositionCustom};
 	enum VerticalPosition {vPositionTop, vPositionCenter, vPositionBottom, vPositionCustom};
@@ -57,11 +57,15 @@ public:
 			Cuboid, UpPointingRectangle, DownPointingRectangle, LeftPointingRectangle, RightPointingRectangle};
 
 	struct TextWrapper {
-		TextWrapper() {}
-		TextWrapper(const QString& t, bool b) : text(t), teXUsed(b) {}
-		TextWrapper(const QString& t) : text(t) {}
+		TextWrapper() : teXUsed(false) {}
+		TextWrapper(const QString& t, bool b) : text(t), teXUsed(b), placeHolder(false) {}
+		TextWrapper(const QString& t) : text(t), teXUsed(false), placeHolder(false) {}
+		TextWrapper(const QString& t, bool b, bool placeHolder): text(t), teXUsed(b), placeHolder(placeHolder) {}
+		TextWrapper(const QString& t, QString& textPlaceHolder): text(t), teXUsed(false), placeHolder(true), textPlaceHolder(textPlaceHolder) {}
 
 		QString text;
+		QString textPlaceHolder; // text with placeholders
+		bool placeHolder;
 		bool teXUsed{false};
 	};
 
@@ -89,6 +93,9 @@ public:
 	CLASS_D_ACCESSOR_DECL(TextWrapper, text, Text)
 	BASIC_D_ACCESSOR_DECL(QColor, fontColor, FontColor)
 	BASIC_D_ACCESSOR_DECL(QColor, backgroundColor, BackgroundColor)
+	CLASS_D_ACCESSOR_DECL(TextWrapper, textPlaceHolder, PlaceHolderText)
+	BASIC_D_ACCESSOR_DECL(QColor, teXFontColor, TeXFontColor)
+	BASIC_D_ACCESSOR_DECL(QColor, teXBackgroundColor, TeXBackgroundColor)
 	CLASS_D_ACCESSOR_DECL(QFont, teXFont, TeXFont)
 	CLASS_D_ACCESSOR_DECL(PositionWrapper, position, Position)
 	void setPosition(QPointF);
