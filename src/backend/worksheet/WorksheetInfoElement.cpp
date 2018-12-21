@@ -86,7 +86,8 @@ void WorksheetInfoElement::init(){
 	label->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
 	TextLabel::TextWrapper text;
 	text.text = "Test";
-	label->setText(text);
+	text.placeHolder = true;
+    label->setText(text);
 	connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
 
 }
