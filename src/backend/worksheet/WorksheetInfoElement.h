@@ -32,6 +32,7 @@ public:
     void addCurvePath(QString &curvePath, CustomPoint* custompoint = nullptr);
     bool assignCurve(const QVector<XYCurve*> &curves);
     void removeCurve(XYCurve* curve);
+	TextLabel::TextWrapper createTextLabelText();
 	QMenu* createContextMenu();
     CartesianPlot* getPlot();
 
