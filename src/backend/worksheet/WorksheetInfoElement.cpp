@@ -17,23 +17,29 @@
 #include <QAction>
 #include <QMenu>
 
+
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot):
     WorksheetElement(name),
-	d_ptr(new WorksheetInfoElementPrivate(this,plot)),label(nullptr),m_menusInitialized(false),
-	m_suppressChildRemoved(false)
+    label(nullptr),m_menusInitialized(false),
+    m_suppressChildRemoved(false),
+    d_ptr(new WorksheetInfoElementPrivate(this,plot))
 {
-	init();
+    Q_D(WorksheetInfoElement);
+    init();
 	setVisible(false);
+    d->retransform();
 }
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot, const XYCurve *curve, double pos):
 	WorksheetElement(name, AspectType::WorksheetInfoElement),
-	d_ptr(new WorksheetInfoElementPrivate(this,plot,curve)),label(nullptr),m_menusInitialized(false),
-	m_suppressChildRemoved(false)
+    label(nullptr),m_menusInitialized(false),
+    m_suppressChildRemoved(false),
+    // must be at least, because otherwise label ist not a nullptr
+    d_ptr(new WorksheetInfoElementPrivate(this,plot,curve))
 {
-	init();
-
     Q_D(WorksheetInfoElement);
+
+    init();
 
     if(curve){
         CustomPoint* custompoint = new CustomPoint(plot, "Markerpoint");
@@ -48,17 +54,42 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
         double y = curve->y(pos,xpos,valueFound);
         if(valueFound){
 			d->x_pos = xpos;
+            markerpoints.last().x = xpos;
+            markerpoints.last().y = y;
             custompoint->setPosition(QPointF(xpos,y));
+            DEBUG("Value found");
         }else{
 			d->x_pos = 0;
+            markerpoints.last().x = 0;
+            markerpoints.last().y = 0;
 			custompoint->setPosition(d->cSystem->mapSceneToLogical(QPointF(0,0)));
+            DEBUG("Value not found");
         }
-		setVisible(true);
 
-		d->retransform();
+		setVisible(true);
 	}else{
 		setVisible(false);
 	}
+
+    TextLabel::TextWrapper text;
+    text.placeHolder = true;
+
+    if(!markerpoints.empty()){
+        QString textString;
+        text = QString::number(markerpoints[0].x)+ ", ";
+        textString.append(QString(QString(markerpoints[0].curve->name()+":")));
+        textString.append(QString::number(markerpoints[0].y));
+        text.text = textString;
+        text.textPlaceHolder = QString("&(x), ")+ QString(markerpoints[0].curve->name()+":");
+        text.textPlaceHolder.append("&("+markerpoints[0].curve->name()+")");
+        text.placeHolder = true;
+    }else{
+        text.placeHolder = true;
+        text.textPlaceHolder = "Please Add Text here";
+    }
+    label->setText(text);
+
+    d->retransform();
 }
 
 WorksheetInfoElement::~WorksheetInfoElement(){
@@ -83,13 +114,11 @@ void WorksheetInfoElement::init(){
 	addChild(label);
 	label->enableCoordBinding(true);
 	label->setCoordBinding(true);
-	label->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
-	TextLabel::TextWrapper text;
-	text.text = "Test";
-	text.placeHolder = true;
-    label->setText(text);
-	connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
-
+    label->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
+    TextLabel::TextWrapper text;
+    text.placeHolder = true;
+    label->setText(text); // set placeHolder to true
+    connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
 }
 
 void WorksheetInfoElement::initActions(){
@@ -401,7 +430,8 @@ void WorksheetInfoElement::visibilityChanged(bool checked) {
 WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner,CartesianPlot *plot):
     q(owner),
     plot(plot),
-	xposLineWidth(5)
+    xposLineWidth(5),
+    connectionLineWidth(5)
 {
 	if(plot)
 		cSystem =  dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
@@ -412,7 +442,8 @@ WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* o
 WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner, CartesianPlot *plot, const XYCurve* curve):
     q(owner),
     plot(plot),
-	xposLineWidth(5)
+    xposLineWidth(5),
+    connectionLineWidth(5)
 {
 	if(plot)
 		cSystem =  dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
