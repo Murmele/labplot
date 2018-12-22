@@ -23,6 +23,7 @@ public:
     QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
     void keyPressEvent(QKeyEvent * event) override;
 	void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
 
     void init();
     void updatePosition();
@@ -50,6 +51,7 @@ private:
     double connectionLineWidth; // drawing linewidth
 	QLineF xposLine; // Line which connects all markerpoints, when there are more than 1
 	double xposLineWidth; // drawing linewidth
+    QPointF oldMousePos;
 };
 
 #endif // WORKSHEETINFOELEMENTPRIVATE_H
