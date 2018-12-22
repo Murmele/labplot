@@ -308,15 +308,15 @@ void LabelWidget::textChanged() {
 
 		if(!ui.chbShowPlaceHolderText->isChecked()){
 			wrapper.text = text;
-			wrapper.placeHolder = false;
 			for (auto* label : m_labelsList){
 				wrapper.textPlaceHolder = label->text().textPlaceHolder;
+                wrapper.placeHolder = label->text().placeHolder;
 				label->setText(wrapper);
 			}
 		}else{
-			wrapper.placeHolder = true;
 			wrapper.textPlaceHolder = text;
 			for(auto* label: m_labelsList){
+                wrapper.placeHolder = label->text().placeHolder;
 				wrapper.text = label->text().text;
 				label->setPlaceHolderText(wrapper);
 			}
@@ -337,15 +337,15 @@ void LabelWidget::textChanged() {
 			// label->setBackgroundColor(ui.kcbBackgroundColor->color());
 		if(!ui.chbShowPlaceHolderText->isChecked()){
 			wrapper.text = text;
-			wrapper.placeHolder = false;
 			for (auto* label : m_labelsList){
+                wrapper.placeHolder = label->text().placeHolder;
 				wrapper.textPlaceHolder = label->text().textPlaceHolder;
 				label->setText(wrapper);
 			}
 		}else{
 			wrapper.textPlaceHolder = text;
-			wrapper.placeHolder = true;
 			for (auto* label : m_labelsList){
+                wrapper.placeHolder = label->text().placeHolder;
 				wrapper.text = label->text().text;
 				label->setPlaceHolderText(wrapper);
 			}
