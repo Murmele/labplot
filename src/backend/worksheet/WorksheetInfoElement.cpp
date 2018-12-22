@@ -672,7 +672,7 @@ void WorksheetInfoElementPrivate::mousePressEvent(QGraphicsSceneMouseEvent* even
 		DEBUG("DIST_SEGMENT   " << dist_segm << "SCALAR_PRODUCT: " << scalar_product << "VEC_LENGTH: " << vecLenght);
 
 		if(scalar_product > 0){
-			if(scalar_product < vecLenght && dist_segm < 5){
+            if(scalar_product < vecLenght && dist_segm < connectionLineWidth){
 				event->accept();
 				if(!isSelected()){
 					setSelected(true);
