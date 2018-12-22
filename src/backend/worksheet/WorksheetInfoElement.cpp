@@ -246,6 +246,8 @@ void WorksheetInfoElement::removeCurve(XYCurve* curve){
  */
 TextLabel::TextWrapper WorksheetInfoElement::createTextLabelText(){
 
+    if(!label)
+        return TextLabel::TextWrapper();
     // TODO: save positions of the variables in extra variables to replace faster, because replace takes long time
 	TextLabel::TextWrapper wrapper = label->text();
 
