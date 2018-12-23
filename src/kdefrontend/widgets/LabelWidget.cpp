@@ -306,16 +306,20 @@ void LabelWidget::textChanged() {
 		QString text = ui.teLabel->toPlainText();
 		TextLabel::TextWrapper wrapper(text, true);
 
-		if(!ui.chbShowPlaceHolderText->isChecked()){
+		TextLabel::TextWrapper wrapper;
+		QString text=ui.teLabel->toPlainText();
+		wrapper.teXUsed = true;
+
+        if (!ui.chbShowPlaceHolderText->isChecked()) {
 			wrapper.text = text;
-			for (auto* label : m_labelsList){
+            for (auto* label : m_labelsList) {
 				wrapper.textPlaceHolder = label->text().textPlaceHolder;
                 wrapper.placeHolder = label->text().placeHolder;
 				label->setText(wrapper);
 			}
-		}else{
+        } else {
 			wrapper.textPlaceHolder = text;
-			for(auto* label: m_labelsList){
+            for (auto* label: m_labelsList) {
                 wrapper.placeHolder = label->text().placeHolder;
 				wrapper.text = label->text().text;
 				label->setPlaceHolderText(wrapper);
@@ -337,14 +341,14 @@ void LabelWidget::textChanged() {
 			// label->setBackgroundColor(ui.kcbBackgroundColor->color());
 		if(!ui.chbShowPlaceHolderText->isChecked()){
 			wrapper.text = text;
-			for (auto* label : m_labelsList){
+            for (auto* label : m_labelsList) {
                 wrapper.placeHolder = label->text().placeHolder;
 				wrapper.textPlaceHolder = label->text().textPlaceHolder;
 				label->setText(wrapper);
 			}
-		}else{
+        } else {
 			wrapper.textPlaceHolder = text;
-			for (auto* label : m_labelsList){
+            for (auto* label : m_labelsList) {
                 wrapper.placeHolder = label->text().placeHolder;
 				wrapper.text = label->text().text;
 				label->setPlaceHolderText(wrapper);
@@ -856,7 +860,7 @@ void LabelWidget::borderOpacityChanged(int value) {
  * Bind TextLabel to the cartesian plot coords or not
  * \param checked
  */
-void LabelWidget::bindingChanged(bool checked){
+void LabelWidget::bindingChanged(bool checked) {
     if(m_initializing)
         return;
 
@@ -865,15 +869,15 @@ void LabelWidget::bindingChanged(bool checked){
 
 }
 
-void LabelWidget::showPlaceHolderTextChanged(bool checked){
+void LabelWidget::showPlaceHolderTextChanged(bool checked) {
 	if(m_initializing)
 		return;
-	if(!checked){
+    if (!checked) {
 		if (m_label->text().teXUsed)
 			ui.teLabel->setText(m_label->text().text);
 		else
 			ui.teLabel->setHtml(m_label->text().text);
-	}else{
+    } else {
 		if (m_label->text().teXUsed)
 			ui.teLabel->setText(m_label->text().textPlaceHolder);
 		else
@@ -1015,9 +1019,8 @@ void LabelWidget::labelBorderOpacityChanged(float value) {
 void LabelWidget::labelCartesianPlotParent(bool on){
     m_initializing = true;
     ui.chbBindLogicalPos->setVisible(on);
-    if(!on){
+    if (!on)
         ui.chbBindLogicalPos->setChecked(false);
-    }
     m_initializing = false;
 }
 
@@ -1034,12 +1037,12 @@ void LabelWidget::load() {
 
     // don't show checkbox if Placeholder feature not used
     bool placeHolder = m_label->text().placeHolder;
-    if(!placeHolder){
+    if (!placeHolder) {
         ui.chbShowPlaceHolderText->setVisible(false);
         ui.chbShowPlaceHolderText->setEnabled(false);
         ui.chbShowPlaceHolderText->setChecked(false);
 
-    }else{
+    } else {
         ui.chbShowPlaceHolderText->setEnabled(true);
         ui.chbShowPlaceHolderText->setVisible(true);
         ui.chbShowPlaceHolderText->setChecked(true);

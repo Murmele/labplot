@@ -303,12 +303,12 @@ void TextLabel::setPosition(QPointF point) {
 	}
 }
 
-QRectF TextLabel::getSize(){
+QRectF TextLabel::getSize() {
     Q_D(TextLabel);
     return d->getSize();
 }
 
-QPointF TextLabel::getLogicalPos(){
+QPointF TextLabel::getLogicalPos() {
     Q_D(TextLabel);
     return d->getLogicalPos();
 }
@@ -319,9 +319,8 @@ QPointF TextLabel::getLogicalPos(){
  */
 void TextLabel::setPositionInvalid(bool invalid) {
 	Q_D(TextLabel);
-	if (invalid != d->positionInvalid) {
+    if (invalid != d->positionInvalid)
 		d->positionInvalid = invalid;
-	}
 }
 
 STD_SETTER_CMD_IMPL_F_S(TextLabel, SetRotationAngle, qreal, rotationAngle, recalcShapeAndBoundingRect);
@@ -379,9 +378,9 @@ void TextLabel::setVisible(bool on) {
  * Binds TextLabel to the coord of the parent CartesianPlot, but only if coord binding is enabled
  * \param on set(true) or reset(false) coord binding
  */
-void TextLabel::setCoordBinding(bool on){
+void TextLabel::setCoordBinding(bool on) {
     Q_D(TextLabel);
-    if(!d->m_coordBindingEnable)
+    if (!d->m_coordBindingEnable)
         return;
     d->m_coordBinding = on;
     d->logicalPos = d->cSystem->mapSceneToLogical(d->pos());
@@ -394,17 +393,17 @@ void TextLabel::setCoordBinding(bool on){
  * If argument CartesianPlot and parentAspect is not available, not able to enable bind too coord.
  * \return true if successfully bind, otherwise false
  */
-bool TextLabel::enableCoordBinding(bool enable, const CartesianPlot* plot){
+bool TextLabel::enableCoordBinding(bool enable, const CartesianPlot* plot) {
     Q_D(TextLabel);
 
-	if(!d->plot) // if worksheetinfoelement is parent, it has no cartesianplot
+    if (!d->plot) // if worksheetinfoelement is parent, it has no cartesianplot
 		d->plot = dynamic_cast<const CartesianPlot*>(parentAspect());
 
-    if(d->plot == nullptr){
-        if(plot == nullptr){
+    if (d->plot == nullptr) {
+        if (plot == nullptr) {
             d->m_coordBindingEnable = false;
             return false;
-        }else{
+        } else {
             d->m_coordBindingEnable = enable;
             d->plot = plot;
             d->cSystem = dynamic_cast<const CartesianCoordinateSystem*>(d->plot->coordinateSystem());
@@ -432,7 +431,7 @@ bool TextLabel::isAttachedToCoordEnabled() const {
  * \brief TextLabel::isAttachedToCoord
  * \return true if TextLabel is attached to the coord.
  */
-bool TextLabel::isAttachedToCoord() const{
+bool TextLabel::isAttachedToCoord() const {
     Q_D(const TextLabel);
     return d->m_coordBinding;
 }

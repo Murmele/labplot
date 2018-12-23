@@ -1161,9 +1161,9 @@ void CartesianPlot::addHistogram() {
  * \brief CartesianPlot::curveSelected
  * Slot which will be called from the XYCurve, when a curve will be selected
  */
-void CartesianPlot::curveSelected(double pos){
+void CartesianPlot::curveSelected(double pos) {
 
-    if(m_marker){
+    if (m_marker) {
         m_marker = false;
         WorksheetInfoElement* marker = new WorksheetInfoElement("Marker", this,qobject_cast<const XYCurve*>(QObject::sender()),pos);
         this->addChild(marker);
@@ -3388,12 +3388,12 @@ bool CartesianPlot::load(XmlStreamReader* reader, bool preview) {
 					return false;
 				}
 			}
-        }else if (reader->name() == "worksheetInfoElement") {
+        } else if (reader->name() == "worksheetInfoElement") {
                 WorksheetInfoElement* marker = new WorksheetInfoElement("Marker",this);
-                if(marker->load(reader,preview)){
+                if (marker->load(reader,preview)) {
                     addChildFast(marker);
                     marker->setParentGraphicsItem(graphicsItem());
-                }else{
+                } else {
                     delete marker;
                     return false;
                 }
@@ -3537,10 +3537,9 @@ bool CartesianPlot::load(XmlStreamReader* reader, bool preview) {
     // assign to all markers the curves they need
     QVector<WorksheetInfoElement*> elements = children<WorksheetInfoElement>();
     QVector<XYCurve*> curves = children<XYCurve>();
-    for(auto element: elements){
-		if(!element->assignCurve(curves)){
+    for (auto element: elements) {
+        if (!element->assignCurve(curves))
 			return false;
-		}
     }
 
 	if (preview)
