@@ -781,27 +781,26 @@ bool XYCurve::columnRemoved(const AbstractColumn* column, const AbstractAspect* 
  * \param y y value at the found index
  * \param valueFound True when value found, otherwise false
  */
-void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& valueFound) const{
+void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& valueFound) const {
     int rowCount = xColumn()->rowCount();
     double prevValue = 0;
 
     for (int row = 0; row < rowCount; row++) {
            if (xColumn()->isValid(row) && yColumn()->isValid(row)){
-               if(row == 0){
+               if(row == 0)
                    prevValue = xColumn()->valueAt(row);
-               }
 
                double value = xColumn()->valueAt(row);
-               if(abs(value-xpos) <= abs(prevValue-xpos)){ // <= prevents also that row-1 become < 0
-                   if(row < rowCount-1){
+               if (abs(value-xpos) <= abs(prevValue-xpos)) { // <= prevents also that row-1 become < 0
+                   if(row < rowCount-1)
                         prevValue = value;
-                    }else{
+                    else {
                         valueFound = true;
                         y = yColumn()->valueAt(row+offset);
                         x = xColumn()->valueAt(row+offset);
                         return;
                     }
-               }else{
+               } else {
                     valueFound = true;
                     y = yColumn()->valueAt(row-1+offset);
                     x = xColumn()->valueAt(row-1+offset);
@@ -820,25 +819,24 @@ void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& 
  * \param x_new: exact x value where y value is
  * \return y value from x value
  */
-double XYCurve::y(double x, double &x_new, bool &valueFound) const{
+double XYCurve::y(double x, double &x_new, bool &valueFound) const {
 	int rowCount = xColumn()->rowCount();
 	double prevValue=0;
 	for (int row = 0; row < rowCount; row++) {
-		   if (xColumn()->isValid(row) && yColumn()->isValid(row)){
-			   if(row == 0){
+           if (xColumn()->isValid(row) && yColumn()->isValid(row)) {
+               if (row == 0)
 				   prevValue = xColumn()->valueAt(row);
-			   }
 
 			   double value = xColumn()->valueAt(row);
-			   if(abs(value-x) <= abs(prevValue-x)){ // <= prevents also that row-1 become < 0
-				   if(row < rowCount-1){
+               if (abs(value-x) <= abs(prevValue-x)) { // <= prevents also that row-1 become < 0
+                   if (row < rowCount-1)
 						prevValue = value;
-					}else{
+                    else {
 						valueFound = true;
                         x_new = xColumn()->valueAt(row);
 						return yColumn()->valueAt(row);
 					}
-			   }else{
+               } else {
 					valueFound = true;
 					x_new = xColumn()->valueAt(row-1);
 					return yColumn()->valueAt(row-1);
@@ -2780,13 +2778,11 @@ void XYCurvePrivate::updatePixmap() {
 	RESET_CURSOR;
 }
 
-QVariant XYCurvePrivate::itemChange(GraphicsItemChange change, const QVariant & value){
+QVariant XYCurvePrivate::itemChange(GraphicsItemChange change, const QVariant & value) {
     // signalize, that the curve was selected. Will be used to create a new WorksheetInfoElement (Marker)
-    if(change == QGraphicsItem::ItemSelectedChange){
-        if(value.toBool()){
+    if (change == QGraphicsItem::ItemSelectedChange)
+        if (value.toBool())
             emit q->selected(cSystem->mapSceneToLogical(mousePos).x());
-        }
-    }
     return QGraphicsItem::itemChange(change,value);
 }
 
