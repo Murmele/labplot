@@ -202,7 +202,8 @@ void WorksheetView::initActions() {
 	addCartesianPlot3Action = new QAction(QIcon::fromTheme("labplot-xy-plot-two-axes-centered"), i18n("Two Axes, Centered"), addNewActionGroup);
 	addCartesianPlot4Action = new QAction(QIcon::fromTheme("labplot-xy-plot-two-axes-centered-origin"), i18n("Two Axes, Crossing at Origin"), addNewActionGroup);
 	addTextLabelAction = new QAction(QIcon::fromTheme("draw-text"), i18n("Text Label"), addNewActionGroup);
-	addBarChartPlot = new QAction(QIcon::fromTheme("office-chart-line"), i18n("Bar Chart"), addNewActionGroup);
+	addBarChartPlot= new QAction(QIcon::fromTheme("office-chart-line"), i18n("Bar Chart"), addNewActionGroup);
+    addGlobalWorksheetInfoElementAction = new QAction(QIcon::fromTheme("office-chart-line"), i18n("Marker"),addNewActionGroup);
 	//Layout actions
 	verticalLayoutAction = new QAction(QIcon::fromTheme("labplot-editvlayout"), i18n("Vertical Layout"), layoutActionGroup);
 	verticalLayoutAction->setCheckable(true);
@@ -405,6 +406,7 @@ void WorksheetView::initMenus() {
 	m_addNewMenu->addMenu(m_addNewCartesianPlotMenu)->setIcon(QIcon::fromTheme("office-chart-line"));
 	m_addNewMenu->addSeparator();
 	m_addNewMenu->addAction(addTextLabelAction);
+    m_addNewMenu->addAction(addGlobalWorksheetInfoElementAction);
 
 	m_viewMouseModeMenu = new QMenu(i18n("Mouse Mode"), this);
 	m_viewMouseModeMenu->setIcon(QIcon::fromTheme("input-mouse"));
@@ -1251,7 +1253,10 @@ void WorksheetView::addNew(QAction* action) {
 		TextLabel* l = new TextLabel(i18n("Text Label"));
 		l->setText(i18n("Text Label"));
 		aspect = l;
-	}
+    }/* else if (action == addGlobalWorksheetInfoElementAction) {
+        GlobalWorksheetInfoElement* m = new GlobalWorksheetInfoElement(i18n("Marker"));
+        aspect = l;
+    }*/
 	if (!aspect)
 		return;
 

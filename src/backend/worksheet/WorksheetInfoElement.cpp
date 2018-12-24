@@ -8,7 +8,6 @@
 #include "backend/worksheet/TextLabel.h"
 #include "backend/lib/commandtemplates.h"
 #include "backend/lib/XmlStreamReader.h"
-#include "backend/lib/macros.h"
 
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
@@ -76,19 +75,15 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 
     if (!markerpoints.empty()) {
         QString textString;
-        text = QString::number(markerpoints[0].x)+ ", ";
+        textString = QString::number(markerpoints[0].x)+ ", ";
         textString.append(QString(QString(markerpoints[0].curve->name()+":")));
         textString.append(QString::number(markerpoints[0].y));
         text.text = textString;
         // TODO: Find better solution than using textedit
-        QTextEdit textedit(QString("&(x), ")+ QString(markerpoints[0].curve->name()+":"));
+        QTextEdit textedit(QString("&(x), ")+ QString(markerpoints[0].curve->name()+":"+"&("+markerpoints[0].curve->name()+")"));
         text.textPlaceHolder = textedit.toHtml();
-        text.textPlaceHolder.append("&("+markerpoints[0].curve->name()+")");
-        text.placeHolder = true;
-    } else {
-        text.placeHolder = true;
+    } else
         text.textPlaceHolder = "Please Add Text here";
-    }
     label->setText(text);
 
     d->retransform();
@@ -100,12 +95,6 @@ WorksheetInfoElement::~WorksheetInfoElement() {
 void WorksheetInfoElement::init() {
 
 	Q_D(WorksheetInfoElement);
-
-    graphicsItem()->setFlag(QGraphicsItem::ItemIsMovable, false);
-	graphicsItem()->setFlag(QGraphicsItem::ItemClipsChildrenToShape, true);
-	graphicsItem()->setFlag(QGraphicsItem::ItemIsSelectable, true);
-	graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-	graphicsItem()->setFlag(QGraphicsItem::ItemIsFocusable, true);
 
 	initActions();
 	initMenus();
@@ -127,7 +116,7 @@ void WorksheetInfoElement::initActions() {
 	//visibility action
 	visibilityAction = new QAction(i18n("Visible"), this);
 	visibilityAction->setCheckable(true);
-	connect(visibilityAction, &QAction::triggered, this, &WorksheetInfoElement::visibilityChanged);
+    connect(visibilityAction, &QAction::triggered, this, &WorksheetInfoElement::setVisible);
 }
 
 void WorksheetInfoElement::initMenus() {
@@ -141,7 +130,7 @@ QMenu* WorksheetInfoElement::createContextMenu() {
 	QMenu* menu = WorksheetElement::createContextMenu();
 	QAction* firstAction = menu->actions().at(1);
 
-	visibilityAction->setChecked(isVisible());
+    visibilityAction->setChecked(isVisible());
 	menu->insertAction(firstAction, visibilityAction);
 
 	return menu;
@@ -240,6 +229,20 @@ void WorksheetInfoElement::removeCurve(const XYCurve* curve) {
 }
 
 /*!
+ * \brief WorksheetInfoElement::setZValue
+ * Set the z value of the label and the custompoints higher than the worksheetinfoelement
+ * \param value
+ */
+void WorksheetInfoElement::setZValue(qreal value) {
+    graphicsItem()->setZValue(value);
+
+    label->setZValue(value+1);
+
+    for (auto markerpoint: markerpoints)
+        markerpoint.customPoint->setZValue(value+1);
+}
+
+/*!
  * \brief WorksheetInfoElement::markerPointsCount
  * Returns the amount of markerpoints. Used in the WorksheetInfoElementDock to fill listWidget.
  * \return
@@ -299,6 +302,11 @@ TextLabel::TextWrapper WorksheetInfoElement::createTextLabelText() {
 CartesianPlot* WorksheetInfoElement::getPlot() {
     Q_D(WorksheetInfoElement);
     return d->plot;
+}
+
+bool WorksheetInfoElement::isVisible() const {
+    Q_D(const WorksheetInfoElement);
+    return d->visible;
 }
 
 /*!
@@ -397,27 +405,6 @@ QGraphicsItem* WorksheetInfoElement::graphicsItem() const {
     return d_ptr;
 }
 
-bool WorksheetInfoElement::isVisible() const {
-    Q_D(const WorksheetInfoElement);
-    return d->isVisible();
-}
-
-/*!
- * \brief WorksheetInfoElement::setVisible
- * Sets the visibility of the WorksheetInfoElement including label and all custom points
- * \param on
- */
-void WorksheetInfoElement::setVisible(bool on) {
-    Q_D(WorksheetInfoElement);
-    for(auto markerpoint: markerpoints) {
-        markerpoint.customPoint->setVisible(on);
-    }
-	if(label)
-		label->setVisible(on);
-    d->m_visible = on;
-	d->retransform();
-}
-
 void WorksheetInfoElement::setPrinting(bool on) {
     Q_D(WorksheetInfoElement);
     d->m_printing = on;
@@ -432,11 +419,71 @@ void WorksheetInfoElement::handleResize(double horizontalRatio, double verticalR
 }
 
 //##############################################################################
+//######  Getter and setter methods ############################################
+//##############################################################################
+
+/* ============================ getter methods ================= */
+BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, bool, xposLineVisible, xposLineVisible);
+BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, double, xposLineWidth, xposLineWidth);
+BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, QColor, xposLineColor, xposLineColor);
+BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, double, connectionLineWidth, connectionLineWidth);
+BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, QColor, connectionLineColor, connectionLineColor);
+
+/* ============================ setter methods ================= */
+
+// Problem: No member named 'Private' in 'WorksheetInfoElement':
+// Solution:
+// Define "typedef  WorksheetInfoElementPrivate Private;" in public section
+// of WorksheetInfoElement
+
+// Problem: WorksheetInfoElementPrivate has no member named 'name'
+// Solution: implement function name()
+
+STD_SETTER_CMD_IMPL_F_S(WorksheetInfoElement, SetXPosLineVisible, bool, xposLineVisible, updateXPosLine);
+void WorksheetInfoElement::setXPosLineVisible(const bool xposLineVisible) {
+    Q_D(WorksheetInfoElement);
+    if (xposLineVisible != d->xposLineVisible)
+        exec(new WorksheetInfoElementSetXPosLineVisibleCmd(d, xposLineVisible, ki18n("%1: set vertical line visible")));
+}
+
+STD_SETTER_CMD_IMPL_F_S(WorksheetInfoElement, SetXPosLineWidth, double, xposLineWidth, updateXPosLine);
+void WorksheetInfoElement::setXPosLineWidth(const double xposLineWidth) {
+    Q_D(WorksheetInfoElement);
+    if (xposLineWidth != d->xposLineWidth)
+        exec(new WorksheetInfoElementSetXPosLineWidthCmd(d, xposLineWidth, ki18n("%1: set vertical line width")));
+}
+
+STD_SETTER_CMD_IMPL_F_S(WorksheetInfoElement, SetXPosLineColor, QColor, xposLineColor, updateXPosLine);
+void WorksheetInfoElement::setXPosLineColor(const QColor xposLineColor) {
+    Q_D(WorksheetInfoElement);
+    if (xposLineColor != d->xposLineColor)
+        exec(new WorksheetInfoElementSetXPosLineColorCmd(d, xposLineColor, ki18n("%1: set vertical line color")));
+}
+
+STD_SETTER_CMD_IMPL_F_S(WorksheetInfoElement, SetConnectionLineWidth, double, connectionLineWidth, updateConnectionLine);
+void WorksheetInfoElement::setConnectionLineWidth(const double connectionLineWidth) {
+    Q_D(WorksheetInfoElement);
+    if (connectionLineWidth != d->connectionLineWidth)
+        exec(new WorksheetInfoElementSetConnectionLineWidthCmd(d, connectionLineWidth, ki18n("%1: set connection line width")));
+}
+
+STD_SETTER_CMD_IMPL_F_S(WorksheetInfoElement, SetConnectionLineColor, QColor, connectionLineColor, updateConnectionLine);
+void WorksheetInfoElement::setConnectionLineColor(const QColor connectionLineColor) {
+    Q_D(WorksheetInfoElement);
+    if (connectionLineColor != d->connectionLineColor)
+        exec(new WorksheetInfoElementSetConnectionLineColorCmd(d, connectionLineColor, ki18n("%1: set connection line color")));
+}
+
+STD_SETTER_CMD_IMPL_F_S(WorksheetInfoElement, SetVisible, bool, visible, visibilityChanged);
+void WorksheetInfoElement::setVisible(const bool visible) {
+    Q_D(WorksheetInfoElement);
+    if (visible != d->visible)
+        exec(new WorksheetInfoElementSetConnectionLineColorCmd(d, visible, ki18n("%1: set visible")));
+}
+
+//##############################################################################
 //######  SLOTs for changes triggered via QActions in the context menu  ########
 //##############################################################################
-void WorksheetInfoElement::visibilityChanged(bool checked) {
-	setVisible(checked);
-}
 
 //##############################################################################
 //####################### Private implementation ###############################
@@ -446,27 +493,44 @@ WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* o
     q(owner),
     plot(plot),
     xposLineWidth(5),
-    connectionLineWidth(5)
+    connectionLineWidth(5),
+    xposLineVisible(true),
+    connectionLineColor(QColor(Qt::black)),
+    xposLineColor(QColor(Qt::black)),
+    visible(true)
 {
-	if(plot)
-		cSystem =  dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
-	else
-		cSystem = nullptr;
+    init();
 }
 
 WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner, CartesianPlot *plot, const XYCurve* curve):
     q(owner),
     plot(plot),
     xposLineWidth(5),
-    connectionLineWidth(5)
+    connectionLineWidth(5),
+    xposLineVisible(true),
+    connectionLineColor(QColor(Qt::black)),
+    xposLineColor(QColor(Qt::black)),
+    visible(true)
 {
-	if(plot)
-		cSystem =  dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
-	else
-		cSystem = nullptr;
+    init();
 }
 
 void WorksheetInfoElementPrivate::init() {
+
+    setFlag(QGraphicsItem::ItemIsMovable, false);
+    setFlag(QGraphicsItem::ItemClipsChildrenToShape, true);
+    setFlag(QGraphicsItem::ItemIsSelectable, true);
+    setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+    setFlag(QGraphicsItem::ItemIsFocusable, true);
+
+    if(plot)
+        cSystem =  dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
+    else
+        cSystem = nullptr;
+}
+
+QString WorksheetInfoElementPrivate::name() const {
+    return q->name();
 }
 
 /*!
@@ -486,14 +550,17 @@ void WorksheetInfoElementPrivate::retransform() {
     q->label->retransform();
     q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 
-
+    double zValueMin = q->label->graphicsItem()->zValue();
     // TODO: find better solution
     for (auto markerpoint: q->markerpoints) {
 		markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 		markerpoint.customPoint->retransform();
+        double zValuePoint = markerpoint.customPoint->graphicsItem()->zValue();
+        if (zValuePoint < zValueMin)
+            zValueMin = zValuePoint;
 		markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 	}
-
+    setZValue(zValueMin-1);
 
     // line goes to the fist pointPos
     // TODO: better would be to direct to the highest point or also possible to make it changeable
@@ -629,15 +696,16 @@ void WorksheetInfoElementPrivate::retransform() {
     //DEBUG("ConnectionLine: P1.x: " << (connectionLine.p1()).x() << "P2.x: " << (connectionLine.p2()).x());
     itemPos.setX(x); // x is always between the labelpos and the point pos
     if (max_scene.y() < min_scene.y())
-        itemPos.setY(max_scene.y()+1);
+        itemPos.setY(max_scene.y());
     else
-        itemPos.setY(min_scene.y()+1);
+        itemPos.setY(min_scene.y());
 
     if (max_scene.x() < min_scene.x())
         itemPos.setX(max_scene.x());
     else
         itemPos.setX(min_scene.x());
 
+    setPos(itemPos);
     boundingRectangle.setX(0);
     boundingRectangle.setWidth(2*xmax);
 	boundingRectangle.setY(0);
@@ -647,20 +715,44 @@ void WorksheetInfoElementPrivate::retransform() {
     setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 }
 
-bool WorksheetInfoElementPrivate::isVisible() const {
-    return m_visible;
-}
-
 void WorksheetInfoElementPrivate::updatePosition() {
 
 }
+
+/*!
+ * \brief WorksheetInfoElement::updateXPosLine
+ * Repainting to update xposLine
+ */
+void WorksheetInfoElementPrivate::updateXPosLine() {
+    update(boundingRectangle);
+}
+
+/*!
+ * \brief WorksheetInfoElement::updateConnectionLine
+ * Repainting to updateConnectionLine
+ */
+void WorksheetInfoElementPrivate::updateConnectionLine() {
+    update(boundingRect());
+}
+
+void WorksheetInfoElementPrivate::visibilityChanged() {
+
+    for(auto markerpoint: q->markerpoints) {
+        markerpoint.customPoint->setVisible(visible);
+    }
+    if(q->label)
+        q->label->setVisible(visible);
+    update(boundingRect());
+}
+
 
 //reimplemented from QGraphicsItem
 QRectF WorksheetInfoElementPrivate::boundingRect() const {
     return boundingRectangle;
 }
+
 void WorksheetInfoElementPrivate::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget* widget) {
-    if (!m_visible)
+    if (!visible)
         return;
     //DEBUG("Position: " << pos().x() << ", Y: "<< pos().y());
 //    painter->fillRect(boundingRectangle,QBrush(QColor(255,0,0,128)));
@@ -670,17 +762,18 @@ void WorksheetInfoElementPrivate::paint(QPainter* painter, const QStyleOptionGra
 //        painter->fillRect(QRectF(-boundingRectangle.width()/2,0,boundingRectangle.width(),40),QBrush(QColor(0,255,0,255)));
 //    }
 
-    QPen pen(Qt::black, connectionLineWidth);
+    QPen pen(connectionLineColor, connectionLineWidth);
     painter->setPen(pen);
     painter->drawLine(connectionLine);
 
 	// draw vertical line, which connects all points together
-	if(q->markerpoints.length()>1){
-		pen = QPen(Qt::black, xposLineWidth);
+    if (xposLineVisible) {
+        pen = QPen(xposLineColor, xposLineWidth);
 		painter->setPen(pen);
 		painter->drawLine(xposLine);
 	}
 }
+
 QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, const QVariant &value) {
     return QGraphicsItem::itemChange(change, value);
 }
@@ -688,13 +781,13 @@ QVariant WorksheetInfoElementPrivate::itemChange(GraphicsItemChange change, cons
 void WorksheetInfoElementPrivate::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     if (event->button() == Qt::MouseButton::LeftButton) {
 
-        if (q->markerpoints.length()>1) {
-            if (abs(xposLine.x1()-event->pos().x())< xposLineWidth) {
+        if (xposLineVisible) {
+            if (abs(xposLine.x1()-event->pos().x())< ((xposLineWidth < 3)? 3: xposLineWidth)) {
 				setSelected(true);
                 oldMousePos = mapToParent(event->pos());
 				return;
 			}
-		}
+        }
 
 		// https://stackoverflow.com/questions/11604680/point-laying-near-line
 		double dx12 = connectionLine.x2()-connectionLine.x1();
@@ -710,7 +803,7 @@ void WorksheetInfoElementPrivate::mousePressEvent(QGraphicsSceneMouseEvent* even
 		DEBUG("DIST_SEGMENT   " << dist_segm << "SCALAR_PRODUCT: " << scalar_product << "VEC_LENGTH: " << vecLenght);
 
         if (scalar_product > 0) {
-            if (scalar_product < vecLenght && dist_segm < connectionLineWidth) {
+            if (scalar_product < vecLenght && dist_segm < ((connectionLineWidth < 3) ? 3: connectionLineWidth)) {
 				event->accept();
                 if (!isSelected())
 					setSelected(true);
@@ -822,7 +915,16 @@ void WorksheetInfoElement::save(QXmlStreamWriter* writer) const {
 
 	//geometry
 	writer->writeStartElement( "geometry" );
-	writer->writeAttribute( "visible", QString::number(d->isVisible()) );
+    writer->writeAttribute( "visible", QString::number(d->visible) );
+    writer->writeAttribute("connectionLineWidth", QString::number(connectionLineWidth()));
+    writer->writeAttribute("connectionLineColor_r", QString::number(connectionLineColor().red()));
+    writer->writeAttribute("connectionLineColor_g", QString::number(connectionLineColor().green()));
+    writer->writeAttribute("connectionLineColor_b", QString::number(connectionLineColor().blue()));
+    writer->writeAttribute("xposLineWidth", QString::number(xposLineWidth()));
+    writer->writeAttribute("xposLineColor_r", QString::number(xposLineColor().red()));
+    writer->writeAttribute("xposLineColor_g", QString::number(xposLineColor().green()));
+    writer->writeAttribute("xposLineColor_b", QString::number(xposLineColor().blue()));
+    writer->writeAttribute("xposLineVisible", QString::number(xposLineVisible()));
 	writer->writeEndElement();
 
 
@@ -869,6 +971,60 @@ bool WorksheetInfoElement::load(XmlStreamReader* reader, bool preview) {
 				reader->raiseWarning(attributeWarning.subs("x").toString());
 			else
 				setVisible(str.toInt());
+
+            str = attribs.value("connectionLineWidth").toString();
+            if (str.isEmpty())
+                reader->raiseWarning(attributeWarning.subs("x").toString());
+            else
+                setConnectionLineWidth(str.toDouble());
+
+            str = attribs.value("connectionLineColor_r").toString();
+            if (str.isEmpty())
+                reader->raiseWarning(attributeWarning.subs("x").toString());
+            else
+                d->connectionLineColor.setRed(str.toInt());
+
+            str = attribs.value("connectionLineColor_g").toString();
+            if (str.isEmpty())
+                reader->raiseWarning(attributeWarning.subs("x").toString());
+            else
+                d->connectionLineColor.setGreen(str.toInt());
+
+            str = attribs.value("connectionLineColor_b").toString();
+            if (str.isEmpty())
+                reader->raiseWarning(attributeWarning.subs("x").toString());
+            else
+                d->connectionLineColor.setBlue(str.toInt());
+
+            str = attribs.value("xposLineWidth").toString();
+            if (str.isEmpty())
+                reader->raiseWarning(attributeWarning.subs("x").toString());
+            else
+                setXPosLineWidth(str.toDouble());
+
+            str = attribs.value("xposLineColor_r").toString();
+            if (str.isEmpty())
+                reader->raiseWarning(attributeWarning.subs("x").toString());
+            else
+                d->xposLineColor.setRed(str.toInt());
+
+            str = attribs.value("xposLineColor_g").toString();
+            if (str.isEmpty())
+                reader->raiseWarning(attributeWarning.subs("x").toString());
+            else
+                d->xposLineColor.setGreen(str.toInt());
+
+            str = attribs.value("xposLineColor_b").toString();
+            if (str.isEmpty())
+                reader->raiseWarning(attributeWarning.subs("x").toString());
+            else
+                d->xposLineColor.setBlue(str.toInt());
+
+            str = attribs.value("xposLineVisible").toString();
+            if (str.isEmpty())
+                reader->raiseWarning(attributeWarning.subs("x").toString());
+            else
+                setXPosLineVisible(str.toInt());
 
 		} else if (reader->name() == "textLabel") {
 			reader->readNext();

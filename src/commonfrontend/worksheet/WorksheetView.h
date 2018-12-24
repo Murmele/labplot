@@ -167,6 +167,7 @@ private:
 	QAction* addTextLabelAction;
 	QAction* addHistogram;
 	QAction* addBarChartPlot;
+    QAction* addGlobalWorksheetInfoElementAction;
 
 	QAction* verticalLayoutAction;
 	QAction* horizontalLayoutAction;

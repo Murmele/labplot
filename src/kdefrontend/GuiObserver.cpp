@@ -380,10 +380,19 @@ void GuiObserver::selectedAspectsChanged(QList<AbstractAspect*>& selectedAspects
             m_mainWindow->stackedWidget->addWidget(m_mainWindow->worksheetInfoElementDock);
         }
         QList<WorksheetInfoElement*> list;
-        for(auto* aspect: selectedAspects)
-            list << qobject_cast<WorksheetInfoElement*>(aspect);
 
-        m_mainWindow->worksheetInfoElementDock->setWorksheetInfoElements(list);
+        // check if all WorksheetInfoElements have the same CartesianPlot as Parent
+        // if they don't have, disable changing the curves
+        bool sameParent = true;
+        CartesianPlot* parent = dynamic_cast<CartesianPlot*>(selectedAspects[0]->parent());
+        for (auto* aspect: selectedAspects) {
+            if (dynamic_cast<CartesianPlot*>(aspect->parent()) != parent)
+                sameParent = false;
+
+            list << qobject_cast<WorksheetInfoElement*>(aspect);
+        }
+
+        m_mainWindow->worksheetInfoElementDock->setWorksheetInfoElements(list, sameParent);
         m_mainWindow->stackedWidget->setCurrentWidget(m_mainWindow->worksheetInfoElementDock);
         m_mainWindow->worksheetInfoElementDock->show();
 	case AspectType::MQTTClient:
