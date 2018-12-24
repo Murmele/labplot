@@ -16,6 +16,7 @@ class WorksheetInfoElementPrivate: public QGraphicsItem
 public:
     WorksheetInfoElementPrivate(WorksheetInfoElement *owner, CartesianPlot *plot);
     WorksheetInfoElementPrivate(WorksheetInfoElement *owner, CartesianPlot *plot, const XYCurve *curve);
+    QString name() const;
 
     //reimplemented from QGraphicsItem
     QRectF boundingRect() const override;
@@ -27,20 +28,26 @@ public:
 
     void init();
     void updatePosition();
-    void setVisible(bool on);
-    bool isVisible() const;
     void retransform();
+    void updateXPosLine();
+    void updateConnectionLine();
+    void visibilityChanged();
 
-
-    bool m_visible;
+    bool visible;
     bool m_printing;
-
 	double x_pos;
+
+    QColor connectionLineColor;
+    double connectionLineWidth; // drawing linewidth
+    bool xposLineVisible;
+    QColor xposLineColor;
+    double xposLineWidth; // drawing linewidth
 
     CartesianPlot* plot;
     const CartesianCoordinateSystem* cSystem;
-private:
+
     WorksheetInfoElement* const q;
+private:
 
 
     QPointF sceneDeltaPoint; // delta position from worksheetinfoElementPrivate to the first marker point in scene coords
@@ -48,9 +55,7 @@ private:
 
     QRectF boundingRectangle; //bounding rectangle of the connection line between CustomPoint and TextLabel
     QLineF connectionLine; // line between CustomPoint and TextLabel
-    double connectionLineWidth; // drawing linewidth
 	QLineF xposLine; // Line which connects all markerpoints, when there are more than 1
-	double xposLineWidth; // drawing linewidth
     QPointF oldMousePos;
 };
 

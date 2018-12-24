@@ -303,16 +303,6 @@ void TextLabel::setPosition(QPointF point) {
 	}
 }
 
-QRectF TextLabel::getSize() {
-    Q_D(TextLabel);
-    return d->getSize();
-}
-
-QPointF TextLabel::getLogicalPos() {
-    Q_D(TextLabel);
-    return d->getLogicalPos();
-}
-
 /*!
  * position is set to invalid if the parent item is not drawn on the scene
  * (e.g. axis is not drawn because it's outside plot ranges -> don't draw axis' title label)
@@ -413,6 +403,16 @@ bool TextLabel::enableCoordBinding(bool enable, const CartesianPlot* plot) {
     d->m_coordBindingEnable = enable;
     d->cSystem = dynamic_cast<const CartesianCoordinateSystem*>(d->plot->coordinateSystem());
     return true;
+}
+
+QRectF TextLabel::getSize() {
+    Q_D(TextLabel);
+    return d->getSize();
+}
+
+QPointF TextLabel::getLogicalPos() {
+    Q_D(TextLabel);
+    return d->getLogicalPos();
 }
 
 bool TextLabel::isVisible() const {

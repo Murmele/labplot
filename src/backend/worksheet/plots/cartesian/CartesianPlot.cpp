@@ -1215,7 +1215,7 @@ void CartesianPlot::curveSelected(double pos) {
 
     if (m_marker) {
         m_marker = false;
-        WorksheetInfoElement* marker = new WorksheetInfoElement("Marker", this,qobject_cast<const XYCurve*>(QObject::sender()),pos);
+        WorksheetInfoElement* marker = new WorksheetInfoElement("Marker", this, qobject_cast<const XYCurve*>(QObject::sender()),pos);
         this->addChild(marker);
         marker->setParentGraphicsItem(graphicsItem());
     }
@@ -1426,7 +1426,7 @@ void CartesianPlot::addLegend() {
  * Marks cartesianPlot to add a new worksheetInfoElement.
  * When a curve will be selected, a WorksheetInfoElement will be added and m_marker will be reset
  */
-void CartesianPlot::addWorksheetInfoElement(){
+void CartesianPlot::addWorksheetInfoElement() {
     m_marker = true;
 }
 
