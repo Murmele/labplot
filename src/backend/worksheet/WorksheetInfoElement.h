@@ -66,6 +66,7 @@ public slots:
     void labelPositionChanged(TextLabel::PositionWrapper position);
     void pointPositionChanged(QPointF pos);
     void childRemoved(const AbstractAspect *parent, const AbstractAspect *before, const AbstractAspect *child);
+	void childAdded(const AbstractAspect* child);
 protected:
     WorksheetInfoElementPrivate* const d_ptr;
 private:
