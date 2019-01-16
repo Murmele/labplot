@@ -428,7 +428,7 @@ BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, double, xposLineWidth, xposLine
 BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, QColor, xposLineColor, xposLineColor);
 BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, double, connectionLineWidth, connectionLineWidth);
 BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, QColor, connectionLineColor, connectionLineColor);
-
+BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, bool, visible, visible);
 /* ============================ setter methods ================= */
 
 // Problem: No member named 'Private' in 'WorksheetInfoElement':
@@ -478,7 +478,7 @@ STD_SETTER_CMD_IMPL_F_S(WorksheetInfoElement, SetVisible, bool, visible, visibil
 void WorksheetInfoElement::setVisible(const bool visible) {
     Q_D(WorksheetInfoElement);
     if (visible != d->visible)
-        exec(new WorksheetInfoElementSetConnectionLineColorCmd(d, visible, ki18n("%1: set visible")));
+		exec(new WorksheetInfoElementSetVisibleCmd(d, visible, ki18n("%1: set visible")));
 }
 
 //##############################################################################
@@ -720,7 +720,6 @@ void WorksheetInfoElementPrivate::updatePosition() {
 }
 
 /*!
- * \brief WorksheetInfoElement::updateXPosLine
  * Repainting to update xposLine
  */
 void WorksheetInfoElementPrivate::updateXPosLine() {
@@ -728,7 +727,6 @@ void WorksheetInfoElementPrivate::updateXPosLine() {
 }
 
 /*!
- * \brief WorksheetInfoElement::updateConnectionLine
  * Repainting to updateConnectionLine
  */
 void WorksheetInfoElementPrivate::updateConnectionLine() {
