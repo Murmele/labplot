@@ -38,10 +38,11 @@ void WorksheetInfoElementDock::setWorksheetInfoElements(QList<WorksheetInfoEleme
     if (sameParent) {
         QVector<XYCurve*> curves = m_element->getPlot()->children<XYCurve>();
         for (int i=0; i< curves.length(); i++)
-            ui->lstAvailableCurves->addItem(curves[i]->name());
+				ui->lstAvailableCurves->addItem(curves[i]->name());
 
         for (int i=0; i<m_element->markerPointsCount(); i++)
-            ui->lstSelectedCurves->addItem(m_element->markerPointAt(i).curve->name());
+			if (m_element->markerPointAt(i).curve != nullptr)
+				ui->lstSelectedCurves->addItem(m_element->markerPointAt(i).curve->name());
 
     } else {
         ui->lstAvailableCurves->setEnabled(false);

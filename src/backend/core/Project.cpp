@@ -43,6 +43,7 @@
 #include "backend/worksheet/plots/cartesian/XYFourierFilterCurve.h"
 #include "backend/worksheet/plots/cartesian/XYFourierTransformCurve.h"
 #include "backend/worksheet/plots/cartesian/Axis.h"
+#include "backend/worksheet/WorksheetInfoElement.h"
 #include "backend/datapicker/DatapickerCurve.h"
 #ifdef HAVE_MQTT
 #include "backend/datasources/MQTTClient.h"
@@ -541,6 +542,15 @@ bool Project::load(XmlStreamReader* reader, bool preview) {
 					RESTORE_POINTER(dynamic_cast<XYAnalysisCurve*>(curve), dataSourceCurve, DataSourceCurve, XYCurve, curves);
 
 				curve->suppressRetransform(false);
+			}
+
+			// assign to all markers the curves they need
+			QVector<WorksheetInfoElement*> elements = children<WorksheetInfoElement>(AbstractAspect::Recursive);
+			for (auto element: elements) {
+				if (!element->assignCurve(curves)) {
+					reader->raiseWarning(i18n("unknown curve name '%1'", curves[0]->name()));
+					return false;
+				}
 			}
 
 			//axes
