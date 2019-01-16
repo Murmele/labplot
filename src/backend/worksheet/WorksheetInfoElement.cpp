@@ -388,10 +388,10 @@ void WorksheetInfoElement::pointPositionChanged(QPointF pos) {
 		d->x_pos = x_new;
         if (valueFound) {
 			m_suppressPointPositionChanged = true;
-			QRectF boundingRect = markerpoints[i].customPoint->graphicsItem()->boundingRect();
-			//markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+			markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 			markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
-			//markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+			markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+			QPointF position = d->cSystem->mapSceneToLogical(markerpoints[i].customPoint->graphicsItem()->pos());
 			m_suppressPointPositionChanged = false;
         }
     }
@@ -890,7 +890,8 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event) {
         bool valueFound;
         QPointF pointPosition;
         for (int i =0; i< q->markerpoints.length(); i++) {
-            q->markerpoints[i].curve->getNextValue(q->markerpoints[i].customPoint->position().x(), index,x,y,valueFound);
+			QPointF position = q->markerpoints[i].customPoint->position();
+			q->markerpoints[i].curve->getNextValue(q->markerpoints[i].customPoint->position().x(), index,x,y,valueFound);
             if (valueFound) {
                 q->markerpoints[i].x = x;
                 q->markerpoints[i].y = y;

@@ -781,51 +781,85 @@ void XYCurve::handleResize(double horizontalRatio, double verticalRatio, bool pa
 
 // Finds index where x is located and returns the value "index" after the found value
 /*!
- * \brief XYCurve::getNextValue
  * Find nearest x value from a value xpos and his y value
- * \param xpos position for which the next index xpos should be found
- * \param offset Offset from the index where xpos is. Positive is after the found index, negative is before the found index
- * \param x x value at the found index
- * \param y y value at the found index
- * \param valueFound True when value found, otherwise false
+ * @param xpos position for which the next index xpos should be found
+ * @param offset Offset from the index where xpos is. Positive is after the found index, negative is before the found index
+ * @param x x value at the found index
+ * @param y y value at the found index
+ * @param valueFound True when value found, otherwise false
  */
 void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& valueFound) const {
     int rowCount = xColumn()->rowCount();
-    double prevValue = 0;
 
-    for (int row = 0; row < rowCount; row++) {
-           if (xColumn()->isValid(row) && yColumn()->isValid(row)){
-               if(row == 0)
-                   prevValue = xColumn()->valueAt(row);
+	if (rowCount == 0) {
+		x = xpos;
+		valueFound = false;
+		return;
+	}
 
-               double value = xColumn()->valueAt(row);
-               if (abs(value-xpos) <= abs(prevValue-xpos)) { // <= prevents also that row-1 become < 0
-                   if(row < rowCount-1)
-                        prevValue = value;
-                    else {
-                        valueFound = true;
-                        y = yColumn()->valueAt(row+offset);
-                        x = xColumn()->valueAt(row+offset);
-                        return;
-                    }
-               } else {
-                    valueFound = true;
-                    y = yColumn()->valueAt(row-1+offset);
-                    x = xColumn()->valueAt(row-1+offset);
-                    return;
-               }
-           }
-    }
+	Column::ColumnMode columnMode = xColumn()->columnMode();
+
+	if (columnMode == Column::ColumnMode::Integer ||
+			columnMode == Column::ColumnMode::Numeric) {
+		double prevValue = xColumn()->valueAt(0);
+		for (int row = 0; row < rowCount; row++) {
+			   if (xColumn()->isValid(row) && yColumn()->isValid(row)) {
+
+				   double value = xColumn()->valueAt(row);
+				   if (abs(value-xpos) <= abs(prevValue-xpos)) { // <= prevents also that row-1 become < 0
+					   if(row < rowCount-1)
+							prevValue = value;
+						else {
+							valueFound = true;
+							y = yColumn()->valueAt(row+offset);
+							x = xColumn()->valueAt(row+offset);
+							return;
+						}
+				   } else {
+						valueFound = true;
+						y = yColumn()->valueAt(row-1+offset);
+						x = xColumn()->valueAt(row-1+offset);
+						return;
+				   }
+			   }
+		}
+	} else if (columnMode == Column::ColumnMode::Day ||
+			 columnMode == Column::ColumnMode::Month ||
+			   columnMode == Column::ColumnMode::DateTime) {
+		qint64 prevValueDate = xColumn()->dateTimeAt(0).toMSecsSinceEpoch();
+		qint64 xpos2 = static_cast<qint64>(xpos);
+		for (int row = 0; row < rowCount; row++) {
+			   if (xColumn()->isValid(row) && yColumn()->isValid(row)) {
+
+				   double value = xColumn()->dateTimeAt(row).toMSecsSinceEpoch();
+				   if (abs(value-xpos2) <= abs(prevValueDate-xpos2)) { // <= prevents also that row-1 become < 0
+					   if(row < rowCount-1)
+							prevValueDate = value;
+						else {
+							valueFound = true;
+							y = yColumn()->valueAt(row+offset);
+							x = xColumn()->dateTimeAt(row+offset).toMSecsSinceEpoch();
+							return;
+						}
+				   } else {
+						valueFound = true;
+						y = yColumn()->valueAt(row-1+offset);
+						x = xColumn()->dateTimeAt(row-1+offset).toMSecsSinceEpoch();
+						return;
+				   }
+			   }
+		}
+	}
+
     valueFound = false;
 }
 
 
 /*!
- * \brief XYCurve::y
- * \param x :value for which y should be found
- * \param valueFound: returns true if y value found, otherwise false
- * \param x_new: exact x value where y value is
- * \return y value from x value
+ * @param x :value for which y should be found
+ * @param valueFound: returns true if y value found, otherwise false
+ * @param x_new: exact x value where y value is
+ * @return y value from x value
  */
 double XYCurve::y(double x, double &x_new, bool &valueFound) const {
 	int rowCount = xColumn()->rowCount();
