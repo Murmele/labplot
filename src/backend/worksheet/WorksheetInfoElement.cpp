@@ -20,8 +20,6 @@
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot):
     WorksheetElement(name),
-    label(nullptr),m_menusInitialized(false),
-    m_suppressChildRemoved(false),
     d_ptr(new WorksheetInfoElementPrivate(this,plot))
 {
     Q_D(WorksheetInfoElement);
@@ -32,8 +30,6 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot, const XYCurve *curve, double pos):
 	WorksheetElement(name, AspectType::WorksheetInfoElement),
-    label(nullptr),m_menusInitialized(false),
-    m_suppressChildRemoved(false),
     // must be at least, because otherwise label ist not a nullptr
     d_ptr(new WorksheetInfoElementPrivate(this,plot,curve))
 {
@@ -113,14 +109,13 @@ void WorksheetInfoElement::init() {
 }
 
 void WorksheetInfoElement::initActions() {
-	//visibility action
 	visibilityAction = new QAction(i18n("Visible"), this);
 	visibilityAction->setCheckable(true);
     connect(visibilityAction, &QAction::triggered, this, &WorksheetInfoElement::setVisible);
 }
 
 void WorksheetInfoElement::initMenus() {
-
+	m_menusInitialized = true;
 }
 
 QMenu* WorksheetInfoElement::createContextMenu() {
@@ -136,10 +131,10 @@ QMenu* WorksheetInfoElement::createContextMenu() {
 	return menu;
 }
 /*!
- * \brief WorksheetInfoElement::addCurve
+ * @brief WorksheetInfoElement::addCurve
  * Adds a new markerpoint to the plot which is placed on the curve curve
- * \param curve Curve on which the markerpoints sits
- * \param custompoint Use existing point, if the project was loaded the custompoint can have different settings
+ * @param curve Curve on which the markerpoints sits
+ * @param custompoint Use existing point, if the project was loaded the custompoint can have different settings
  */
 void WorksheetInfoElement::addCurve(const XYCurve* curve, CustomPoint* custompoint) {
     Q_D(WorksheetInfoElement);
@@ -169,8 +164,8 @@ void WorksheetInfoElement::addCurve(const XYCurve* curve, CustomPoint* custompoi
  * with the function assignCurve
  * Assumption: if custompoint!=nullptr then the custompoint was already added to the WorksheetInfoElement previously. Here
  * only new created CustomPoints will be added to the WorksheetInfoElement
- * \param curvePath path from the curve
- * \param custompoint adding already created custom point
+ * @param curvePath path from the curve
+ * @param custompoint adding already created custom point
  */
 void WorksheetInfoElement::addCurvePath(QString &curvePath, CustomPoint* custompoint) {
     Q_D(WorksheetInfoElement);
@@ -193,7 +188,7 @@ void WorksheetInfoElement::addCurvePath(QString &curvePath, CustomPoint* customp
 /*!
  * \brief assignCurve
  * Finds the curve with the path stored in the markerpoints and assigns the pointer to markerpoints
- * \param curves
+ * @param curves
  * \return true if all markerpoints are assigned with a curve, false if one or more markerpoints don't have a curve assigned
  */
 bool WorksheetInfoElement::assignCurve(const QVector<XYCurve *> &curves) {
@@ -217,9 +212,8 @@ bool WorksheetInfoElement::assignCurve(const QVector<XYCurve *> &curves) {
 }
 
 /*!
- * \brief WorksheetInfoElementPrivate::removeCurve
  * Remove markerpoint from a curve
- * \param curve
+ * @param curve
  */
 void WorksheetInfoElement::removeCurve(const XYCurve* curve) {
     for (int i=0; i< markerpoints.length(); i++) {
@@ -229,9 +223,8 @@ void WorksheetInfoElement::removeCurve(const XYCurve* curve) {
 }
 
 /*!
- * \brief WorksheetInfoElement::setZValue
  * Set the z value of the label and the custompoints higher than the worksheetinfoelement
- * \param value
+ * @param value
  */
 void WorksheetInfoElement::setZValue(qreal value) {
     graphicsItem()->setZValue(value);
@@ -243,28 +236,23 @@ void WorksheetInfoElement::setZValue(qreal value) {
 }
 
 /*!
- * \brief WorksheetInfoElement::markerPointsCount
  * Returns the amount of markerpoints. Used in the WorksheetInfoElementDock to fill listWidget.
- * \return
  */
 int WorksheetInfoElement::markerPointsCount() {
     return markerpoints.length();
 }
 
 /*!
- * \brief WorksheetInfoElement::markerPointAt
  * Returns the Markerpoint at index \p index. Used in the WorksheetInfoElementDock to fill listWidget
- * \param index
- * \return
+ * @param index
  */
 WorksheetInfoElement::MarkerPoints_T WorksheetInfoElement::markerPointAt(int index) {
     return markerpoints.at(index);
 }
 
 /*!
- * \brief createTextLabelText
  * create Text which will be shown in the TextLabel
- * \return
+ * @return Text
  */
 TextLabel::TextWrapper WorksheetInfoElement::createTextLabelText() {
 
@@ -295,9 +283,8 @@ TextLabel::TextWrapper WorksheetInfoElement::createTextLabelText() {
 }
 
 /*!
- * \brief getPlot
  * Returns plot, where this marker is used. Needed in the worksheetinfoelement Dock
- * \return
+ * @return
  */
 CartesianPlot* WorksheetInfoElement::getPlot() {
     Q_D(WorksheetInfoElement);
@@ -310,9 +297,8 @@ bool WorksheetInfoElement::isVisible() const {
 }
 
 /*!
- * \brief WorksheetInfoElement::labelPositionChanged
  * Will be called, when the label changes his position
- * \param position
+ * @param position
  */
 void WorksheetInfoElement::labelPositionChanged(TextLabel::PositionWrapper position) {
     Q_UNUSED(position)
@@ -321,7 +307,6 @@ void WorksheetInfoElement::labelPositionChanged(TextLabel::PositionWrapper posit
 }
 
 /*!
- * \brief WorksheetInfoElement::childRemoved
  * Delete child and remove from markerpoint list if it is a markerpoint. If it is a textlabel delete complete WorksheetInfoElement
  */
 void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const AbstractAspect* before, const AbstractAspect* child) {
@@ -361,13 +346,15 @@ void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const Abst
 }
 
 /*!
- * \brief WorksheetInfoElement::pointPositionChanged
  * Will be called, when the customPoint changes his position
- * \param pos
+ * @param pos
  */
 void WorksheetInfoElement::pointPositionChanged(QPointF pos) {
     Q_UNUSED(pos)
     Q_D(WorksheetInfoElement);
+
+	if (m_suppressPointPositionChanged)
+		return;
 
     CustomPoint* point = dynamic_cast<CustomPoint*>(QObject::sender());
     if (point == nullptr)
@@ -375,8 +362,8 @@ void WorksheetInfoElement::pointPositionChanged(QPointF pos) {
 
     // TODO: Find better solution, this is not a good solution!
 	// Problem: pointPositionChanged will also be called outside of itemchange() in custompoint. Don't know why
-    if (!point->graphicsItem()->flags().operator&=(QGraphicsItem::ItemSendsGeometryChanges))
-        return;
+//    if (!point->graphicsItem()->flags().operator&=(QGraphicsItem::ItemSendsGeometryChanges))
+//        return;
 
 	// caĺculate new y value
     double x = point->position().x();
@@ -386,9 +373,11 @@ void WorksheetInfoElement::pointPositionChanged(QPointF pos) {
         double y = markerpoints[i].curve->y(x,x_new, valueFound);
 		d->x_pos = x_new;
         if (valueFound) {
-            markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+			m_suppressPointPositionChanged = true;
+			//markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 			markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
-            markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+			//markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
+			m_suppressPointPositionChanged = false;
         }
     }
 	label->setText(createTextLabelText());

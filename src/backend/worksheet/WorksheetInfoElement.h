@@ -70,10 +70,11 @@ protected:
     WorksheetInfoElementPrivate* const d_ptr;
 private:
     Q_DECLARE_PRIVATE(WorksheetInfoElement)
-    TextLabel* label;
+	TextLabel* label{nullptr};
     QVector<struct MarkerPoints_T> markerpoints;
-	bool m_menusInitialized;
-	bool m_suppressChildRemoved;
+	bool m_menusInitialized {false};
+	bool m_suppressChildRemoved {false};
+	bool m_suppressPointPositionChanged {false};
 
 	// Actions
 	QAction* visibilityAction;
