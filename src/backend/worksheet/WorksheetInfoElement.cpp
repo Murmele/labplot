@@ -39,8 +39,6 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 
     if (curve) {
         CustomPoint* custompoint = new CustomPoint(plot, "Markerpoint");
-        custompoint->setParentGraphicsItem(plot->plotArea()->graphicsItem());
-        connect(custompoint, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
         addChild(custompoint);
         struct WorksheetInfoElement::MarkerPoints_T markerpoint = {custompoint, curve, curve->path()};
         markerpoints.append(markerpoint);
@@ -96,16 +94,15 @@ void WorksheetInfoElement::init() {
 	initMenus();
 
 	connect(this, &WorksheetInfoElement::aspectRemoved, this, &WorksheetInfoElement::childRemoved);
+	connect(this, &WorksheetInfoElement::aspectAdded, this, &WorksheetInfoElement::childAdded);
 
 	label = new TextLabel("Markerlabel", d->plot);
 	addChild(label);
 	label->enableCoordBinding(true);
 	label->setCoordBinding(true);
-    label->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
     TextLabel::TextWrapper text;
     text.placeHolder = true;
     label->setText(text); // set placeHolder to true
-    connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
 }
 
 void WorksheetInfoElement::initActions() {
@@ -145,14 +142,14 @@ void WorksheetInfoElement::addCurve(const XYCurve* curve, CustomPoint* custompoi
     }
     if (!custompoint) {
         custompoint = new CustomPoint(d->plot, "Markerpoint");
-        custompoint->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
-        connect(custompoint, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
+		addChild(custompoint);
 		bool valueFound;
 		double x_new;
 		double y = curve->y(d->x_pos, x_new, valueFound);
 		custompoint->setPosition(QPointF(x_new,y));
-    }
-    addChild(custompoint);
+	} else
+		addChild(custompoint);
+
     struct MarkerPoints_T markerpoint = {custompoint, curve, curve->path()};
     markerpoints.append(markerpoint);
 }
@@ -176,8 +173,6 @@ void WorksheetInfoElement::addCurvePath(QString &curvePath, CustomPoint* customp
     }
     if (!custompoint) {
         custompoint = new CustomPoint(d->plot, "Markerpoint");
-        custompoint->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
-        connect(custompoint, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
 		custompoint->setVisible(false);
 		addChild(custompoint);
 	}
@@ -345,6 +340,25 @@ void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const Abst
 	}
 }
 
+void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
+	Q_D(const WorksheetInfoElement);
+	const CustomPoint* point = dynamic_cast<const CustomPoint*>(child);
+	if (point) {
+		connect(point, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
+
+		CustomPoint* p = const_cast<CustomPoint*>(point);
+		p->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
+		return;
+	}
+
+	const TextLabel* labelChild = dynamic_cast<const TextLabel*>(child);
+	if (labelChild) {
+		connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
+
+		TextLabel* l = const_cast<TextLabel*>(labelChild);
+		l->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
+	}
+}
 /*!
  * Will be called, when the customPoint changes his position
  * @param pos
@@ -374,6 +388,7 @@ void WorksheetInfoElement::pointPositionChanged(QPointF pos) {
 		d->x_pos = x_new;
         if (valueFound) {
 			m_suppressPointPositionChanged = true;
+			QRectF boundingRect = markerpoints[i].customPoint->graphicsItem()->boundingRect();
 			//markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 			markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
 			//markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
@@ -1021,7 +1036,6 @@ bool WorksheetInfoElement::load(XmlStreamReader* reader, bool preview) {
 			}
             if (!label->load(reader, preview))
 				return false;
-			label->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
 		} else if (reader->name() == "customPoint") {
 			// Marker must have at least one curve
             if (markerpointFound) { // must be cleared by markerPointCurve
