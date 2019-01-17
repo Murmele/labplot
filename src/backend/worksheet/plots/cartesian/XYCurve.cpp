@@ -790,6 +790,18 @@ void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& 
 	}
 
 	Column::ColumnMode columnMode = xColumn()->columnMode();
+	if (xpos == NAN) {
+
+		if (columnMode == Column::ColumnMode::Integer ||
+				columnMode == Column::ColumnMode::Numeric)
+			x = xColumn()->valueAt(0);
+		else if(columnMode == Column::ColumnMode::Day ||
+				columnMode == Column::ColumnMode::Month ||
+				  columnMode == Column::ColumnMode::DateTime)
+			x = xColumn()->dateTimeAt(0).toMSecsSinceEpoch();
+
+		y = yColumn()->valueAt(0);
+	}
 
 	if (columnMode == Column::ColumnMode::Integer ||
 			columnMode == Column::ColumnMode::Numeric) {
@@ -835,8 +847,13 @@ void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& 
 						}
 				   } else {
 						valueFound = true;
-						y = yColumn()->valueAt(row-1+offset);
-						x = xColumn()->dateTimeAt(row-1+offset).toMSecsSinceEpoch();
+						int yIndex = row - 1 + offset;
+						if (row-1+offset < 0)
+							yIndex = 0;
+						else if (row -1 + offset > rowCount - 1)
+							yIndex = rowCount -1;
+						y = yColumn()->valueAt(yIndex);
+						x = xColumn()->dateTimeAt(yIndex).toMSecsSinceEpoch();
 						return;
 				   }
 			   }
@@ -853,6 +870,8 @@ void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& 
  * @param x_new: exact x value where y value is
  * @return y value from x value
  */
+
+// datetime does not work. wait til in master the new things are commited
 double XYCurve::y(double x, double &x_new, bool &valueFound) const {
 	int rowCount = xColumn()->rowCount();
 	double prevValue=0;
@@ -872,8 +891,13 @@ double XYCurve::y(double x, double &x_new, bool &valueFound) const {
 					}
                } else {
 					valueFound = true;
-					x_new = xColumn()->valueAt(row-1);
-					return yColumn()->valueAt(row-1);
+					int indexClipped = row - 1;
+					if (indexClipped < 0)
+						indexClipped = 0;
+					else if (indexClipped > rowCount -1)
+						indexClipped = rowCount -1;
+					x_new = xColumn()->valueAt(indexClipped);
+					return yColumn()->valueAt(indexClipped);
 			   }
 		   }
 	}

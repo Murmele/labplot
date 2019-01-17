@@ -576,8 +576,6 @@ void WorksheetInfoElementPrivate::retransform() {
     double difference_x = pointPos.x() - labelPos.x();
     double difference_y = pointPos.y() - labelPos.y();
 
-
-
     double x,y;
     QPointF min_scene = cSystem->mapLogicalToScene(QPointF(plot->xMin(),plot->yMin()));
     QPointF max_scene = cSystem->mapLogicalToScene(QPointF(plot->xMax(),plot->yMax()));
@@ -857,7 +855,9 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
         if (valueFound) {
             q->markerpoints[i].y = y;
             q->markerpoints[i].x = x_new;
+			q->m_suppressPointPositionChanged = true;
             q->markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
+			q->m_suppressPointPositionChanged = false;
         } else
             DEBUG("No value found for Logicalpoint" << i);
     }
@@ -898,10 +898,13 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event) {
                 pointPosition.setX(x);
                 pointPosition.setY(y);
 				DEBUG("X_old: " << q->markerpoints[i].customPoint->position().x() << "X_new: " << x);
-                q->markerpoints[i].customPoint->setPosition(pointPosition);
+				q->m_suppressPointPositionChanged = true;
+				q->markerpoints[i].customPoint->setPosition(pointPosition);
+				q->m_suppressPointPositionChanged = false;
             }
         }
         q->label->setText(q->createTextLabelText());
+		retransform();
 
     }
 }
