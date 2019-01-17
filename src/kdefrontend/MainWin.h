@@ -188,7 +188,7 @@ private:
 	QMenu* m_editMenu{nullptr};
 
 	//Docks
-	QStackedWidget* stackedWidget;
+	QStackedWidget* stackedWidget{nullptr};
 	AxisDock* axisDock{nullptr};
 	QDockWidget* cursorDock{nullptr};
 	CursorDock* cursorWidget{nullptr};

@@ -50,6 +50,7 @@ private:
 	Ui::WorksheetDock ui;
 	QList<Worksheet*> m_worksheetList;
 	Worksheet* m_worksheet{nullptr};
+	bool m_initializing{false};
 	ThemeHandler* m_themeHandler;
 
 	void updatePaperSize();

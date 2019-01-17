@@ -44,6 +44,7 @@
 #include <QAction>
 #include <QMenu>
 #include <QTextEdit>
+#include <QDateTime>
 
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot):
@@ -284,11 +285,34 @@ TextLabel::TextWrapper WorksheetInfoElement::createTextLabelText() {
 	// TODO: save positions of the variables in extra variables to replace faster, because replace takes long time
 	TextLabel::TextWrapper wrapper = label->text();
 
+	AbstractColumn::ColumnMode columnMode = markerpoints[0].curve->xColumn()->columnMode();
 	QString placeHolderText = wrapper.textPlaceHolder;
-	if (!wrapper.teXUsed)
-		placeHolderText.replace("&amp;(x)",QString::number(markerpoints[0].x));
-	else
-		placeHolderText.replace("&(x)",QString::number(markerpoints[0].x));
+	if (!wrapper.teXUsed) {
+		double value = markerpoints[0].x;
+		if (columnMode== AbstractColumn::ColumnMode::Numeric ||
+			columnMode == AbstractColumn::ColumnMode::Integer)
+			placeHolderText.replace("&amp;(x)",QString::number(value));
+		else if (columnMode== AbstractColumn::ColumnMode::Day ||
+				 columnMode == AbstractColumn::ColumnMode::Month ||
+				 columnMode == AbstractColumn::ColumnMode::DateTime) {
+			QDateTime dateTime;
+			dateTime.setTime_t(value);
+			QString dateTimeString = dateTime.toString();
+			placeHolderText.replace("&amp;(x)",dateTimeString);
+		}
+	} else {
+		if (columnMode== AbstractColumn::ColumnMode::Numeric ||
+			columnMode == AbstractColumn::ColumnMode::Integer)
+			placeHolderText.replace("&(x)",QString::number(markerpoints[0].x));
+		else if (columnMode== AbstractColumn::ColumnMode::Day ||
+				 columnMode == AbstractColumn::ColumnMode::Month ||
+				 columnMode == AbstractColumn::ColumnMode::DateTime) {
+			QDateTime dateTime;
+			dateTime.setTime_t(markerpoints[0].x);
+			QString dateTimeString = dateTime.toString();
+			placeHolderText.replace("&(x)",dateTimeString);
+		}
+	}
 
 	for (int i=0; i< markerpoints.length(); i++){
 
@@ -811,8 +835,12 @@ void WorksheetInfoElementPrivate::mousePressEvent(QGraphicsSceneMouseEvent* even
 
 		if (xposLineVisible) {
 			if (abs(xposLine.x1()-event->pos().x())< ((xposLineWidth < 3)? 3: xposLineWidth)) {
-				setSelected(true);
+				if (!isSelected());
+					setSelected(true);
+				m_suppressKeyPressEvents = false;
 				oldMousePos = mapToParent(event->pos());
+				event->accept();
+				setFocus();
 				return;
 			}
 		}
@@ -836,14 +864,17 @@ void WorksheetInfoElementPrivate::mousePressEvent(QGraphicsSceneMouseEvent* even
 				if (!isSelected())
 					setSelected(true);
 				oldMousePos = mapToParent(event->pos());
+				m_suppressKeyPressEvents = false;
+				event->accept();
+				setFocus();
 				return;
 			}
 		}
 
+		m_suppressKeyPressEvents = true;
 		event->ignore();
 		if (isSelected())
 			setSelected(false);
-		return;
 	}
 	QGraphicsItem::mousePressEvent(event);
 }
@@ -906,6 +937,11 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 }
 
 void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event) {
+	if (m_suppressKeyPressEvents) {
+		event->ignore();
+		return QGraphicsItem::keyPressEvent(event);
+	}
+
 	TextLabel::TextWrapper text;
 	if (event->key() == Qt::Key_Right || event->key() == Qt::Key_Left) {
 		int index;

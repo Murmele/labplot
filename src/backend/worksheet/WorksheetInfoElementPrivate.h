@@ -85,6 +85,7 @@ private:
 	QLineF connectionLine; // line between CustomPoint and TextLabel
 	QLineF xposLine; // Line which connects all markerpoints, when there are more than 1
 	QPointF oldMousePos;
+	bool m_suppressKeyPressEvents{false};
 };
 
 #endif // WORKSHEETINFOELEMENTPRIVATE_H

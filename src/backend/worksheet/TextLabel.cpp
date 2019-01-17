@@ -471,8 +471,8 @@ TextLabelPrivate::TextLabelPrivate(TextLabel* owner, CartesianPlot* plot)
 	  suppressRetransform(false),
 	  m_printing(false),
 	  m_hovered(false),
-	  plot(plot),
-	  q(owner) {
+	  q(owner),
+	  plot(plot){
 
 	if(plot)
 		cSystem = dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());

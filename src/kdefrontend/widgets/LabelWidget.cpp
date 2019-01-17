@@ -304,10 +304,7 @@ void LabelWidget::textChanged() {
 
 	if (ui.tbTexUsed->isChecked()) {
 		QString text = ui.teLabel->toPlainText();
-		TextLabel::TextWrapper wrapper(text, true);
-
 		TextLabel::TextWrapper wrapper;
-		QString text=ui.teLabel->toPlainText();
 		wrapper.teXUsed = true;
 
         if (!ui.chbShowPlaceHolderText->isChecked()) {
