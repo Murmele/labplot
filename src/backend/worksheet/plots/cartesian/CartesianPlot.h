@@ -224,7 +224,7 @@ private:
 	QMenu* dataAnalysisMenu{nullptr};
 	QMenu* themeMenu{nullptr};
 
-    bool m_marker;
+	bool m_marker{false};
 
 	Q_DECLARE_PRIVATE(CartesianPlot)
 
