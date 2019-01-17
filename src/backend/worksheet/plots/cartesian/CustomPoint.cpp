@@ -36,6 +36,7 @@
 #include <QPainter>
 #include <QMenu>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsScene>
 
 #include <KConfig>
 #include <KConfigGroup>
