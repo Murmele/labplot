@@ -471,8 +471,6 @@ TextLabelPrivate::TextLabelPrivate(TextLabel* owner, CartesianPlot* plot)
 	  suppressRetransform(false),
 	  m_printing(false),
 	  m_hovered(false),
-	  m_coordBinding(false),
-	  m_coordBindingEnable(false),
 	  plot(plot),
 	  q(owner) {
 

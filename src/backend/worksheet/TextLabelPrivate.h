@@ -38,6 +38,7 @@
 class QGraphicsSceneHoverEvent;
 class CartesianPlot;
 class CartesianCoordinateSystem;
+class TextLabel;
 
 class TextLabelPrivate: public QGraphicsItem {
 public:
@@ -90,6 +91,7 @@ public:
 	void updateTeXImage();
 	void updateBorder();
 	QStaticText staticText;
+        QPointF logicalPos;
 
 	bool suppressItemChangeEvent{false};
 	bool suppressRetransform{false};
