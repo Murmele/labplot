@@ -441,6 +441,7 @@ void WorksheetInfoElement::pointPositionChanged(QPointF pos) {
 		if (valueFound) {
 			m_suppressPointPositionChanged = true;
 			markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
+			DEBUG("WorksheetInfoElement::pointPositionChanged, Set Position: ("<< x_new << "," << y << ")");
 			markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
 			markerpoints[i].customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 			QPointF position = d->cSystem->mapSceneToLogical(markerpoints[i].customPoint->graphicsItem()->pos());
