@@ -1048,6 +1048,8 @@ void WorksheetView::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void WorksheetView::mouseMoveEvent(QMouseEvent* event) {
+	if (m_suppressSelectionChangedEvent)
+		return QGraphicsView::mouseMoveEvent(event);
 	if (m_mouseMode == SelectionMode && m_cartesianPlotMouseMode != CartesianPlot::SelectionMode ) {
 		//check whether there is a cartesian plot under the cursor
 		//and set the cursor appearance according to the current mouse mode for the cartesian plots

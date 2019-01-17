@@ -19,21 +19,30 @@
        <bold>true</bold>
       </font>
      </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="text">
+      <string>Border:</string>
+     </property>
     </widget>
    </item>
-   <item row="3" column="3" colspan="2">
-    <widget class="KFontRequester" name="kfontRequester"/>
+   <item row="19" column="5" colspan="2">
+    <widget class="QComboBox" name="cbBorderShape"/>
    </item>
-   <item row="16" column="3" colspan="2">
+   <item row="15" column="5" colspan="2">
     <widget class="KComboBox" name="cbVerticalAlignment"/>
    </item>
-   <item row="6" column="3" colspan="2">
-    <widget class="KColorButton" name="kcbFontColor">
+   <item row="11" column="0">
+    <widget class="QLabel" name="lPositionY">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+      <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="toolTip">
+      <string>Vertical position relative to label's parent</string>
      </property>
      <property name="text">
       <string>Text:</string>
@@ -103,12 +112,26 @@
         <property name="text">
          <string/>
         </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QToolButton" name="tbFontBold">
+        <property name="text">
+         <string/>
+        </property>
         <property name="checkable">
          <bool>true</bool>
         </property>
        </widget>
       </item>
       <item row="0" column="3">
+       <widget class="QToolButton" name="tbFontUnderline">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
        <widget class="QToolButton" name="tbFontUnderline">
         <property name="text">
          <string/>
@@ -122,6 +145,22 @@
        <widget class="QToolButton" name="tbDateTime">
         <property name="text">
          <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="10">
+       <widget class="ResizableTextEdit" name="teLabel">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
         </property>
        </widget>
       </item>
@@ -214,13 +253,20 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="4">
-       <widget class="QToolButton" name="tbFontSuperScript">
+      <item row="0" column="3">
+       <widget class="QToolButton" name="tbFontStrikeOut">
         <property name="text">
          <string/>
         </property>
         <property name="checkable">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="chbShowPlaceHolderText">
+        <property name="text">
+         <string>Show Placeholder</string>
         </property>
        </widget>
       </item>
@@ -485,13 +531,13 @@
       <string>°</string>
      </property>
      <property name="minimum">
-      <number>-360</number>
+      <number>0</number>
      </property>
      <property name="maximum">
-      <number>360</number>
+      <number>100</number>
      </property>
      <property name="singleStep">
-      <number>5</number>
+      <number>10</number>
      </property>
     </widget>
    </item>

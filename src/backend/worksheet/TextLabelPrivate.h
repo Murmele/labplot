@@ -70,7 +70,7 @@ public:
 	bool positionInvalid{false};
 
 
-	const CartesianPlot* plot;
+	const CartesianPlot* plot{nullptr};
 	const CartesianCoordinateSystem* cSystem;
 	TextLabel::HorizontalAlignment horizontalAlignment{TextLabel::hAlignCenter};
 	TextLabel::VerticalAlignment verticalAlignment{TextLabel::vAlignBottom};
@@ -78,8 +78,8 @@ public:
 	TextLabel::BorderShape borderShape{TextLabel::NoBorder};
 	QPen borderPen{Qt::black, Worksheet::convertToSceneUnits(1.0, Worksheet::Point), Qt::SolidLine};
 	qreal borderOpacity{1.0};
-	bool m_coordBindingEnable; // if allowed to attach to coord
-	bool m_coordBinding; // actual state
+	bool m_coordBindingEnable{false}; // if allowed to attach to coord
+	bool m_coordBinding{false}; // actual state
 
 	QString name() const;
 	void retransform();
@@ -90,6 +90,9 @@ public:
 	void updateText();
 	void updateTeXImage();
 	void updateBorder();
+	QPointF getLogicalPos();
+	QRectF getSize();
+
 	QStaticText staticText;
         QPointF logicalPos;
 
@@ -114,6 +117,7 @@ public:
 private:
 	void contextMenuEvent(QGraphicsSceneContextMenuEvent*) override;
 	void mouseReleaseEvent(QGraphicsSceneMouseEvent*) override;
+	void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
 	void hoverEnterEvent(QGraphicsSceneHoverEvent*) override;
 	void hoverLeaveEvent(QGraphicsSceneHoverEvent*) override;
 };

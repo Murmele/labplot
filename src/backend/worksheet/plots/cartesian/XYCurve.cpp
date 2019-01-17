@@ -783,6 +783,10 @@ bool XYCurve::columnRemoved(const AbstractColumn* column, const AbstractAspect* 
 void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& valueFound) const {
     int rowCount = xColumn()->rowCount();
 
+	AbstractColumn::Properties properties = xColumn()->properties();
+	if (properties == AbstractColumn::Properties::MonotonicDecreasing)
+		offset *=-1;
+
 	if (rowCount == 0) {
 		x = xpos;
 		valueFound = false;
