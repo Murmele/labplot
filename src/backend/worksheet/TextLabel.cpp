@@ -150,9 +150,9 @@ void TextLabel::init() {
 
 	DEBUG("CHECK: default/run time image resolution: " << d->teXImageResolution << '/' << QApplication::desktop()->physicalDpiX());
 
-    // disable attach to cartesian plot by default
-    d->m_coordBindingEnable = false;
-    d->m_coordBinding = false;
+	// disable attach to cartesian plot by default
+	d->m_coordBindingEnable = false;
+	d->m_coordBinding = false;
 
 	connect(&d->teXImageFutureWatcher, &QFutureWatcher<QImage>::finished, this, &TextLabel::updateTeXImage);
 }
@@ -250,8 +250,8 @@ STD_SETTER_CMD_IMPL_F_S(TextLabel, SetText, TextLabel::TextWrapper, textWrapper,
 void TextLabel::setText(const TextWrapper &textWrapper) {
 	Q_D(TextLabel);
 	if ( (textWrapper.text != d->textWrapper.text) || (textWrapper.teXUsed != d->textWrapper.teXUsed)
-         || ((d->textWrapper.placeHolder || textWrapper.placeHolder) && (textWrapper.textPlaceHolder != d->textWrapper.textPlaceHolder)) ||
-         textWrapper.placeHolder != d->textWrapper.placeHolder)
+		 || ((d->textWrapper.placeHolder || textWrapper.placeHolder) && (textWrapper.textPlaceHolder != d->textWrapper.textPlaceHolder)) ||
+		 textWrapper.placeHolder != d->textWrapper.placeHolder)
 		exec(new TextLabelSetTextCmd(d, textWrapper, ki18n("%1: set label text")));
 }
 
@@ -297,8 +297,8 @@ void TextLabel::setPosition(QPointF point) {
 	Q_D(TextLabel);
 	if (point != d->position.point) {
 		d->position.point = point;
-        if(d->m_coordBindingEnable)
-            d->logicalPos = d->cSystem->mapSceneToLogical(point);
+		if(d->m_coordBindingEnable)
+			d->logicalPos = d->cSystem->mapSceneToLogical(point);
 		retransform();
 	}
 }
@@ -309,7 +309,7 @@ void TextLabel::setPosition(QPointF point) {
  */
 void TextLabel::setPositionInvalid(bool invalid) {
 	Q_D(TextLabel);
-    if (invalid != d->positionInvalid)
+	if (invalid != d->positionInvalid)
 		d->positionInvalid = invalid;
 }
 
@@ -369,11 +369,11 @@ void TextLabel::setVisible(bool on) {
  * \param on set(true) or reset(false) coord binding
  */
 void TextLabel::setCoordBinding(bool on) {
-    Q_D(TextLabel);
-    if (!d->m_coordBindingEnable)
-        return;
-    d->m_coordBinding = on;
-    d->logicalPos = d->cSystem->mapSceneToLogical(d->pos());
+	Q_D(TextLabel);
+	if (!d->m_coordBindingEnable)
+		return;
+	d->m_coordBinding = on;
+	d->logicalPos = d->cSystem->mapSceneToLogical(d->pos());
 }
 
 /*!
@@ -384,35 +384,35 @@ void TextLabel::setCoordBinding(bool on) {
  * \return true if successfully bind, otherwise false
  */
 bool TextLabel::enableCoordBinding(bool enable, const CartesianPlot* plot) {
-    Q_D(TextLabel);
+	Q_D(TextLabel);
 
-    if (!d->plot) // if worksheetinfoelement is parent, it has no cartesianplot
+	if (!d->plot) // if worksheetinfoelement is parent, it has no cartesianplot
 		d->plot = dynamic_cast<const CartesianPlot*>(parentAspect());
 
-    if (d->plot == nullptr) {
-        if (plot == nullptr) {
-            d->m_coordBindingEnable = false;
-            return false;
-        } else {
-            d->m_coordBindingEnable = enable;
-            d->plot = plot;
-            d->cSystem = dynamic_cast<const CartesianCoordinateSystem*>(d->plot->coordinateSystem());
-            return true;
-        }
-    }
-    d->m_coordBindingEnable = enable;
-    d->cSystem = dynamic_cast<const CartesianCoordinateSystem*>(d->plot->coordinateSystem());
-    return true;
+	if (d->plot == nullptr) {
+		if (plot == nullptr) {
+			d->m_coordBindingEnable = false;
+			return false;
+		} else {
+			d->m_coordBindingEnable = enable;
+			d->plot = plot;
+			d->cSystem = dynamic_cast<const CartesianCoordinateSystem*>(d->plot->coordinateSystem());
+			return true;
+		}
+	}
+	d->m_coordBindingEnable = enable;
+	d->cSystem = dynamic_cast<const CartesianCoordinateSystem*>(d->plot->coordinateSystem());
+	return true;
 }
 
 QRectF TextLabel::getSize() {
-    Q_D(TextLabel);
-    return d->getSize();
+	Q_D(TextLabel);
+	return d->getSize();
 }
 
 QPointF TextLabel::getLogicalPos() {
-    Q_D(TextLabel);
-    return d->getLogicalPos();
+	Q_D(TextLabel);
+	return d->getLogicalPos();
 }
 
 bool TextLabel::isVisible() const {
@@ -424,16 +424,16 @@ bool TextLabel::isVisible() const {
  * \return true if bind to coord is enabled
  */
 bool TextLabel::isAttachedToCoordEnabled() const {
-    Q_D(const TextLabel);
-    return d->m_coordBindingEnable;
+	Q_D(const TextLabel);
+	return d->m_coordBindingEnable;
 }
 /*!
  * \brief TextLabel::isAttachedToCoord
  * \return true if TextLabel is attached to the coord.
  */
 bool TextLabel::isAttachedToCoord() const {
-    Q_D(const TextLabel);
-    return d->m_coordBinding;
+	Q_D(const TextLabel);
+	return d->m_coordBinding;
 }
 
 void TextLabel::setPrinting(bool on) {
@@ -494,20 +494,20 @@ QString TextLabelPrivate::name() const {
  * \return Size and position of the TextLabel in scene coords
  */
 QRectF TextLabelPrivate::getSize(){
-    float w, h;
-    if (textWrapper.teXUsed) {
-        //image size is in pixel, convert to scene units
-        w = teXImage.width()*teXImageScaleFactor;
-        h = teXImage.height()*teXImageScaleFactor;
-    }
-    else {
-        //size is in points, convert to scene units
-        w = staticText.size().width()*scaleFactor;
-        h = staticText.size().height()*scaleFactor;
-    }
-    float x = position.point.x();
-    float y = position.point.y();
-    return QRectF(x,y,w,h);
+	float w, h;
+	if (textWrapper.teXUsed) {
+		//image size is in pixel, convert to scene units
+		w = teXImage.width()*teXImageScaleFactor;
+		h = teXImage.height()*teXImageScaleFactor;
+	}
+	else {
+		//size is in points, convert to scene units
+		w = staticText.size().width()*scaleFactor;
+		h = staticText.size().height()*scaleFactor;
+	}
+	float x = position.point.x();
+	float y = position.point.y();
+	return QRectF(x,y,w,h);
 }
 
 /*!
@@ -515,8 +515,8 @@ QRectF TextLabelPrivate::getSize(){
  * \return logical position in the plot
  */
 QPointF TextLabelPrivate::getLogicalPos(){
-    if(m_coordBinding)
-        return logicalPos;
+	if(m_coordBinding)
+		return logicalPos;
 	if(cSystem)
 		return cSystem->mapSceneToLogical(position.point);
 
@@ -531,7 +531,7 @@ void TextLabelPrivate::retransform() {
 		return;
 
 	if (position.horizontalPosition != TextLabel::hPositionCustom
-	        || position.verticalPosition != TextLabel::vPositionCustom)
+			|| position.verticalPosition != TextLabel::vPositionCustom)
 		updatePosition();
 
 	float x = position.point.x();
@@ -549,35 +549,35 @@ void TextLabelPrivate::retransform() {
 		w = staticText.size().width()*scaleFactor;
 		h = staticText.size().height()*scaleFactor;
 	}
-    QPointF itemPos;
-    if(!m_coordBinding){
-        //depending on the alignment, calculate the new GraphicsItem's position in parent's coordinate system
-        switch (horizontalAlignment) {
-        case TextLabel::hAlignLeft:
-            itemPos.setX(x - w/2);
-            break;
-        case TextLabel::hAlignCenter:
-            itemPos.setX(x);
-            break;
-        case TextLabel::hAlignRight:
-            itemPos.setX(x + w/2);
-            break;
-        }
+	QPointF itemPos;
+	if(!m_coordBinding){
+		//depending on the alignment, calculate the new GraphicsItem's position in parent's coordinate system
+		switch (horizontalAlignment) {
+		case TextLabel::hAlignLeft:
+			itemPos.setX(x - w/2);
+			break;
+		case TextLabel::hAlignCenter:
+			itemPos.setX(x);
+			break;
+		case TextLabel::hAlignRight:
+			itemPos.setX(x + w/2);
+			break;
+		}
 
-        switch (verticalAlignment) {
-        case TextLabel::vAlignTop:
-            itemPos.setY(y - h/2);
-            break;
-        case TextLabel::vAlignCenter:
-            itemPos.setY(y);
-            break;
-        case TextLabel::vAlignBottom:
-            itemPos.setY(y + h/2);
-            break;
-        }
-    }else{
-        itemPos = cSystem->mapLogicalToScene(logicalPos);
-    }
+		switch (verticalAlignment) {
+		case TextLabel::vAlignTop:
+			itemPos.setY(y - h/2);
+			break;
+		case TextLabel::vAlignCenter:
+			itemPos.setY(y);
+			break;
+		case TextLabel::vAlignBottom:
+			itemPos.setY(y + h/2);
+			break;
+		}
+	}else{
+		itemPos = cSystem->mapLogicalToScene(logicalPos);
+	}
 
 	suppressItemChangeEvent = true;
 	setPos(itemPos);
@@ -949,10 +949,10 @@ QVariant TextLabelPrivate::itemChange(GraphicsItemChange change, const QVariant 
 }
 
 void TextLabelPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event){
-    if(m_coordBinding){
-        logicalPos = cSystem->mapSceneToLogical(pos());
-    }
-    return QGraphicsItem::mouseMoveEvent(event);
+	if(m_coordBinding){
+		logicalPos = cSystem->mapSceneToLogical(pos());
+	}
+	return QGraphicsItem::mouseMoveEvent(event);
 }
 
 void TextLabelPrivate::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
