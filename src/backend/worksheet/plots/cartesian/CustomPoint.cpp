@@ -1,10 +1,10 @@
 /***************************************************************************
-    File                 : CustomPoint.cpp
-    Project              : LabPlot
-    Description          : Custom user-defined point on the plot
-    --------------------------------------------------------------------
-    Copyright            : (C) 2015 Ankit Wagadre (wagadre.ankit@gmail.com)
-    Copyright            : (C) 2015 Alexander Semke (alexander.semke@web.de)
+	File                 : CustomPoint.cpp
+	Project              : LabPlot
+	Description          : Custom user-defined point on the plot
+	--------------------------------------------------------------------
+	Copyright            : (C) 2015 Ankit Wagadre (wagadre.ankit@gmail.com)
+	Copyright            : (C) 2015 Alexander Semke (alexander.semke@web.de)
  ***************************************************************************/
 /***************************************************************************
  *                                                                         *
@@ -98,7 +98,7 @@ void CustomPoint::initActions() {
 }
 
 /*!
-    Returns an icon to be used in the project explorer.
+	Returns an icon to be used in the project explorer.
 */
 QIcon CustomPoint::icon() const {
 	return  QIcon::fromTheme("draw-cross");
@@ -202,9 +202,9 @@ bool CustomPoint::isVisible() const {
 }
 
 void CustomPoint::setParentGraphicsItem(QGraphicsItem* item) {
-    Q_D(CustomPoint);
-    d->setParentItem(item);
-    //d->updatePosition();
+	Q_D(CustomPoint);
+	d->setParentItem(item);
+	//d->updatePosition();
 }
 
 void CustomPoint::setPrinting(bool on) {
@@ -235,7 +235,7 @@ QString CustomPointPrivate::name() const {
 }
 
 /*!
-    calculates the position and the bounding box of the item/point. Called on geometry or properties changes.
+	calculates the position and the bounding box of the item/point. Called on geometry or properties changes.
  */
 void CustomPointPrivate::retransform() {
 	if (suppressRetransform)
@@ -268,14 +268,14 @@ bool CustomPointPrivate::swapVisible(bool on) {
 }
 
 /*!
-    Returns the outer bounds of the item as a rectangle.
+	Returns the outer bounds of the item as a rectangle.
  */
 QRectF CustomPointPrivate::boundingRect() const {
 	return transformedBoundingRectangle;
 }
 
 /*!
-    Returns the shape of this item as a QPainterPath in local coordinates.
+	Returns the shape of this item as a QPainterPath in local coordinates.
 */
 QPainterPath CustomPointPrivate::shape() const {
 	return pointShape;
@@ -338,7 +338,7 @@ QVariant CustomPointPrivate::itemChange(GraphicsItemChange change, const QVarian
 	if (change == QGraphicsItem::ItemPositionChange) {
 		//emit the signals in order to notify the UI.
 		const auto* cSystem = dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
-        q->setPosition(cSystem->mapSceneToLogical(value.toPointF()));
+		q->setPosition(cSystem->mapSceneToLogical(value.toPointF()));
 		emit q->positionChanged(cSystem->mapSceneToLogical(value.toPointF()));
 	}
 

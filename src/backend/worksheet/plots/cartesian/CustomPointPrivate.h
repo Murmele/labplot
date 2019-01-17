@@ -1,10 +1,10 @@
 /***************************************************************************
-    File                 : CustomPointPrivate.h
-    Project              : LabPlot
-    Description          : Custom user-defined point on the plot
-    --------------------------------------------------------------------
-    Copyright            : (C) 2015 Ankit Wagadre (wagadre.ankit@gmail.com)
-    Copyright            : (C) 2015 Alexander Semke (alexander.semke@web.de)
+	File                 : CustomPointPrivate.h
+	Project              : LabPlot
+	Description          : Custom user-defined point on the plot
+	--------------------------------------------------------------------
+	Copyright            : (C) 2015 Ankit Wagadre (wagadre.ankit@gmail.com)
+	Copyright            : (C) 2015 Alexander Semke (alexander.semke@web.de)
  ***************************************************************************/
 /***************************************************************************
  *                                                                         *
