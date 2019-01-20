@@ -189,6 +189,8 @@ void AxisDock::init() {
 	ui.leMajorTicksIncrement->setValidator( new QDoubleValidator(ui.leMajorTicksIncrement) );
 	ui.leMinorTicksIncrement->setValidator( new QDoubleValidator(ui.leMinorTicksIncrement) );
 
+	ui.sbMajorTicksNumber->setRange(2,99);
+
 	//TODO move this stuff to retranslateUI()
 	ui.cbPosition->addItem(i18n("Top"));
 	ui.cbPosition->addItem(i18n("Bottom"));

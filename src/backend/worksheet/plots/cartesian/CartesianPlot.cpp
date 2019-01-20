@@ -2055,7 +2055,7 @@ void CartesianPlotPrivate::retransform() {
 
 	PERFTRACE("CartesianPlotPrivate::retransform()");
 	prepareGeometryChange();
-	setPos( rect.x()+rect.width()/2, rect.y()+rect.height()/2);
+	setPos( rect.x()+rect.width()/2, rect.y()+rect.height()/2); // centering is not always a good choice
 
 	updateDataRect();
 	retransformScales();

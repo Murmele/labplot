@@ -29,7 +29,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>4</number>
      </property>
      <widget class="QWidget" name="tabGeneral">
       <attribute name="title">
@@ -1138,10 +1138,10 @@
           <string>°</string>
          </property>
          <property name="minimum">
-          <number>-360</number>
+          <number>-180</number>
          </property>
          <property name="maximum">
-          <number>360</number>
+          <number>180</number>
          </property>
          <property name="singleStep">
           <number>10</number>
@@ -1474,14 +1474,14 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>KComboBox</class>
-   <extends>QComboBox</extends>
-   <header>kcombobox.h</header>
-  </customwidget>
-  <customwidget>
    <class>KFontRequester</class>
    <extends>QWidget</extends>
    <header>kfontrequester.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KComboBox</class>
+   <extends>QComboBox</extends>
+   <header>kcombobox.h</header>
   </customwidget>
   <customwidget>
    <class>KColorButton</class>
