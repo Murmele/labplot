@@ -1207,9 +1207,6 @@ void AxisPrivate::retransformTicks() {
 		}
 	}
 
-	// TODO: find better way
-	//tmpMajorTicksNumber = tmpMajorTicksNumber > 200 ? 200 : tmpMajorTicksNumber; // limit number of ticks
-
 	int tmpMinorTicksNumber;
 	if (minorTicksType == Axis::TicksTotalNumber)
 		tmpMinorTicksNumber = minorTicksNumber;
