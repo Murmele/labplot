@@ -27,8 +27,8 @@ public:
 	void keyPressEvent(QKeyEvent *event) override;
 	void stepBy(int steps) override;
 	QAbstractSpinBox::StepEnabled stepEnabled() const;
-	void increaseValue(Type type, int step);
-	void increaseValueTemp(qint64& thisType, qint64& nextType, Type nextTypeType, int step);
+        bool increaseValue(Type type, int step);
+        bool changeValue(qint64& thisType, qint64& nextType, Type nextTypeType, int step);
 	Type determineType(int cursorPos) const;
 	void writeValue();
 	void setValue(qint64 increment);

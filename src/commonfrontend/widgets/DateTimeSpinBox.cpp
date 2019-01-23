@@ -159,41 +159,46 @@ bool DateTimeSpinBox::valid() {
 }
 
 // step can also be negative
-void DateTimeSpinBox::increaseValue(DateTimeSpinBox::Type type, int step) {
+bool DateTimeSpinBox::increaseValue(DateTimeSpinBox::Type type, int step) {
 	switch (type) {
 
 	case Type::year: {
 		if (m_year + step < 0 && step < 0) {
-			if (m_year + step < 0)
+			if (m_year + step < 0) {
 				m_year = 0;
-			break;
+				return false;
+			}
 		}
 		m_year += step;
+		return true;
 	}
 		break;
 	case Type::month:
-		increaseValueTemp(m_month, m_year, Type::year, step);
+		return changeValue(m_month, m_year, Type::year, step);
 		break;
 	case Type::day:
-		increaseValueTemp(m_day, m_month, Type::month, step);
+		return changeValue(m_day, m_month, Type::month, step);
 		break;
 	case Type::hour:
-		increaseValueTemp(m_hour, m_day, Type::day, step);
+		return changeValue(m_hour, m_day, Type::day, step);
 		break;
 	case Type::minute:
-		increaseValueTemp(m_minute, m_hour, Type::hour, step);
+		return changeValue(m_minute, m_hour, Type::hour, step);
 		break;
 	case Type::second:
-		increaseValueTemp(m_second, m_minute, Type::minute, step);
+		return changeValue(m_second, m_minute, Type::minute, step);
 		break;
 	case Type::millisecond:
-		increaseValueTemp(m_millisecond, m_second, Type::second, step);
+		return changeValue(m_millisecond, m_second, Type::second, step);
+		break;
+	default:
+		return false;
 		break;
 	}
 
 }
 
-void DateTimeSpinBox::increaseValueTemp(qint64& thisType, qint64& nextType, DateTimeSpinBox::Type nextTypeType, int step) {
+bool DateTimeSpinBox::changeValue(qint64& thisType, qint64& nextType, DateTimeSpinBox::Type nextTypeType, int step) {
 
 	int maxValue = 0;
 	switch (nextTypeType) {
@@ -221,13 +226,14 @@ void DateTimeSpinBox::increaseValueTemp(qint64& thisType, qint64& nextType, Date
 	step -= nextTypeCounter * maxValue;
 	if (thisType + step < 0 && step < 0) {
 		nextTypeCounter --;
-		if (nextType + nextTypeCounter >= 0) {
+		if (increaseValue(nextTypeType, nextTypeCounter)) {
 			step += maxValue;
 			thisType += step;
-			increaseValue(nextTypeType, nextTypeCounter);
-		} else
+			return true;
+		} else {
 			thisType = 0;
-		return;
+			return false;
+		}
 	} else if ( thisType + step > maxValue-1 && step > 0) {
 		step -= nextTypeCounter * maxValue;
 		if (thisType + step > maxValue-1) {
@@ -237,10 +243,11 @@ void DateTimeSpinBox::increaseValueTemp(qint64& thisType, qint64& nextType, Date
 		} else
 			thisType += step;
 
-		increaseValue(nextTypeType, nextTypeCounter);
-		return;
+
+		return increaseValue(nextTypeType, nextTypeCounter);
 	}
 	thisType += step;
+	return true;
 }
 
 DateTimeSpinBox::Type DateTimeSpinBox::determineType(int cursorPos) const{
