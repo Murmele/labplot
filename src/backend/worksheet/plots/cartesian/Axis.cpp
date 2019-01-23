@@ -1197,7 +1197,6 @@ void AxisPrivate::retransformTicks() {
 			case Axis::ScaleX2:
 				tmpMajorTicksNumber = qRound((pow(end,2)-pow(start,2))/majorTicksSpacing + 1);
 		}
-		tmpMajorTicksNumber = tmpMajorTicksNumber > 100 ? 100 : tmpMajorTicksNumber;
 	} else {
 		//custom column was provided
 		if (majorTicksColumn) {
@@ -1207,6 +1206,9 @@ void AxisPrivate::retransformTicks() {
 			return;
 		}
 	}
+
+	// TODO: find better way
+	//tmpMajorTicksNumber = tmpMajorTicksNumber > 200 ? 200 : tmpMajorTicksNumber; // limit number of ticks
 
 	int tmpMinorTicksNumber;
 	if (minorTicksType == Axis::TicksTotalNumber)

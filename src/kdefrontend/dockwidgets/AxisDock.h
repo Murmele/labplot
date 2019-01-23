@@ -38,6 +38,7 @@ class LabelWidget;
 class TreeViewComboBox;
 class AspectTreeModel;
 class AbstractColumn;
+class DateTimeSpinBox;
 
 class AxisDock : public QWidget{
 	Q_OBJECT
@@ -65,6 +66,9 @@ private:
 
 	void load();
 	void loadConfig(KConfig&);
+
+	// own created widgets
+	DateTimeSpinBox* dtsbMajorTicksIncrement;
 
 private slots:
 	void init();
