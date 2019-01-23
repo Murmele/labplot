@@ -1812,14 +1812,12 @@ void AxisPrivate::recalcShapeAndBoundingRect() {
 		td.setDefaultFont(labelsFont);
 		for (int i = 0; i < tickLabelPoints.size(); i++) {
 			tempPath = QPainterPath();
-			QRectF boundingrectLabelString;
 			if (labelsFormat == Axis::FormatDecimal || labelsFormat == Axis::FormatScientificE) {
-				boundingrectLabelString = fm.boundingRect(tickLabelStrings.at(i));
+				tempPath.addRect(fm.boundingRect(tickLabelStrings.at(i)));
 			} else {
 				td.setHtml(tickLabelStrings.at(i));
-				boundingrectLabelString = QRectF(0, -td.size().height(), td.size().width(), td.size().height());
+				tempPath.addRect(QRectF(0, -td.size().height(), td.size().width(), td.size().height()));
 			}
-			tempPath.addRect(boundingrectLabelString);
 
 			trafo.reset();
 			trafo.translate( tickLabelPoints.at(i).x(), tickLabelPoints.at(i).y() );
