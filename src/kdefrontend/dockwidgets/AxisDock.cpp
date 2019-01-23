@@ -922,7 +922,7 @@ void AxisDock::majorTicksIncrementChanged() {
 		if (value < 0) value = -1.*value; //don't allow negative values
 
 		double diff = m_axis->end() - m_axis->start();
-		if (diff/value > 100) { // maximum of 200 ticks
+		if (value == 0 || diff/value > 100) { // maximum of 200 ticks
 			value = diff/100;
 			m_initializing = true;
 
