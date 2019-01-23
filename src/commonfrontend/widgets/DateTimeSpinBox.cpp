@@ -33,14 +33,6 @@ void DateTimeSpinBox::keyPressEvent(QKeyEvent *event) {
 		increaseValue(type, -1);
 		writeValue();
 		setCursorPosition(type);
-	} else if (event->key() == Qt::Key_Left) {
-		int cursorPos = lineEdit()->cursorPosition();
-		if (cursorPos > 0)
-			lineEdit()->setCursorPosition(cursorPos - 1);
-	} else if (event->key() == Qt::Key_Right) {
-		int cursorPos = lineEdit()->cursorPosition();
-		if (cursorPos < lineEdit()->text().length())
-			lineEdit()->setCursorPosition(cursorPos + 1);
 	} else {
 		QAbstractSpinBox::keyPressEvent(event);
 		getValue();
@@ -93,6 +85,8 @@ void DateTimeSpinBox::setValue(qint64 increment) {
 	m_second = rest /divisor;
 	rest -= m_second * divisor;
 	m_millisecond = rest;
+
+	writeValue();
 }
 
 qint64 DateTimeSpinBox::value() {
