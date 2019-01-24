@@ -66,32 +66,11 @@ AxisDock::AxisDock(QWidget* parent) : QWidget(parent) {
 	//"Ticks"-tab
 	auto* layout = static_cast<QGridLayout*>(ui.tabTicks->layout());
 	cbMajorTicksColumn = new TreeViewComboBox(ui.tabTicks);
+	layout->addWidget(cbMajorTicksColumn, 8, 2);
 	cbMinorTicksColumn = new TreeViewComboBox(ui.tabTicks);
+	layout->addWidget(cbMinorTicksColumn, 21, 2);
 	dtsbMajorTicksIncrement = new DateTimeSpinBox(ui.tabTicks);
-
-	int rowCount = layout->rowCount();
-	int columnCount = layout->columnCount();
-
-	for (int row = 0; row < rowCount; row++) {
-		for (int column = 0; column < columnCount; column++) {
-			QLayoutItem* item = layout->itemAtPosition(row, column);
-			if (item) {
-				QWidget* widget = item->widget();
-
-				QLabel* label = dynamic_cast<QLabel*>(widget);
-				if (label) {
-					if (label == ui.lMajorTicksColumn)
-						layout->addWidget(cbMajorTicksColumn, row, 2);
-
-					if (label == ui.lMinorTicksColumn)
-						layout->addWidget(cbMinorTicksColumn, row, 2);
-
-					if (label == ui.lMajorTicksIncrementDateTime)
-						layout->addWidget(dtsbMajorTicksIncrement, row, 2);
-				}
-			}
-		}
-	}
+	layout->addWidget(dtsbMajorTicksIncrement, 7, 2);
 
 	//adjust layouts in the tabs
 	for (int i = 0; i < ui.tabWidget->count(); ++i) {
@@ -846,53 +825,53 @@ void AxisDock::majorTicksTypeChanged(int index) {
 
 	auto type = Axis::TicksType(index);
 	const auto* plot = dynamic_cast<const CartesianPlot*>(m_axis->parentAspect());
-	if (plot) {
-		bool numeric = ( (m_axis->orientation() == Axis::AxisHorizontal && plot->xRangeFormat() == CartesianPlot::Numeric)
-			|| (m_axis->orientation() == Axis::AxisVertical && plot->yRangeFormat() == CartesianPlot::Numeric) );
 
-		if ( type == Axis::TicksTotalNumber) {
-			ui.lMajorTicksNumber->show();
-			ui.sbMajorTicksNumber->show();
-			ui.lMajorTicksIncrementNumeric->hide();
-			ui.sbMajorTicksIncrementNumeric->hide();
+	bool numeric = ( (m_axis->orientation() == Axis::AxisHorizontal && plot->xRangeFormat() == CartesianPlot::Numeric)
+		|| (m_axis->orientation() == Axis::AxisVertical && plot->yRangeFormat() == CartesianPlot::Numeric) );
+
+	if ( type == Axis::TicksTotalNumber) {
+		ui.lMajorTicksNumber->show();
+		ui.sbMajorTicksNumber->show();
+		ui.lMajorTicksIncrementNumeric->hide();
+		ui.sbMajorTicksIncrementNumeric->hide();
+		ui.lMajorTicksIncrementDateTime->hide();
+		dtsbMajorTicksIncrement->hide();
+		ui.lMajorTicksColumn->hide();
+		cbMajorTicksColumn->hide();
+	} else if ( type == Axis::TicksIncrement) {
+		ui.lMajorTicksNumber->hide();
+		ui.sbMajorTicksNumber->hide();
+		ui.lMajorTicksIncrementNumeric->show();
+		if (numeric) {
 			ui.lMajorTicksIncrementDateTime->hide();
 			dtsbMajorTicksIncrement->hide();
-			ui.lMajorTicksColumn->hide();
-			cbMajorTicksColumn->hide();
-		} else if ( type == Axis::TicksIncrement) {
-			ui.lMajorTicksNumber->hide();
-			ui.sbMajorTicksNumber->hide();
 			ui.lMajorTicksIncrementNumeric->show();
-			if (numeric) {
-				ui.lMajorTicksIncrementDateTime->hide();
-				dtsbMajorTicksIncrement->hide();
-				ui.lMajorTicksIncrementNumeric->show();
-				ui.sbMajorTicksIncrementNumeric->show();
-			} else {
-				ui.lMajorTicksIncrementDateTime->show();
-				dtsbMajorTicksIncrement->show();
-				ui.lMajorTicksIncrementNumeric->hide();
-				ui.sbMajorTicksIncrementNumeric->hide();
-			}
-			ui.lMajorTicksColumn->hide();
-			cbMajorTicksColumn->hide();
-
-			// Check if Increment is not to small
-			majorTicksIncrementChanged();
+			ui.sbMajorTicksIncrementNumeric->show();
 		} else {
-			ui.lMajorTicksNumber->hide();
-			ui.sbMajorTicksNumber->hide();
+			ui.lMajorTicksIncrementDateTime->show();
+			dtsbMajorTicksIncrement->show();
 			ui.lMajorTicksIncrementNumeric->hide();
 			ui.sbMajorTicksIncrementNumeric->hide();
-			dtsbMajorTicksIncrement->hide();
-			dtsbMajorTicksIncrement->hide();
-			ui.lMajorTicksColumn->show();
-			cbMajorTicksColumn->show();
 		}
+		ui.lMajorTicksColumn->hide();
+		cbMajorTicksColumn->hide();
 
-		for (auto* axis : m_axesList)
-			axis->setMajorTicksType(type);
+		// Check if Increment is not to small
+		majorTicksIncrementChanged();
+	} else {
+		ui.lMajorTicksNumber->hide();
+		ui.sbMajorTicksNumber->hide();
+		ui.lMajorTicksIncrementNumeric->hide();
+		ui.sbMajorTicksIncrementNumeric->hide();
+		dtsbMajorTicksIncrement->hide();
+		dtsbMajorTicksIncrement->hide();
+		ui.lMajorTicksColumn->show();
+		cbMajorTicksColumn->show();
 	}
+
+	for (auto* axis : m_axesList)
+		axis->setMajorTicksType(type);
+
 }
 
 void AxisDock::majorTicksNumberChanged(int value) {
@@ -908,36 +887,34 @@ void AxisDock::majorTicksIncrementChanged() {
 		return;
 
 	const auto* plot = dynamic_cast<const CartesianPlot*>(m_axis->parentAspect());
-	if (plot) {
-		bool numeric = ( (m_axis->orientation() == Axis::AxisHorizontal && plot->xRangeFormat() == CartesianPlot::Numeric)
-			|| (m_axis->orientation() == Axis::AxisVertical && plot->yRangeFormat() == CartesianPlot::Numeric) );
 
-		double value;
+	bool numeric = ( (m_axis->orientation() == Axis::AxisHorizontal && plot->xRangeFormat() == CartesianPlot::Numeric)
+		|| (m_axis->orientation() == Axis::AxisVertical && plot->yRangeFormat() == CartesianPlot::Numeric) );
+
+	double value;
+
+	if (numeric)
+		value = ui.sbMajorTicksIncrementNumeric->value();
+	else
+		value = dtsbMajorTicksIncrement->value();
+
+	if (value < 0) value = -1.*value; //don't allow negative values
+
+	double diff = m_axis->end() - m_axis->start();
+	if (value == 0 || diff/value > 100) { // maximum of 100 ticks
+		value = diff/100;
+		m_initializing = true;
 
 		if (numeric)
-			value = ui.sbMajorTicksIncrementNumeric->value();
-		else {
-			value = dtsbMajorTicksIncrement->value();
-		}
-		if (value < 0) value = -1.*value; //don't allow negative values
+			ui.sbMajorTicksIncrementNumeric->setValue(value);
+		else
+			dtsbMajorTicksIncrement->setValue(value);
 
-		double diff = m_axis->end() - m_axis->start();
-		if (value == 0 || diff/value > 100) { // maximum of 100 ticks
-			value = diff/100;
-			m_initializing = true;
-
-			if (numeric)
-				ui.sbMajorTicksIncrementNumeric->setValue(value);
-			else {
-				dtsbMajorTicksIncrement->setValue(value);
-			}
-
-			m_initializing = false;
-		}
-
-		for (auto* axis : m_axesList)
-			axis->setMajorTicksIncrement(value);
+		m_initializing = false;
 	}
+
+	for (auto* axis : m_axesList)
+		axis->setMajorTicksIncrement(value);
 }
 
 void AxisDock::majorTicksLineStyleChanged(int index) {

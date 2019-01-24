@@ -1596,16 +1596,32 @@ void AxisPrivate::retransformTickLabelPositions() {
 				endPoint   = anchorPoint + QPointF(0, (majorTicksDirection & Axis::ticksIn) ? -yDirection * majorTicksLength : 0);
 			}
 
-			// move so, that the corner is at the same position than the tick when the rotation angle is not zero
-			if (labelsRotationAngle >= 0.01) {
+			// for rotated labels (angle is not zero), align label's corner at the position of the tick
+			if (labelsRotationAngle >= 89.999 && labelsRotationAngle <= 90.009) {
+				if (labelsPosition == Axis::LabelsOut) {
+					pos.setX( endPoint.x());
+					pos.setY( endPoint.y() + height + width + labelsOffset );
+				} else {
+					pos.setX( startPoint.x());
+					pos.setY( startPoint.y() + labelsOffset );
+				}
+			} else if (labelsRotationAngle >= -90.999 && labelsRotationAngle <= -89.009) {
+				if (labelsPosition == Axis::LabelsOut) {
+					pos.setX( endPoint.x());
+					pos.setY( endPoint.y() + height + labelsOffset );
+				} else {
+					pos.setX( startPoint.x());
+					pos.setY( startPoint.y() + labelsOffset );
+				}
+			} else if (labelsRotationAngle >= 0.01 && labelsRotationAngle <= 179.999) {
 				if (labelsPosition == Axis::LabelsOut) {
 					pos.setX( endPoint.x() - diffx);
 					pos.setY( endPoint.y() + labelsOffset + height + diffy);
 				} else {
 					pos.setX( startPoint.x() - diffx);
-					pos.setY( startPoint.y() + labelsOffset + height + diffy);
+					pos.setY( startPoint.y() + labelsOffset + diffy);
 				}
-			}else if (labelsRotationAngle <= -0.01) {
+			}else if (labelsRotationAngle <= -0.01 && labelsRotationAngle >= -179.999) {
 				if (labelsPosition == Axis::LabelsOut) {
 					pos.setX( endPoint.x());
 					pos.setY( endPoint.y() + height + labelsOffset );
