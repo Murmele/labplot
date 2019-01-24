@@ -70,6 +70,9 @@ private:
 	// own created widgets
 	DateTimeSpinBox* dtsbMajorTicksIncrement;
 
+	int determineDecimals(double diff);
+	double determineStep(double diff, int decimal);
+
 private slots:
 	void init();
 

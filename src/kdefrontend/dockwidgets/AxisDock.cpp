@@ -922,7 +922,7 @@ void AxisDock::majorTicksIncrementChanged() {
 		if (value < 0) value = -1.*value; //don't allow negative values
 
 		double diff = m_axis->end() - m_axis->start();
-		if (value == 0 || diff/value > 100) { // maximum of 200 ticks
+		if (value == 0 || diff/value > 100) { // maximum of 100 ticks
 			value = diff/100;
 			m_initializing = true;
 
@@ -1491,6 +1491,12 @@ void AxisDock::axisStartChanged(double value) {
 	m_initializing = true;
 	ui.leStart->setText( QString::number(value) );
 	ui.dateTimeEditStart->setDateTime( QDateTime::fromMSecsSinceEpoch(value) );
+
+	// determine stepsize and number of decimals
+	double diff = m_axis->end() - m_axis->start();
+	int decimal = determineDecimals(diff);
+	ui.sbMajorTicksIncrementNumeric->setDecimals(decimal);
+	ui.sbMajorTicksIncrementNumeric->setSingleStep(determineStep(diff, decimal));
 	m_initializing = false;
 }
 
@@ -1498,6 +1504,7 @@ void AxisDock::axisEndChanged(double value) {
 	m_initializing = true;
 	ui.leEnd->setText( QString::number(value) );
 	ui.dateTimeEditEnd->setDateTime( QDateTime::fromMSecsSinceEpoch(value) );
+	ui.sbMajorTicksIncrementNumeric->setSingleStep(floor(m_axis->end() - m_axis->start())/10);
 	m_initializing = false;
 }
 
@@ -1755,6 +1762,12 @@ void AxisDock::load() {
 	ui.leStart->setText( QString::number(m_axis->start()) );
 	ui.leEnd->setText( QString::number(m_axis->end()) );
 
+
+	double diff = m_axis->end() - m_axis->start();
+	int decimal = determineDecimals(diff);
+	ui.sbMajorTicksIncrementNumeric->setDecimals(decimal);
+	ui.sbMajorTicksIncrementNumeric->setSingleStep(determineStep(diff, decimal));
+
 	//depending on range format of the axis (numeric vs. datetime), show/hide the corresponding widgets
 	const auto* plot = dynamic_cast<const CartesianPlot*>(m_axis->parentAspect());
 	if (plot) {
@@ -1867,6 +1880,35 @@ void AxisDock::load() {
 	GuiTools::updatePenStyles(ui.cbMajorGridStyle, ui.kcbMajorGridColor->color());
 	GuiTools::updatePenStyles(ui.cbMinorGridStyle, ui.kcbMinorGridColor->color());
 	m_initializing = true;
+}
+
+int AxisDock::determineDecimals(double diff) {
+	diff /= 10; // step one decimal before
+	double power10 = 1;
+	for (int i = 0; i < 10; i++) {
+		double nearest = round(diff * power10) / power10;
+		if (nearest > 0) {
+			return i;
+		}
+		power10 *= 10;
+	}
+
+	return 10;
+}
+
+double AxisDock::determineStep(double diff, int decimal) {
+	double ten = 1;
+	if (decimal == 0) {
+		for (unsigned int i = 1; i < 1000000000; i++) {
+			if (diff/ten <= 10) {
+				return ten/10; // use one decimal before
+			}
+			ten *= 10;
+		}
+		return 1;
+	}
+
+	return static_cast<double>(1)/(pow(10,decimal));
 }
 
 void AxisDock::loadConfigFromTemplate(KConfig& config) {

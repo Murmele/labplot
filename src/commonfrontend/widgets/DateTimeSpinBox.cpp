@@ -1,3 +1,31 @@
+/***************************************************************************
+	File                 : DateTimeSpinBox.cpp
+	Project              : LabPlot
+	Description          : widget for setting datetimes with a spinbox
+	--------------------------------------------------------------------
+	Copyright            : (C) 2019 Martin Marmsoler (martin.marmsoler@gmail.com)
+
+ ***************************************************************************/
+
+/***************************************************************************
+ *                                                                         *
+ *  This program is free software; you can redistribute it and/or modify   *
+ *  it under the terms of the GNU General Public License as published by   *
+ *  the Free Software Foundation; either version 2 of the License, or      *
+ *  (at your option) any later version.                                    *
+ *                                                                         *
+ *  This program is distributed in the hope that it will be useful,        *
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of         *
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the          *
+ *  GNU General Public License for more details.                           *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the Free Software           *
+ *   Foundation, Inc., 51 Franklin Street, Fifth Floor,                    *
+ *   Boston, MA  02110-1301  USA                                           *
+ *                                                                         *
+ ***************************************************************************/
+
 #include "DateTimeSpinBox.h"
 
 #include <QLineEdit>
@@ -20,9 +48,14 @@ DateTimeSpinBox::DateTimeSpinBox(QWidget* parent) : QAbstractSpinBox (parent)
 void DateTimeSpinBox::keyPressEvent(QKeyEvent *event) {
 
 	if (event->key() >= Qt::Key_0 && event->key() <= Qt::Key_9) {
-		Type type = determineType(lineEdit()->cursorPosition());
+		int cursorPos = lineEdit()->cursorPosition();
+		int textLenght = lineEdit()->text().length();
 		QAbstractSpinBox::keyPressEvent(event);
 		getValue();
+		if (lineEdit()->text().length() != textLenght)
+			lineEdit()->setCursorPosition(cursorPos + 1);
+		else
+			lineEdit()->setCursorPosition(cursorPos);
 	} else if (event->key() == Qt::Key_Up) {
 		Type type = determineType(lineEdit()->cursorPosition());
 		increaseValue(type, 1);
@@ -174,22 +207,22 @@ bool DateTimeSpinBox::increaseValue(DateTimeSpinBox::Type type, int step) {
 	}
 		break;
 	case Type::month:
-		return changeValue(m_month, m_year, Type::year, step);
+		return changeValue(m_month, Type::year, step);
 		break;
 	case Type::day:
-		return changeValue(m_day, m_month, Type::month, step);
+		return changeValue(m_day, Type::month, step);
 		break;
 	case Type::hour:
-		return changeValue(m_hour, m_day, Type::day, step);
+		return changeValue(m_hour, Type::day, step);
 		break;
 	case Type::minute:
-		return changeValue(m_minute, m_hour, Type::hour, step);
+		return changeValue(m_minute, Type::hour, step);
 		break;
 	case Type::second:
-		return changeValue(m_second, m_minute, Type::minute, step);
+		return changeValue(m_second, Type::minute, step);
 		break;
 	case Type::millisecond:
-		return changeValue(m_millisecond, m_second, Type::second, step);
+		return changeValue(m_millisecond, Type::second, step);
 		break;
 	default:
 		return false;
@@ -198,9 +231,9 @@ bool DateTimeSpinBox::increaseValue(DateTimeSpinBox::Type type, int step) {
 
 }
 
-bool DateTimeSpinBox::changeValue(qint64& thisType, qint64& nextType, DateTimeSpinBox::Type nextTypeType, int step) {
+bool DateTimeSpinBox::changeValue(qint64& thisType, DateTimeSpinBox::Type nextTypeType, int step) {
 
-	int maxValue = 0;
+	int maxValue = 1;
 	switch (nextTypeType) {
 		case (Type::year):
 			maxValue = 12;
@@ -220,6 +253,8 @@ bool DateTimeSpinBox::changeValue(qint64& thisType, qint64& nextType, DateTimeSp
 		case (Type::second):
 			maxValue = 1000;
 			break;
+		case (Type::millisecond):
+			return false;
 	}
 
 	int nextTypeCounter = step / maxValue;
