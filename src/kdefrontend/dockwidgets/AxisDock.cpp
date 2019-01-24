@@ -1882,6 +1882,11 @@ void AxisDock::load() {
 	m_initializing = true;
 }
 
+/*!
+ * Determine the number of decimals for using in a QDoubleSpinBox
+ * \param diff
+ * \return
+ */
 int AxisDock::determineDecimals(double diff) {
 	diff /= 10; // step one decimal before
 	double power10 = 1;
@@ -1896,6 +1901,12 @@ int AxisDock::determineDecimals(double diff) {
 	return 10;
 }
 
+/*!
+ * Determine the step in a QDoubleSpinBox with specific decimals and diff
+ * \param diff Difference between the largest value and smallest value
+ * \param decimal
+ * \return
+ */
 double AxisDock::determineStep(double diff, int decimal) {
 	double ten = 1;
 	if (decimal == 0) {
