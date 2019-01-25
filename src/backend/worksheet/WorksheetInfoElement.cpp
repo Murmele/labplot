@@ -617,7 +617,7 @@ void WorksheetInfoElementPrivate::retransform() {
 			zValueMin = zValuePoint;
 		markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 	}
-	setZValue(zValueMin-1);
+	setZValue(zValueMin-0.001); // low enough that it is not behind other elements
 
 	// line goes to the fist pointPos
 	// TODO: better would be to direct to the highest point or also possible to make it changeable
