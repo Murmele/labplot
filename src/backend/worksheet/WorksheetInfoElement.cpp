@@ -399,7 +399,7 @@ void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
 		connect(point, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
 
 		CustomPoint* p = const_cast<CustomPoint*>(point);
-		p->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
+		p->setParentGraphicsItem(d->plot->graphicsItem());
 		return;
 	}
 
@@ -408,7 +408,7 @@ void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
 		connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
 
 		TextLabel* l = const_cast<TextLabel*>(labelChild);
-		l->setParentGraphicsItem(d->plot->plotArea()->graphicsItem());
+		l->setParentGraphicsItem(d->plot->graphicsItem());
 	}
 }
 /*!
