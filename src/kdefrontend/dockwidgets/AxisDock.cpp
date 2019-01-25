@@ -820,7 +820,8 @@ void AxisDock::majorTicksDirectionChanged(int index) {
 	Shows/hides the corresponding widgets.
 */
 void AxisDock::majorTicksTypeChanged(int index) {
-	if (m_initializing)
+
+	if (!m_axis) // If elements are added to the combobox 'cbMajorTicksType' (at init of this class), then this function is called, which is a problem if no axis are available
 		return;
 
 	auto type = Axis::TicksType(index);
@@ -869,6 +870,9 @@ void AxisDock::majorTicksTypeChanged(int index) {
 		cbMajorTicksColumn->show();
 	}
 
+	if (m_initializing)
+		return;
+
 	for (auto* axis : m_axesList)
 		axis->setMajorTicksType(type);
 
@@ -903,6 +907,12 @@ void AxisDock::majorTicksIncrementChanged() {
 	double diff = m_axis->end() - m_axis->start();
 	if (value == 0 || diff/value > 100) { // maximum of 100 ticks
 		value = diff/100;
+
+		// determine stepsize and number of decimals
+		int decimal = determineDecimals(value*10);
+		ui.sbMajorTicksIncrementNumeric->setDecimals(decimal);
+		ui.sbMajorTicksIncrementNumeric->setSingleStep(determineStep(diff, decimal));
+
 		m_initializing = true;
 
 		if (numeric)
@@ -1482,6 +1492,12 @@ void AxisDock::axisEndChanged(double value) {
 	ui.leEnd->setText( QString::number(value) );
 	ui.dateTimeEditEnd->setDateTime( QDateTime::fromMSecsSinceEpoch(value) );
 	ui.sbMajorTicksIncrementNumeric->setSingleStep(floor(m_axis->end() - m_axis->start())/10);
+
+	// determine stepsize and number of decimals
+	double diff = m_axis->end() - m_axis->start();
+	int decimal = determineDecimals(diff);
+	ui.sbMajorTicksIncrementNumeric->setDecimals(decimal);
+	ui.sbMajorTicksIncrementNumeric->setSingleStep(determineStep(diff, decimal));
 	m_initializing = false;
 }
 
@@ -1849,11 +1865,9 @@ void AxisDock::load() {
 	ui.sbMinorGridOpacity->setValue( round(m_axis->minorGridOpacity()*100.0) );
 
 	GuiTools::updatePenStyles(ui.cbLineStyle, ui.kcbLineColor->color());
-	m_initializing = false;
 	this->majorTicksTypeChanged(ui.cbMajorTicksType->currentIndex());
 	GuiTools::updatePenStyles(ui.cbMajorTicksLineStyle, ui.kcbMajorTicksColor->color());
 	this->minorTicksTypeChanged(ui.cbMinorTicksType->currentIndex());
-	m_initializing = true;
 	GuiTools::updatePenStyles(ui.cbMinorTicksLineStyle, ui.kcbMinorTicksColor->color());
 	GuiTools::updatePenStyles(ui.cbMajorGridStyle, ui.kcbMajorGridColor->color());
 	GuiTools::updatePenStyles(ui.cbMinorGridStyle, ui.kcbMinorGridColor->color());
