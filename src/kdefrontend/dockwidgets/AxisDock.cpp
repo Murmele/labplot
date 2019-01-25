@@ -66,11 +66,11 @@ AxisDock::AxisDock(QWidget* parent) : QWidget(parent) {
 	//"Ticks"-tab
 	auto* layout = static_cast<QGridLayout*>(ui.tabTicks->layout());
 	cbMajorTicksColumn = new TreeViewComboBox(ui.tabTicks);
-	layout->addWidget(cbMajorTicksColumn, 8, 2);
+	layout->addWidget(cbMajorTicksColumn, 7, 2);
 	cbMinorTicksColumn = new TreeViewComboBox(ui.tabTicks);
-	layout->addWidget(cbMinorTicksColumn, 21, 2);
+	layout->addWidget(cbMinorTicksColumn, 20, 2);
 	dtsbMajorTicksIncrement = new DateTimeSpinBox(ui.tabTicks);
-	layout->addWidget(dtsbMajorTicksIncrement, 7, 2);
+	layout->addWidget(dtsbMajorTicksIncrement, 6, 2);
 
 	//adjust layouts in the tabs
 	for (int i = 0; i < ui.tabWidget->count(); ++i) {
