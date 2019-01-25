@@ -1848,15 +1848,15 @@ void AxisDock::load() {
 	ui.sbMinorGridWidth->setValue( Worksheet::convertFromSceneUnits(m_axis->minorGridPen().widthF(),Worksheet::Point) );
 	ui.sbMinorGridOpacity->setValue( round(m_axis->minorGridOpacity()*100.0) );
 
-	m_initializing = false;
 	GuiTools::updatePenStyles(ui.cbLineStyle, ui.kcbLineColor->color());
+	m_initializing = false;
 	this->majorTicksTypeChanged(ui.cbMajorTicksType->currentIndex());
 	GuiTools::updatePenStyles(ui.cbMajorTicksLineStyle, ui.kcbMajorTicksColor->color());
 	this->minorTicksTypeChanged(ui.cbMinorTicksType->currentIndex());
+	m_initializing = true;
 	GuiTools::updatePenStyles(ui.cbMinorTicksLineStyle, ui.kcbMinorTicksColor->color());
 	GuiTools::updatePenStyles(ui.cbMajorGridStyle, ui.kcbMajorGridColor->color());
 	GuiTools::updatePenStyles(ui.cbMinorGridStyle, ui.kcbMinorGridColor->color());
-	m_initializing = true;
 }
 
 /*!
