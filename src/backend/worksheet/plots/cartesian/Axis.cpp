@@ -1873,10 +1873,14 @@ void AxisPrivate::recalcShapeAndBoundingRect() {
 		qreal offsetX = titleOffsetX - labelsOffset; //the distance to the axis line
 		qreal offsetY = titleOffsetY - labelsOffset; //the distance to the axis line
 		if (orientation == Axis::AxisHorizontal) {
-			offsetY -= title->graphicsItem()->boundingRect().height()/2 + tickLabelsPath.boundingRect().height();
+			offsetY -= title->graphicsItem()->boundingRect().height()/2;
+			if (labelsPosition == Axis::LabelsOut)
+				offsetY -= tickLabelsPath.boundingRect().height();
 			title->setPosition( QPointF( (rect.topLeft().x() + rect.topRight().x())/2 + titleOffsetX, rect.bottomLeft().y() - offsetY ) );
 		} else {
-			offsetX -= title->graphicsItem()->boundingRect().width()/2 + tickLabelsPath.boundingRect().width();
+			offsetX -= title->graphicsItem()->boundingRect().width()/2;
+			if (labelsPosition == Axis::LabelsOut)
+				offsetX -= tickLabelsPath.boundingRect().width();
 			title->setPosition( QPointF( rect.topLeft().x() + offsetX, (rect.topLeft().y() + rect.bottomLeft().y())/2 - titleOffsetY) );
 		}
 		axisShape.addPath(WorksheetElement::shapeFromPath(title->graphicsItem()->mapToParent(title->graphicsItem()->shape()), linePen));
