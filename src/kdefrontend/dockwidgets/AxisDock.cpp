@@ -902,14 +902,14 @@ void AxisDock::majorTicksIncrementChanged() {
 	else
 		value = dtsbMajorTicksIncrement->value();
 
-	if (value < 0) value = -1.*value; //don't allow negative values
+	if (value < 0) value = -1. * value; //don't allow negative values
 
 	double diff = m_axis->end() - m_axis->start();
-	if (value == 0 || diff/value > 100) { // maximum of 100 ticks
+	if (value == 0 || diff / value > 100) { // maximum of 100 ticks
 		value = diff/100;
 
 		// determine stepsize and number of decimals
-		int decimal = determineDecimals(value*10);
+		int decimal = determineDecimals(value * 10);
 		ui.sbMajorTicksIncrementNumeric->setDecimals(decimal);
 		ui.sbMajorTicksIncrementNumeric->setSingleStep(determineStep(diff, decimal));
 
