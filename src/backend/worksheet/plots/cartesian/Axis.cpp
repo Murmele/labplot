@@ -1566,8 +1566,8 @@ void AxisPrivate::retransformTickLabelPositions() {
 
 	QTextDocument td;
 	td.setDefaultFont(labelsFont);
-	double cosinus = cos(labelsRotationAngle * M_PI / 180);
-	double sinus = sin(labelsRotationAngle * M_PI / 180);
+	double cosinus = cos(labelsRotationAngle * M_PI / 180); // calculate only one time
+	double sinus = sin(labelsRotationAngle * M_PI / 180); // calculate only one time
 	for ( int i = 0; i < majorTickPoints.size(); i++ ) {
 		if ((orientation == Axis::AxisHorizontal && plot->xRangeFormat() == CartesianPlot::Numeric) ||
 				(orientation == Axis::AxisVertical && plot->yRangeFormat() == CartesianPlot::Numeric)) {
@@ -1597,39 +1597,31 @@ void AxisPrivate::retransformTickLabelPositions() {
 			}
 
 			// for rotated labels (angle is not zero), align label's corner at the position of the tick
-			if (labelsRotationAngle >= 89.999 && labelsRotationAngle <= 90.009) {
+			if (abs(labelsRotationAngle) > 179.999 && abs(labelsRotationAngle) < 180.009) { // +-180°
 				if (labelsPosition == Axis::LabelsOut) {
-					pos.setX( endPoint.x());
-					pos.setY( endPoint.y() + height + width + labelsOffset );
+					pos.setX( endPoint.x() + width/2);
+					pos.setY( endPoint.y() + labelsOffset );
 				} else {
-					pos.setX( startPoint.x());
-					pos.setY( startPoint.y() + labelsOffset );
+					pos.setX( startPoint.x() + width/2);
+					pos.setY( startPoint.y() - height + labelsOffset );
 				}
-			} else if (labelsRotationAngle >= -90.999 && labelsRotationAngle <= -89.009) {
+			} else if (labelsRotationAngle <= -0.01) { // [-0.01°, -180°)
 				if (labelsPosition == Axis::LabelsOut) {
-					pos.setX( endPoint.x());
-					pos.setY( endPoint.y() + height + labelsOffset );
+					pos.setX( endPoint.x() + sinus * height/2);
+					pos.setY( endPoint.y() + labelsOffset + cosinus * height/2);
 				} else {
-					pos.setX( startPoint.x());
-					pos.setY( startPoint.y() + labelsOffset );
+					pos.setX( startPoint.x() + sinus * height/2 - diffx);
+					pos.setY( startPoint.y() + labelsOffset + cosinus * height/2 + diffy);
 				}
-			} else if (labelsRotationAngle >= 0.01 && labelsRotationAngle <= 179.999) {
+			} else if (labelsRotationAngle >= 0.01) { // [0.01°, 180°)
 				if (labelsPosition == Axis::LabelsOut) {
-					pos.setX( endPoint.x() - diffx);
-					pos.setY( endPoint.y() + labelsOffset + height + diffy);
+					pos.setX( endPoint.x() - diffx + sinus * height/2);
+					pos.setY( endPoint.y() + labelsOffset + diffy + cosinus * height/2);
 				} else {
-					pos.setX( startPoint.x() - diffx);
-					pos.setY( startPoint.y() + labelsOffset + diffy);
+					pos.setX( startPoint.x() + sinus * height/2);
+					pos.setY( startPoint.y() + labelsOffset + cosinus * height/2);
 				}
-			}else if (labelsRotationAngle <= -0.01 && labelsRotationAngle >= -179.999) {
-				if (labelsPosition == Axis::LabelsOut) {
-					pos.setX( endPoint.x());
-					pos.setY( endPoint.y() + height + labelsOffset );
-				} else {
-					pos.setX( startPoint.x());
-					pos.setY( startPoint.y() + labelsOffset );
-				}
-			} else {
+			} else {	// 0°
 				if (labelsPosition == Axis::LabelsOut) {
 					pos.setX( endPoint.x() - width/2);
 					pos.setY( endPoint.y() + height + labelsOffset );
@@ -1638,7 +1630,8 @@ void AxisPrivate::retransformTickLabelPositions() {
 					pos.setY( startPoint.y() + labelsOffset );
 				}
 			}
-		} else {// vertical
+		// ---------------------- vertical -------------------------
+		} else {
 			if (offset < middleX) {
 				startPoint = anchorPoint + QPointF((majorTicksDirection & Axis::ticksIn)  ? xDirection * majorTicksLength  : 0, 0);
 				endPoint = anchorPoint + QPointF((majorTicksDirection & Axis::ticksOut) ? -xDirection * majorTicksLength : 0, 0);
@@ -1647,24 +1640,49 @@ void AxisPrivate::retransformTickLabelPositions() {
 				endPoint = anchorPoint + QPointF((majorTicksDirection & Axis::ticksIn)  ? -xDirection *  majorTicksLength  : 0, 0);
 			}
 
-			if (labelsRotationAngle >= 0.01) {
+			if (labelsRotationAngle >= 89.999 && labelsRotationAngle <= 90.009) { // +90°
 				if (labelsPosition == Axis::LabelsOut) {
-					// links
-					pos.setX( endPoint.x() - labelsOffset - diffx);
-					pos.setY( endPoint.y() + height/2 + diffy);
+					pos.setX( endPoint.x() - labelsOffset);
+					pos.setY( endPoint.y() + width/2 );
 				} else {
-					pos.setX( startPoint.x() - labelsOffset - diffx);
-					pos.setY( startPoint.y() + height/2 + diffy);
+					pos.setX( startPoint.x() - labelsOffset);
+					pos.setY( startPoint.y() + width/2);
 				}
-			} else if (labelsRotationAngle <= -0.01) {
+			} else if (labelsRotationAngle >= -90.999 && labelsRotationAngle <= -89.009) { // -90°
 				if (labelsPosition == Axis::LabelsOut) {
-					pos.setX( endPoint.x() - labelsOffset - diffx);
-					pos.setY( endPoint.y() + height/2 + diffy);
+					pos.setX( endPoint.x() - labelsOffset - height);
+					pos.setY( endPoint.y() - width/2 );
 				} else {
-					pos.setX( startPoint.x() - labelsOffset - diffx);
-					pos.setY( startPoint.y() + height/2 + diffy);
+					pos.setX( startPoint.x() - labelsOffset);
+					pos.setY( startPoint.y() - width/2 );
 				}
-			} else {
+			} else if (abs(labelsRotationAngle) > 179.999 && abs(labelsRotationAngle) < 180.009) { // +-180°
+				if (labelsPosition == Axis::LabelsOut) {
+					pos.setX( endPoint.x() - labelsOffset);
+					pos.setY( endPoint.y() - height/2);
+				} else {
+					pos.setX( startPoint.x() - labelsOffset + width);
+					pos.setY( startPoint.y() - height/2 );
+				}
+			} else if (abs(labelsRotationAngle) >= 0.01 && abs(labelsRotationAngle) < 90.01) { // [0.01°, 90°)
+				if (labelsPosition == Axis::LabelsOut) {
+					// left
+					pos.setX( endPoint.x() - labelsOffset - diffx + sinus * height/2);
+					pos.setY( endPoint.y() + cosinus * height/2 + diffy);
+				} else {
+					pos.setX( startPoint.x() - labelsOffset + sinus * height/2);
+					pos.setY( startPoint.y() + cosinus * height/2);
+				}
+			} else if (abs(labelsRotationAngle) >= 90.01 && abs(labelsRotationAngle) < 180) { // [90.01, 180)
+				if (labelsPosition == Axis::LabelsOut) {
+					// left
+					pos.setX( endPoint.x() - labelsOffset + sinus * height/2);
+					pos.setY( endPoint.y() + cosinus * height/2);
+				} else {
+					pos.setX( startPoint.x() - labelsOffset - diffx + sinus * height/2);
+					pos.setY( startPoint.y() + diffy + cosinus * height/2);
+				}
+			} else { // 0°
 				if (labelsPosition == Axis::LabelsOut) {
 					pos.setX( endPoint.x() - width - labelsOffset);
 					pos.setY( endPoint.y() + height/2 );
