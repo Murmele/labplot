@@ -897,6 +897,8 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 	for (auto markerpoint: q->markerpoints)
 		markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 
+	bool newMarkerPointPos = false;
+
 	q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 	double x = q->markerpoints[0].x+delta_logic.x();
 	DEBUG("markerpoints[0].x: " << q->markerpoints[0].x << ", markerpoints[0].y: " << q->markerpoints[0].y << ", Scene xpos: " << x);
@@ -913,6 +915,8 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 		}
 
 		if (valueFound) {
+			if (abs(x_new - q->markerpoints[i].x) > 0)
+				newMarkerPointPos = true;
 			q->markerpoints[i].y = y;
 			q->markerpoints[i].x = x_new;
 			q->m_suppressPointPositionChanged = true;
@@ -921,20 +925,20 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 		} else
 			DEBUG("No value found for Logicalpoint" << i);
 	}
-	double x_label = q->label->position().point.x() + delta.x();
-	double y_label = q->label->position().point.y();
+	if (newMarkerPointPos) { // move oldMousePos only when the markerpoints are moved to the next value
+		q->label->setText(q->createTextLabelText());
+		double x_label = q->label->position().point.x() + delta.x();
+		double y_label = q->label->position().point.y();
+		//q->label->setPosition(QPointF(x_label,y_label)); // don't move label
+		oldMousePos = eventPos;
+	}
 
-	q->label->setPosition(QPointF(x_label,y_label));
-	q->label->setText(q->createTextLabelText());
 
+	q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 	for (auto markerpoint: q->markerpoints)
 		markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 
-	q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-
 	retransform();
-
-	oldMousePos = eventPos;
 }
 
 void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event) {
