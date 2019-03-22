@@ -2302,7 +2302,7 @@ int XYCurve::indexForX(double x) const {
 		if ((xColumnMode == AbstractColumn::ColumnMode::Numeric ||
 			 xColumnMode == AbstractColumn::ColumnMode::Integer)) {
 			for (unsigned int i = 0; i < maxSteps; i++) { // so no log_2(rowCount) needed
-				int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex)/2);
+				int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex) / 2);
 				double value = xColumn()->valueAt(index);
 
 				if (higherIndex - lowerIndex < 2) {
@@ -2329,7 +2329,7 @@ int XYCurve::indexForX(double x) const {
 					xColumnMode == AbstractColumn::ColumnMode::Day)) {
 			qint64 xInt64 = static_cast<qint64>(x);
 			for (unsigned int i = 0; i < maxSteps; i++) { // so no log_2(rowCount) needed
-				int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex)/2);
+				int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex) /2 );
 				qint64 value = xColumn()->dateTimeAt(index).toMSecsSinceEpoch();
 
 				if (higherIndex - lowerIndex < 2) {
@@ -2425,7 +2425,7 @@ int XYCurve::indexForX(double x, QVector<double>& column, AbstractColumn::Proper
 		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount)) + 1;
 
 		for (unsigned int i = 0; i < maxSteps; i++) { // so no log_2(rowCount) needed
-			int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex)/2);
+			int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex) / 2);
 			double value = column[index];
 
 			if (higherIndex - lowerIndex < 2) {
@@ -2495,7 +2495,7 @@ int XYCurve::indexForX(const double x, const QVector<QPointF>& points, AbstractC
 		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount)) + 1;
 
 		for (unsigned int i = 0; i < maxSteps; i++) { // so no log_2(rowCount) needed
-			int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex)/2);
+			int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex) / 2);
 			double value = points[index].x();
 
 			if (higherIndex - lowerIndex < 2) {
@@ -2564,7 +2564,7 @@ int XYCurve::indexForX(double x, QVector<QLineF>& lines, AbstractColumn::Propert
 		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount)) + 1;
 
 		for (unsigned int i = 0; i < maxSteps; i++) { // so no log_2(rowCount) needed
-			int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex)/2);
+			int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex) / 2);
 			double value = lines[index].p1().x();
 
 			if (higherIndex - lowerIndex < 2) {
