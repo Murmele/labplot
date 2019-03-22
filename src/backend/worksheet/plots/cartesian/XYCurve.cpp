@@ -2297,7 +2297,7 @@ int XYCurve::indexForX(double x) const {
 		int lowerIndex = 0;
 		int higherIndex = rowCount - 1;
 
-		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount))+1;
+		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount)) + 1;
 
 		if ((xColumnMode == AbstractColumn::ColumnMode::Numeric ||
 			 xColumnMode == AbstractColumn::ColumnMode::Integer)) {
@@ -2422,7 +2422,7 @@ int XYCurve::indexForX(double x, QVector<double>& column, AbstractColumn::Proper
 		int lowerIndex = 0;
 		int higherIndex = rowCount-1;
 
-		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount))+1;
+		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount)) + 1;
 
 		for (unsigned int i = 0; i < maxSteps; i++) { // so no log_2(rowCount) needed
 			int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex)/2);
@@ -2492,7 +2492,7 @@ int XYCurve::indexForX(const double x, const QVector<QPointF>& points, AbstractC
 		int lowerIndex = 0;
 		int higherIndex = rowCount - 1;
 
-		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount))+1;
+		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount)) + 1;
 
 		for (unsigned int i = 0; i < maxSteps; i++) { // so no log_2(rowCount) needed
 			int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex)/2);
@@ -2561,7 +2561,7 @@ int XYCurve::indexForX(double x, QVector<QLineF>& lines, AbstractColumn::Propert
 		int lowerIndex = 0;
 		int higherIndex = rowCount-1;
 
-		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount))+1;
+		unsigned int maxSteps = calculateMaxSteps(static_cast<unsigned int>(rowCount)) + 1;
 
 		for (unsigned int i = 0; i < maxSteps; i++) { // so no log_2(rowCount) needed
 			int index = lowerIndex + round(static_cast<double>(higherIndex - lowerIndex)/2);
