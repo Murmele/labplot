@@ -781,90 +781,52 @@ bool XYCurve::columnRemoved(const AbstractColumn* column, const AbstractAspect* 
  * @param valueFound True when value found, otherwise false
  */
 void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& valueFound) const {
-    int rowCount = xColumn()->rowCount();
 
+	valueFound = false;
 	AbstractColumn::Properties properties = xColumn()->properties();
 	if (properties == AbstractColumn::Properties::MonotonicDecreasing)
 		offset *=-1;
 
-	if (rowCount == 0) {
-		x = xpos;
-		valueFound = false;
+	int index = indexForX(xpos);
+	if (index < 0) {
 		return;
 	}
+	if (offset > 0 && index+offset < xColumn()->rowCount())
+		index += offset;
+	else if (offset > 0)
+		index = xColumn()->rowCount() -1;
+	else if ((offset < 0 && index+offset > 0))
+		index += offset;
+	else
+		index = 0;
 
-	Column::ColumnMode columnMode = xColumn()->columnMode();
-	if (xpos == NAN) {
 
-		if (columnMode == Column::ColumnMode::Integer ||
-				columnMode == Column::ColumnMode::Numeric)
-			x = xColumn()->valueAt(0);
-		else if(columnMode == Column::ColumnMode::Day ||
-				columnMode == Column::ColumnMode::Month ||
-				  columnMode == Column::ColumnMode::DateTime)
-			x = xColumn()->dateTimeAt(0).toMSecsSinceEpoch();
+	AbstractColumn::ColumnMode xMode = xColumn()->columnMode();
 
-		y = yColumn()->valueAt(0);
-	}
+	if (xMode == AbstractColumn::ColumnMode::Numeric ||
+		xMode == AbstractColumn::ColumnMode::Integer)
+		x = xColumn()->valueAt(index);
+	else if (xMode == AbstractColumn::ColumnMode::DateTime ||
+			 xMode == AbstractColumn::ColumnMode::Day ||
+			 xMode == AbstractColumn::ColumnMode::Month)
+		x = xColumn()->dateTimeAt(index).toMSecsSinceEpoch();
+	else
+		return;
 
-	if (columnMode == Column::ColumnMode::Integer ||
-			columnMode == Column::ColumnMode::Numeric) {
-		double prevValue = xColumn()->valueAt(0);
-		for (int row = 0; row < rowCount; row++) {
-			   if (xColumn()->isValid(row) && yColumn()->isValid(row)) {
 
-				   double value = xColumn()->valueAt(row);
-				   if (abs(value-xpos) <= abs(prevValue-xpos)) { // <= prevents also that row-1 become < 0
-					   if(row < rowCount-1)
-							prevValue = value;
-						else {
-							valueFound = true;
-							y = yColumn()->valueAt(row+offset);
-							x = xColumn()->valueAt(row+offset);
-							return;
-						}
-				   } else {
-						valueFound = true;
-						y = yColumn()->valueAt(row-1+offset);
-						x = xColumn()->valueAt(row-1+offset);
-						return;
-				   }
-			   }
-		}
-	} else if (columnMode == Column::ColumnMode::Day ||
-			 columnMode == Column::ColumnMode::Month ||
-			   columnMode == Column::ColumnMode::DateTime) {
-		qint64 prevValueDate = xColumn()->dateTimeAt(0).toMSecsSinceEpoch();
-		qint64 xpos2 = static_cast<qint64>(xpos);
-		for (int row = 0; row < rowCount; row++) {
-			   if (xColumn()->isValid(row) && yColumn()->isValid(row)) {
+	AbstractColumn::ColumnMode yMode = yColumn()->columnMode();
 
-				   double value = xColumn()->dateTimeAt(row).toMSecsSinceEpoch();
-				   if (abs(value-xpos2) <= abs(prevValueDate-xpos2)) { // <= prevents also that row-1 become < 0
-					   if(row < rowCount-1)
-							prevValueDate = value;
-						else {
-							valueFound = true;
-							y = yColumn()->valueAt(row+offset);
-							x = xColumn()->dateTimeAt(row+offset).toMSecsSinceEpoch();
-							return;
-						}
-				   } else {
-						valueFound = true;
-						int yIndex = row - 1 + offset;
-						if (row-1+offset < 0)
-							yIndex = 0;
-						else if (row -1 + offset > rowCount - 1)
-							yIndex = rowCount -1;
-						y = yColumn()->valueAt(yIndex);
-						x = xColumn()->dateTimeAt(yIndex).toMSecsSinceEpoch();
-						return;
-				   }
-			   }
-		}
-	}
+	if (xMode == AbstractColumn::ColumnMode::Numeric ||
+		xMode == AbstractColumn::ColumnMode::Integer)
+		y = yColumn()->valueAt(index);
+	else if (xMode == AbstractColumn::ColumnMode::DateTime ||
+			 xMode == AbstractColumn::ColumnMode::Day ||
+			 xMode == AbstractColumn::ColumnMode::Month)
+		y = yColumn()->dateTimeAt(index).toMSecsSinceEpoch();
+	else
+		return;
 
-    valueFound = false;
+	valueFound = true;
 }
 
 
