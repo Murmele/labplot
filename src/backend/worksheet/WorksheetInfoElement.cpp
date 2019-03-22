@@ -359,37 +359,40 @@ void WorksheetInfoElement::labelPositionChanged(TextLabel::PositionWrapper posit
 void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const AbstractAspect* before, const AbstractAspect* child) {
 	Q_D(WorksheetInfoElement);
 
-	if (m_suppressChildRemoved)
-		return;
+	// does not work, because when the childs are reordered this function is called and everything will be deleted. find other way
+	// function works as expected when child was removed
 
-	if (parent != this)
-		return;
+//	if (m_suppressChildRemoved)
+//		return;
 
-	const CustomPoint* point = dynamic_cast<const CustomPoint*> (child);
-	if (point != nullptr){
-		for (int i =0; i< markerpoints.length(); i++)
-			if (point == markerpoints[i].customPoint)
-				markerpoints.removeAt(i);
-	}
-	if (markerpoints.empty()) {
-		m_suppressChildRemoved = true;
-		removeChild(label);
-		m_suppressChildRemoved = false;
-		remove();
-	} else
-		d->retransform();
+//	if (parent != this)
+//		return;
+//	// problem: when the order was changed the elements are deleted for a short time and recreated. This function will called then
+//	const CustomPoint* point = dynamic_cast<const CustomPoint*> (child);
+//	if (point != nullptr){
+//		for (int i =0; i< markerpoints.length(); i++)
+//			if (point == markerpoints[i].customPoint)
+//				markerpoints.removeAt(i);
+//	}
+//	if (markerpoints.empty()) {
+//		m_suppressChildRemoved = true;
+//		removeChild(label);
+//		m_suppressChildRemoved = false;
+//		remove();
+//	} else
+//		d->retransform();
 
-	const TextLabel* textlabel = dynamic_cast<const TextLabel*>(child);
-	if (label != nullptr) {
-		if (textlabel == label) {
-			for (auto markerpoint : markerpoints) {
-				m_suppressChildRemoved = true;
-				removeChild(markerpoint.customPoint);
-				m_suppressChildRemoved = false;
-			}
-			remove();
-		}
-	}
+//	const TextLabel* textlabel = dynamic_cast<const TextLabel*>(child);
+//	if (label != nullptr) {
+//		if (textlabel == label) {
+//			for (auto markerpoint : markerpoints) {
+//				m_suppressChildRemoved = true;
+//				removeChild(markerpoint.customPoint);
+//				m_suppressChildRemoved = false;
+//			}
+//			remove();
+//		}
+//	}
 }
 
 void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
@@ -904,7 +907,7 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 	DEBUG("markerpoints[0].x: " << q->markerpoints[0].x << ", markerpoints[0].y: " << q->markerpoints[0].y << ", Scene xpos: " << x);
 	for (int i =0; i < q->markerpoints.length(); i++) {
 		bool valueFound;
-		double x_new;
+		double x_new = NAN;
 
 		double y;
 		if (q->markerpoints[i].curve)
@@ -932,7 +935,6 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 		//q->label->setPosition(QPointF(x_label,y_label)); // don't move label
 		oldMousePos = eventPos;
 	}
-
 
 	q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 	for (auto markerpoint: q->markerpoints)
