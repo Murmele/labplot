@@ -2664,7 +2664,18 @@ void CartesianPlotPrivate::paint(QPainter *painter, const QStyleOptionGraphicsIt
 		painter->restore();
 	}
 
-	WorksheetElementContainerPrivate::paint(painter, option, widget);
+	QPainterPath painterPath;
+	painterPath.addRect(q->m_plotArea->graphicsItem()->boundingRect());
+	if (m_hovered && !isSelected() && !m_printing) {
+		painter->setPen(QPen(QApplication::palette().color(QPalette::Shadow), 5, Qt::SolidLine));
+		painter->drawPath(painterPath);
+	}
+
+	if (isSelected() && !m_printing) {
+		painter->setPen(QPen(QApplication::palette().color(QPalette::Highlight), 5, Qt::SolidLine));
+		painter->drawPath(painterPath);
+	}
+
 }
 
 //##############################################################################
