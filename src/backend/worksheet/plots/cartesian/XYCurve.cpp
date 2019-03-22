@@ -2341,9 +2341,9 @@ int XYCurve::indexForX(double x) const {
 					return index;
 				}
 
-				if (value > xInt64 && increase)
+				if (value >= xInt64 && increase)
 					higherIndex = index;
-				else if (value > xInt64 && !increase)
+				else if (value >= xInt64 && !increase)
 					lowerIndex = index;
 				else if (value < xInt64 && increase)
 					lowerIndex = index;
