@@ -824,59 +824,17 @@ void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& 
 
 	AbstractColumn::ColumnMode yMode = yColumn()->columnMode();
 
-	if (xMode == AbstractColumn::ColumnMode::Numeric ||
-		xMode == AbstractColumn::ColumnMode::Integer)
+	if (yMode == AbstractColumn::ColumnMode::Numeric ||
+		yMode == AbstractColumn::ColumnMode::Integer)
 		y = yColumn()->valueAt(index);
-	else if (xMode == AbstractColumn::ColumnMode::DateTime ||
-			 xMode == AbstractColumn::ColumnMode::Day ||
-			 xMode == AbstractColumn::ColumnMode::Month)
+	else if (yMode == AbstractColumn::ColumnMode::DateTime ||
+			 yMode == AbstractColumn::ColumnMode::Day ||
+			 yMode == AbstractColumn::ColumnMode::Month)
 		y = yColumn()->dateTimeAt(index).toMSecsSinceEpoch();
 	else
 		return;
 
 	valueFound = true;
-}
-
-
-/*!
- * @param x :value for which y should be found
- * @param valueFound: returns true if y value found, otherwise false
- * @param x_new: exact x value where y value is
- * @return y value from x value
- */
-
-// datetime does not work. wait til in master the new things are commited
-double XYCurve::y(double x, double &x_new, bool &valueFound) const {
-	int rowCount = xColumn()->rowCount();
-	double prevValue=0;
-	for (int row = 0; row < rowCount; row++) {
-           if (xColumn()->isValid(row) && yColumn()->isValid(row)) {
-               if (row == 0)
-				   prevValue = xColumn()->valueAt(row);
-
-			   double value = xColumn()->valueAt(row);
-               if (abs(value-x) <= abs(prevValue-x)) { // <= prevents also that row-1 become < 0
-                   if (row < rowCount-1)
-						prevValue = value;
-                    else {
-						valueFound = true;
-                        x_new = xColumn()->valueAt(row);
-						return yColumn()->valueAt(row);
-					}
-               } else {
-					valueFound = true;
-					int indexClipped = row - 1;
-					if (indexClipped < 0)
-						indexClipped = 0;
-					else if (indexClipped > rowCount -1)
-						indexClipped = rowCount -1;
-					x_new = xColumn()->valueAt(indexClipped);
-					return yColumn()->valueAt(indexClipped);
-			   }
-		   }
-	}
-	valueFound = false;
-	return 0;
 }
 
 void XYCurve::xColumnAboutToBeRemoved(const AbstractAspect* aspect) {
@@ -2201,6 +2159,45 @@ double XYCurve::y(double x, bool &valueFound) const {
 		valueFound = false;
 		return NAN;
 	}
+
+	valueFound = true;
+	if (yColumnMode == AbstractColumn::ColumnMode::Numeric ||
+		yColumnMode == AbstractColumn::ColumnMode::Integer) {
+		return yColumn()->valueAt(index);
+	} else {
+		valueFound = false;
+		return NAN;
+	}
+}
+
+/*!
+ * @param x :value for which y should be found
+ * @param valueFound: returns true if y value found, otherwise false
+ * @param x_new: exact x value where y value is
+ * @return y value from x value
+ */
+double XYCurve::y(double x, double &x_new, bool &valueFound) const {
+	AbstractColumn::ColumnMode yColumnMode = yColumn()->columnMode();
+	int index = indexForX(x);
+	if (index < 0) {
+		valueFound = false;
+		return NAN;
+	}
+
+	AbstractColumn::ColumnMode xColumnMode = xColumn()->columnMode();
+	if (xColumnMode == AbstractColumn::ColumnMode::Numeric ||
+		xColumnMode == AbstractColumn::ColumnMode::Integer)
+		x_new = xColumn()->valueAt(index);
+	else if(xColumnMode == AbstractColumn::ColumnMode::DateTime ||
+			  xColumnMode == AbstractColumn::ColumnMode::Day ||
+			  xColumnMode == AbstractColumn::ColumnMode::Month)
+		x_new = xColumn()->dateTimeAt(index).toMSecsSinceEpoch();
+	else {
+		// any other type implemented
+		valueFound = false;
+		return NAN;
+	}
+
 
 	valueFound = true;
 	if (yColumnMode == AbstractColumn::ColumnMode::Numeric ||
