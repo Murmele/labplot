@@ -2664,16 +2664,18 @@ void CartesianPlotPrivate::paint(QPainter *painter, const QStyleOptionGraphicsIt
 		painter->restore();
 	}
 
-	QPainterPath painterPath;
-	painterPath.addRect(q->m_plotArea->graphicsItem()->boundingRect());
+	float penWidth = 6.;
+	QRectF rect = q->m_plotArea->graphicsItem()->boundingRect();
+	rect = QRectF(-rect.width()/2 - penWidth / 2, -rect.height()/2 - penWidth / 2,
+				  rect.width() + penWidth, rect.height() + penWidth);
 	if (m_hovered && !isSelected() && !m_printing) {
-		painter->setPen(QPen(QApplication::palette().color(QPalette::Shadow), 5, Qt::SolidLine));
-		painter->drawPath(painterPath);
+		painter->setPen(QPen(QApplication::palette().color(QPalette::Shadow), penWidth, Qt::SolidLine));
+		painter->drawRect(rect);
 	}
 
 	if (isSelected() && !m_printing) {
-		painter->setPen(QPen(QApplication::palette().color(QPalette::Highlight), 5, Qt::SolidLine));
-		painter->drawPath(painterPath);
+		painter->setPen(QPen(QApplication::palette().color(QPalette::Highlight), penWidth, Qt::SolidLine));
+		painter->drawRect(rect);
 	}
 
 }
