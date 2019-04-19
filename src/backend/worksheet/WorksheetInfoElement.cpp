@@ -403,6 +403,9 @@ void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
 
 		CustomPoint* p = const_cast<CustomPoint*>(point);
 		p->setParentGraphicsItem(d->plot->graphicsItem());
+		// otherwise Custom point must be patched to handle discrete curve points.
+		// This makes it much easier
+		p->graphicsItem()->setFlag(QGraphicsItem::ItemIsMovable, false);
 		return;
 	}
 
