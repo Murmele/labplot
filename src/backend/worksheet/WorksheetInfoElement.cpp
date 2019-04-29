@@ -241,8 +241,9 @@ bool WorksheetInfoElement::assignCurve(const QVector<XYCurve *> &curves) {
  */
 void WorksheetInfoElement::removeCurve(const XYCurve* curve) {
 	for (int i=0; i< markerpoints.length(); i++) {
-		if (markerpoints[i].curve == curve)
+		if (markerpoints[i].curve == curve) {
 			removeChild(markerpoints[i].customPoint);
+		}
 	}
 }
 
@@ -266,6 +267,10 @@ int WorksheetInfoElement::markerPointsCount() {
 	return markerpoints.length();
 }
 
+int WorksheetInfoElement::gluePointsCount() {
+	return label->gluePointCount();
+}
+
 /*!
  * Returns the Markerpoint at index \p index. Used in the WorksheetInfoElementDock to fill listWidget
  * @param index
@@ -280,7 +285,7 @@ WorksheetInfoElement::MarkerPoints_T WorksheetInfoElement::markerPointAt(int ind
  */
 TextLabel::TextWrapper WorksheetInfoElement::createTextLabelText() {
 
-	if (!label)
+	if (!label || markerPointsCount() == 0)
 		return TextLabel::TextWrapper();
 	// TODO: save positions of the variables in extra variables to replace faster, because replace takes long time
 	TextLabel::TextWrapper wrapper = label->text();
@@ -353,6 +358,22 @@ void WorksheetInfoElement::labelPositionChanged(TextLabel::PositionWrapper posit
 	d->retransform();
 }
 
+void WorksheetInfoElement::labelTextWrapperChanged(TextLabel::TextWrapper wrapper) {
+	Q_UNUSED(wrapper);
+	if (m_setTextLabelText)
+		return;
+
+	m_setTextLabelText = true;
+	label->setText(createTextLabelText());
+	m_setTextLabelText = false;
+}
+
+void WorksheetInfoElement::labelBorderShapeChanged() {
+	Q_D(WorksheetInfoElement);
+	emit labelBorderShapeChangedSignal(label->gluePointCount());
+	d->retransform();
+}
+
 /*!
  * Delete child and remove from markerpoint list if it is a markerpoint. If it is a textlabel delete complete WorksheetInfoElement
  */
@@ -412,6 +433,8 @@ void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
 	const TextLabel* labelChild = dynamic_cast<const TextLabel*>(child);
 	if (labelChild) {
 		connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
+		connect(label, &TextLabel::textWrapperChanged, this, &WorksheetInfoElement::labelTextWrapperChanged);
+		connect(label, &TextLabel::borderShapeChanged, this, &WorksheetInfoElement::labelBorderShapeChanged);
 
 		TextLabel* l = const_cast<TextLabel*>(labelChild);
 		l->setParentGraphicsItem(d->plot->graphicsItem());
@@ -544,6 +567,25 @@ void WorksheetInfoElement::setVisible(const bool visible) {
 		exec(new WorksheetInfoElementSetVisibleCmd(d, visible, ki18n("%1: set visible")));
 }
 
+STD_SETTER_CMD_IMPL_F_S(WorksheetInfoElement, SetGluePointIndex, int, gluePointIndex, retransform);
+void WorksheetInfoElement::setGluePointIndex(const int value) {
+	Q_D(WorksheetInfoElement);
+	if (value != d->gluePointIndex) {
+		if (value < 0)
+			d->automaticGluePoint = true;
+		else
+			d->automaticGluePoint = false;
+		exec(new WorksheetInfoElementSetGluePointIndexCmd(d, value, ki18n("%1: set visible")));
+	}
+}
+
+STD_SETTER_CMD_IMPL_F_S(WorksheetInfoElement, SetConnectionLineCurveName, QString, connectionLineCurveName, retransform);
+void WorksheetInfoElement::setConnectionLineCurveName(const QString name) {
+	Q_D(WorksheetInfoElement);
+	if (name.compare(d->connectionLineCurveName) != 0)
+		exec(new WorksheetInfoElementSetConnectionLineCurveNameCmd(d, name, ki18n("%1: set visible")));
+}
+
 //##############################################################################
 //######  SLOTs for changes triggered via QActions in the context menu  ########
 //##############################################################################
@@ -627,13 +669,20 @@ void WorksheetInfoElementPrivate::retransform() {
 
 	// line goes to the fist pointPos
 	// TODO: better would be to direct to the highest point or also possible to make it changeable
-	QPointF pointPos = cSystem->mapLogicalToScene(q->markerpoints[0].customPoint->position());
-	QRectF labelSize = q->label->getSize();
+	QPointF pointPos = cSystem->mapLogicalToScene(q->markerpoints[0].customPoint->position());;
+	for (int i=0; i< q->markerPointsCount(); i++) {
+		if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
+			pointPos = cSystem->mapLogicalToScene(q->markerpoints[i].customPoint->position());
+			break;
+		}
+	}
 
-	QPointF labelPos = cSystem->mapLogicalToScene(q->label->getLogicalPos());
-
-	double difference_x = pointPos.x() - labelPos.x();
-	double difference_y = pointPos.y() - labelPos.y();
+	// use limit function like in the cursor! So the line will be drawn only till the border of the cartesian Plot
+	QPointF labelPos;
+	if (automaticGluePoint)
+		labelPos = q->label->findNearestGluePoint(pointPos);//cSystem->mapLogicalToScene(q->label->getLogicalPos(AbstractCoordinateSystem::MappingFlag::SuppressPageClipping), AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
+	else
+		labelPos = q->label->gluePointAt(gluePointIndex);
 
 	double x,y;
 	QPointF min_scene = cSystem->mapLogicalToScene(QPointF(plot->xMin(),plot->yMin()));
@@ -641,119 +690,17 @@ void WorksheetInfoElementPrivate::retransform() {
 
 	y = abs(max_scene.y()-min_scene.y())/2;
 	x = abs(max_scene.x()-min_scene.x())/2;
-	double xmax = x;
+
 	QPointF labelPosItemCoords = mapFromParent(labelPos); // calculate item coords from scene coords
 	QPointF pointPosItemCoords = mapFromParent(pointPos); // calculate item coords from scene coords
-
-	double w = abs(labelPosItemCoords.x()-pointPosItemCoords.x());//abs(difference_x);
-	double h = abs(labelPosItemCoords.y()-pointPosItemCoords.y());//abs(difference_y);
-
 
 	setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 
 	xposLine = QLineF(pointPosItemCoords.x(), 0, pointPosItemCoords.x(), 2*y);
-
-	double boundingRectX,boundingRectY,boundingRectW,boundingRectH;
+	connectionLine = QLineF(labelPosItemCoords.x(),labelPosItemCoords.y(),pointPosItemCoords.x(),pointPosItemCoords.y());
 
 	QPointF itemPos;
-	//DEBUG("PointPosX: " << pointPos.x() << "Logical: " << cSystem->mapSceneToLogical(pointPos).x() << "Itemcoord: " << pointPosItemCoords.x());
-	//DEBUG("LabelPosX: " << labelPos.x() << "Logical: " << cSystem->mapSceneToLogical(labelPos).x() << "Itemcoord: " << labelPosItemCoords.x());
-	if (w > h) {
-		// attach to right or left border of the textlabel
-		if (difference_x > 0) {
-			// point is more right than textlabel
-			// attach to right border of textlabel
-			x = pointPos.x() - w/2;
 
-			if (difference_y >0) {
-				// point is lower than TextLabel
-				//DEBUG("RIGHT: point is more right and lower than TextLabel");
-				connectionLine = QLineF(labelPosItemCoords.x()+labelSize.width()/2,labelPosItemCoords.y(),pointPosItemCoords.x(),pointPosItemCoords.y());
-				sceneDeltaPoint = QPointF(w/2,pointPosItemCoords.y()); // w/2
-				sceneDeltaTextLabel = QPointF(-w/2,labelPosItemCoords.y());
-			} else {
-				// point is higher than TextLabel
-				//DEBUG("RIGHT: point is more right and higher than TextLabel");
-				connectionLine = QLineF(labelPosItemCoords.x()+labelSize.width()/2,labelPosItemCoords.y(),pointPosItemCoords.x(),pointPosItemCoords.y());
-				sceneDeltaPoint = QPointF(w/2,pointPosItemCoords.y());
-				sceneDeltaTextLabel = QPointF(-w/2,labelPosItemCoords.y());
-			}
-			boundingRectX = labelPosItemCoords.x()+labelSize.width()/2;
-			boundingRectW = w-labelSize.width()/2;
-		} else {
-			// point is more left than textlabel
-			// attach to left border
-			x = pointPos.x()+w/2;
-			if (difference_y < 0) {
-				// point is higher than TextLabel
-				//DEBUG("LEFT: point is more left and higher than TextLabel");
-				connectionLine = QLineF(pointPosItemCoords.x(),pointPosItemCoords.y(),labelPosItemCoords.x()-labelSize.width()/2,labelPosItemCoords.y());
-				sceneDeltaPoint = QPointF(-w/2,pointPosItemCoords.y());
-				sceneDeltaTextLabel = QPointF(w/2,labelPosItemCoords.y());
-			} else {
-				// point is lower than TextLabel
-				//DEBUG("LEFT: point is more left and lower than TextLabel");
-				connectionLine = QLineF(pointPosItemCoords.x(),pointPosItemCoords.y(),labelPosItemCoords.x()-labelSize.width()/2,labelPosItemCoords.y());
-				sceneDeltaPoint = QPointF(-w/2,pointPosItemCoords.y());
-				sceneDeltaTextLabel = QPointF(w/2,labelPosItemCoords.y());
-			}
-			if (pointPos.x() < labelPos.x()-labelSize.width()/2) {
-				boundingRectX = pointPosItemCoords.x()-connectionLineWidth/2;
-				boundingRectW = w-labelSize.width()/2+connectionLineWidth;
-			} else {
-				boundingRectX = labelPosItemCoords.x()-labelSize.width()/2-connectionLineWidth/2;
-				boundingRectW = labelSize.width()/2+connectionLineWidth;
-			}
-		}
-	} else {
-		// attach to top or bottom border of the textlabel
-		if (difference_y < 0) {
-			// attach to top border
-			if (difference_x > 0) {
-				// point is more right than TextLabel
-				//DEBUG("TOP: point is more right and higher than TextLabel");
-				x = labelPos.x()+w/2;
-				connectionLine = QLineF(labelPosItemCoords.x(),labelPosItemCoords.y()-labelSize.height()/2,pointPosItemCoords.x(),pointPosItemCoords.y());
-				sceneDeltaPoint = QPointF(w/2,pointPosItemCoords.y());
-				sceneDeltaTextLabel = QPointF(-w/2,labelPosItemCoords.y());
-				boundingRectX = labelPosItemCoords.x();
-				boundingRectW = w;
-			} else {
-				// point is more left than TextLabel
-				//DEBUG("TOP: point is more left and higher than TextLabel");
-				x = pointPos.x()+w/2;
-				connectionLine = QLineF(pointPosItemCoords.x(),pointPosItemCoords.y(),labelPosItemCoords.x(),labelPosItemCoords.y()-labelSize.height()/2);
-				sceneDeltaPoint = QPointF(-w/2,pointPosItemCoords.y());
-				sceneDeltaTextLabel = QPointF(w/2,labelPosItemCoords.y());
-				boundingRectX = pointPosItemCoords.x();
-				boundingRectW = w;
-			}
-		} else {
-			// attach to bottom border
-			if (difference_x > 0) {
-				// point is more right than TextLabel
-				//DEBUG("BOTTOM: point is more right and lower than TextLabel");
-				x = labelPos.x()+ w/2;
-				connectionLine = QLineF(labelPosItemCoords.x(),labelPosItemCoords.y()+labelSize.height()/2,pointPosItemCoords.x(),pointPosItemCoords.y());
-				sceneDeltaPoint = QPointF(w/2,pointPosItemCoords.y());
-				sceneDeltaTextLabel = QPointF(-w/2,labelPosItemCoords.y());
-				boundingRectX = labelPosItemCoords.x();
-				boundingRectW = w;
-			} else {
-				// point is more left than TextLabel
-				//DEBUG("BOTTOM: point is more left and lower than TextLabel");
-				x = pointPos.x()+w/2;
-				connectionLine = QLineF(pointPosItemCoords.x(),pointPosItemCoords.y(),labelPosItemCoords.x(),labelPosItemCoords.y()+labelSize.height()/2);
-				sceneDeltaPoint = QPointF(-w/2,pointPosItemCoords.y());
-				sceneDeltaTextLabel = QPointF(w/2,labelPosItemCoords.y());
-				boundingRectX = pointPosItemCoords.x();
-				boundingRectW = w;
-			}
-		}
-	}
-
-	boundingRectangle.setX(boundingRectX-2);
-	boundingRectangle.setWidth(boundingRectW+4);
 	//DEBUG("ConnectionLine: P1.x: " << (connectionLine.p1()).x() << "P2.x: " << (connectionLine.p2()).x());
 	itemPos.setX(x); // x is always between the labelpos and the point pos
 	if (max_scene.y() < min_scene.y())
@@ -768,7 +715,7 @@ void WorksheetInfoElementPrivate::retransform() {
 
 	setPos(itemPos);
 	boundingRectangle.setX(0);
-	boundingRectangle.setWidth(2*xmax);
+	boundingRectangle.setWidth(2*x);
 	boundingRectangle.setY(0);
 	boundingRectangle.setHeight(2*y);
 
@@ -813,13 +760,6 @@ QRectF WorksheetInfoElementPrivate::boundingRect() const {
 void WorksheetInfoElementPrivate::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget* widget) {
 	if (!visible)
 		return;
-	//DEBUG("Position: " << pos().x() << ", Y: "<< pos().y());
-	//    painter->fillRect(boundingRectangle,QBrush(QColor(255,0,0,128)));
-	//    if(boundingRectangle.width() > 40)
-	//        painter->fillRect(QRectF(-20,0,40,40),QBrush(QColor(0,255,0,255)));
-	//    else {
-	//        painter->fillRect(QRectF(-boundingRectangle.width()/2,0,boundingRectangle.width(),40),QBrush(QColor(0,255,0,255)));
-	//    }
 
 	QPen pen(connectionLineColor, connectionLineWidth);
 	painter->setPen(pen);
@@ -850,7 +790,12 @@ void WorksheetInfoElementPrivate::mousePressEvent(QGraphicsSceneMouseEvent* even
 				setFocus();
 				return;
 			}
-		}
+		}/* else {
+			for (int i=0; i< q->markerPointsCount(); i++) {
+				WorksheetInfoElement::MarkerPoints_T markerpoint =  q->markerPointAt(i);
+				//if (markerpoint.customPoint->symbolSize())
+			}
+		}*/
 
 		// https://stackoverflow.com/questions/11604680/point-laying-near-line
 		double dx12 = connectionLine.x2()-connectionLine.x1();
@@ -892,7 +837,7 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 	DEBUG("EventPos: " << eventPos.x() << " Y: " << eventPos.y());
 	QPointF delta = eventPos - oldMousePos;
 
-	QPointF eventLogicPos = cSystem->mapSceneToLogical(eventPos);
+	QPointF eventLogicPos = cSystem->mapSceneToLogical(eventPos, AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
 	QPointF delta_logic =  eventLogicPos - cSystem->mapSceneToLogical(oldMousePos);
 
 	if (!q->label)

@@ -410,9 +410,24 @@ QRectF TextLabel::getSize() {
 	return d->getSize();
 }
 
-QPointF TextLabel::getLogicalPos() {
+QPointF TextLabel::getLogicalPos(AbstractCoordinateSystem::MappingFlags flag) {
 	Q_D(TextLabel);
-	return d->getLogicalPos();
+	return d->getLogicalPos(flag);
+}
+
+QPointF TextLabel::findNearestGluePoint(QPointF scenePoint) {
+	Q_D(TextLabel);
+	return d->findNearestGluePoint(scenePoint);
+}
+
+QPointF TextLabel::gluePointAt(int index) {
+	Q_D(TextLabel);
+	return d->gluePointAt(index);
+}
+
+int TextLabel::gluePointCount() {
+	Q_D(const TextLabel);
+	return d->m_gluePoints.length();
 }
 
 bool TextLabel::isVisible() const {
@@ -511,14 +526,59 @@ QRectF TextLabelPrivate::getSize(){
 }
 
 /*!
+ * \brief TextLabelPrivate::findNearestGluePoint
+ * Finds the glue point, which is nearest to @param point in scene coords.
+ * \param point reference position
+ * \return Nearest point to @param point
+ */
+QPointF TextLabelPrivate::findNearestGluePoint(QPointF scenePoint) {
+	if (m_gluePoints.isEmpty())
+		return boundingRectangle.center();
+
+	if (m_gluePoints.length() == 1)
+		return m_gluePoints[0];
+
+	QPointF point = mapToParent(m_gluePoints[0]);
+	QPointF nearestPoint = point;
+	double distance2 = pow(point.x()-scenePoint.x(), 2) + pow(point.y()-scenePoint.y(), 2);
+	// assumption, more than one point available
+	for (int i=1; i< m_gluePoints.length(); i++) {
+		point = mapToParent(m_gluePoints[i]);
+		double distance2_temp = pow(point.x()-scenePoint.x(), 2) + pow(point.y()-scenePoint.y(), 2);
+		if (distance2_temp < distance2) {
+			nearestPoint = point;
+			distance2 = distance2_temp;
+		}
+	}
+
+	return nearestPoint;
+}
+
+/*!
+ * \brief TextLabelPrivate::gluePointAt
+ * \param index
+ * \return Returns gluepoint at index \param index
+ */
+QPointF TextLabelPrivate::gluePointAt(int index) {
+
+	if (m_gluePoints.isEmpty() || index > m_gluePoints.length())
+		return mapToParent(boundingRectangle.center());
+
+	if (index < 0)
+		return mapToParent(m_gluePoints[0]);
+
+	return mapToParent(m_gluePoints[index]);
+}
+
+/*!
  * \brief TextLabelPrivate::getLogicalPos
  * \return logical position in the plot
  */
-QPointF TextLabelPrivate::getLogicalPos(){
+QPointF TextLabelPrivate::getLogicalPos(AbstractCoordinateSystem::MappingFlags flag){
 	if(m_coordBinding)
 		return logicalPos;
 	if(cSystem)
-		return cSystem->mapSceneToLogical(position.point);
+		return cSystem->mapSceneToLogical(position.point, flag);
 
 	return QPointF();
 }
@@ -666,10 +726,22 @@ void TextLabelPrivate::updateTeXImage() {
 void TextLabelPrivate::updateBorder() {
 	borderShapePath = QPainterPath();
 	switch (borderShape) {
-	case (TextLabel::NoBorder):
+	case (TextLabel::NoBorder): {
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(boundingRectangle.x()+boundingRectangle.width()/2,boundingRectangle.y())); // top
+		m_gluePoints.append(QPointF(boundingRectangle.x()+boundingRectangle.width(),boundingRectangle.y()+boundingRectangle.height()/2)); // right
+		m_gluePoints.append(QPointF(boundingRectangle.x()+boundingRectangle.width()/2,boundingRectangle.y()+boundingRectangle.height())); // bottom
+		m_gluePoints.append(QPointF(boundingRectangle.x(),boundingRectangle.y()+boundingRectangle.height()/2)); // left
 		break;
+	}
 	case (TextLabel::BorderShape::Rect): {
 		borderShapePath.addRect(boundingRectangle);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(boundingRectangle.x() + boundingRectangle.width()/2, boundingRectangle.y())); // top
+		m_gluePoints.append(QPointF(boundingRectangle.x() + boundingRectangle.width(), boundingRectangle.y() + boundingRectangle.height()/2)); // right
+		m_gluePoints.append(QPointF(boundingRectangle.x() + boundingRectangle.width()/2, boundingRectangle.y() + boundingRectangle.height())); // bottom
+		m_gluePoints.append(QPointF(boundingRectangle.x(), boundingRectangle.y() + boundingRectangle.height()/2)); // left
 		break;
 	}
 	case (TextLabel::BorderShape::Ellipse): {
@@ -677,7 +749,14 @@ void TextLabelPrivate::updateBorder() {
 		const double ys = boundingRectangle.y();
 		const double w = boundingRectangle.width();
 		const double h = boundingRectangle.height();
-		borderShapePath.addEllipse(xs  - 0.1 * w, ys - 0.1 * h, 1.2 * w,  1.2 * h);
+		const QRectF ellipseRect(xs  - 0.1 * w, ys - 0.1 * h, 1.2 * w,  1.2 * h);
+		borderShapePath.addEllipse(ellipseRect);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(ellipseRect.x() + ellipseRect.width()/2, ellipseRect.y())); // top
+		m_gluePoints.append(QPointF(ellipseRect.x() + ellipseRect.width(), ellipseRect.y() + ellipseRect.height()/2)); // right
+		m_gluePoints.append(QPointF(ellipseRect.x() + ellipseRect.width()/2, ellipseRect.y() + ellipseRect.height())); // bottom
+		m_gluePoints.append(QPointF(ellipseRect.x(), ellipseRect.y() + ellipseRect.height()/2)); // left
 		break;
 	}
 	case (TextLabel::BorderShape::RoundSideRect): {
@@ -690,6 +769,12 @@ void TextLabelPrivate::updateBorder() {
 		borderShapePath.quadTo(xs + w + h/2, ys + h/2, xs + w, ys + h);
 		borderShapePath.lineTo(xs, ys + h);
 		borderShapePath.quadTo(xs - h/2, ys + h/2, xs, ys);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(xs + w/2, ys)); // top
+		m_gluePoints.append(QPointF(xs + w + h/2, ys + h/2)); // right
+		m_gluePoints.append(QPointF(xs + w/2, ys + h)); // bottom
+		m_gluePoints.append(QPointF(xs - h/2, ys + h/2)); // left
 		break;
 	}
 	case (TextLabel::BorderShape::RoundCornerRect): {
@@ -706,6 +791,12 @@ void TextLabelPrivate::updateBorder() {
 		borderShapePath.quadTo(xs, ys + h, xs, ys + h - 0.2 * h);
 		borderShapePath.lineTo(xs, ys + 0.2 * h);
 		borderShapePath.quadTo(xs, ys, xs + 0.2 * h, ys);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(xs+w/2,ys)); // top
+		m_gluePoints.append(QPointF(xs+w,ys+h/2)); // right
+		m_gluePoints.append(QPointF(xs+w/2,ys+h)); // bottom
+		m_gluePoints.append(QPointF(xs,ys+h/2)); // left
 		break;
 
 	}
@@ -723,6 +814,12 @@ void TextLabelPrivate::updateBorder() {
 		borderShapePath.quadTo(xs, ys + h, xs - 0.3 * h, ys + h);
 		borderShapePath.lineTo(xs - 0.3 * h, ys);
 		borderShapePath.quadTo(xs, ys, xs, ys - 0.3 * h);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(xs + w / 2, ys - 0.3 * h)); // top
+		m_gluePoints.append(QPointF(xs + w + 0.3 * h, ys + h / 2)); // right
+		m_gluePoints.append(QPointF(xs + w / 2, ys + h + 0.3 * h)); // bottom
+		m_gluePoints.append(QPointF(xs - 0.3 * h, ys + h / 2)); // left
 		break;
 	}
 	case (TextLabel::BorderShape::DentedBorderRect): {
@@ -735,6 +832,12 @@ void TextLabelPrivate::updateBorder() {
 		borderShapePath.quadTo(xs + w, ys + h / 2, xs + w + 0.2 * h, ys + h + 0.2 * h);
 		borderShapePath.quadTo(xs + w / 2, ys + h, xs - 0.2 * h, ys + h + 0.2 * h);
 		borderShapePath.quadTo(xs, ys + h / 2, xs - 0.2 * h, ys - 0.2 * h);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(xs + w / 2, ys - 0.2 * h)); // top
+		m_gluePoints.append(QPointF(xs + w + 0.2 * h, ys + h / 2)); // right
+		m_gluePoints.append(QPointF(xs + w / 2, ys + h + 0.2 * h)); // bottom
+		m_gluePoints.append(QPointF(xs - 0.2 * h, ys + h / 2)); // left
 		break;
 	}
 	case (TextLabel::BorderShape::Cuboid): {
@@ -753,6 +856,12 @@ void TextLabelPrivate::updateBorder() {
 		borderShapePath.moveTo(xs + w, ys + h);
 		borderShapePath.lineTo(xs + w + 0.3 * h, ys + h - 0.2 * h);
 		borderShapePath.lineTo(xs + w + 0.3 * h, ys - 0.2 * h);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(xs + w / 2, ys - 0.1 * h)); // top
+		m_gluePoints.append(QPointF(xs + w + 0.15 * h, ys + h / 2)); // right
+		m_gluePoints.append(QPointF(xs + w / 2, ys + h)); // bottom
+		m_gluePoints.append(QPointF(xs, ys + h / 2)); // left
 		break;
 	}
 	case (TextLabel::BorderShape::UpPointingRectangle): {
@@ -772,6 +881,12 @@ void TextLabelPrivate::updateBorder() {
 		borderShapePath.quadTo(xs, ys + h, xs, ys + h - 0.2 * h);
 		borderShapePath.lineTo(xs, ys + 0.2 * h);
 		borderShapePath.quadTo(xs, ys, xs + 0.2 * h, ys);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(xs + w/2, ys - h * 0.2)); // top
+		m_gluePoints.append(QPointF(xs + w, ys + h/2)); // right
+		m_gluePoints.append(QPointF(xs + w/2, ys + h)); // bottom
+		m_gluePoints.append(QPointF(xs, ys + h/2)); // left
 		break;
 	}
 	case (TextLabel::BorderShape::DownPointingRectangle): {
@@ -791,6 +906,12 @@ void TextLabelPrivate::updateBorder() {
 		borderShapePath.quadTo(xs, ys + h, xs, ys + h - 0.2 * h);
 		borderShapePath.lineTo(xs, ys + 0.2 * h);
 		borderShapePath.quadTo(xs, ys, xs + 0.2 * h, ys);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(xs + w/2, ys)); // top
+		m_gluePoints.append(QPointF(xs + w, ys + h/2)); // right
+		m_gluePoints.append(QPointF(xs + w/2, ys + h  + 0.2 * h)); // bottom
+		m_gluePoints.append(QPointF(xs, ys + h/2)); // left
 		break;
 	}
 	case (TextLabel::BorderShape::LeftPointingRectangle): {
@@ -810,6 +931,12 @@ void TextLabelPrivate::updateBorder() {
 		borderShapePath.lineTo(xs, ys + h / 2 - 0.2 * h);
 		borderShapePath.lineTo(xs, ys + 0.2 * h);
 		borderShapePath.quadTo(xs, ys, xs + 0.2 * h, ys);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(xs + w/2, ys)); // top
+		m_gluePoints.append(QPointF(xs + w, ys + h/2)); // right
+		m_gluePoints.append(QPointF(xs + w/2, ys + h)); // bottom
+		m_gluePoints.append(QPointF(xs - 0.2 * h, ys + h/2)); // left
 		break;
 	}
 	case (TextLabel::BorderShape::RightPointingRectangle): {
@@ -829,6 +956,12 @@ void TextLabelPrivate::updateBorder() {
 		borderShapePath.quadTo(xs, ys + h, xs, ys + h - 0.2 * h);
 		borderShapePath.lineTo(xs, ys + 0.2 * h);
 		borderShapePath.quadTo(xs, ys, xs + 0.2 * h, ys);
+
+		m_gluePoints.clear();
+		m_gluePoints.append(QPointF(xs + w/2, ys)); // top
+		m_gluePoints.append(QPointF(xs + w + 0.2 * h, ys + h/2)); // right
+		m_gluePoints.append(QPointF(xs + w/2, ys + h)); // bottom
+		m_gluePoints.append(QPointF(xs, ys + h/2)); // left
 		break;
 	}
 	}
@@ -876,6 +1009,11 @@ void TextLabelPrivate::recalcShapeAndBoundingRect() {
 	}
 
 	labelShape = matrix.map(labelShape);
+
+	// rotate gluePoints
+	for (int i=0; i < m_gluePoints.length(); i++) {
+		m_gluePoints[i] = matrix.map(m_gluePoints[i]);
+	}
 
 	emit q->changed();
 }
@@ -926,6 +1064,17 @@ void TextLabelPrivate::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 		painter->setPen(QPen(QApplication::palette().color(QPalette::Highlight), 2, Qt::SolidLine));
 		painter->drawPath(labelShape);
 	}
+
+	#define DEBUG_TEXTLABEL_GLUEPOINTS 1
+	#if DEBUG_TEXTLABEL_GLUEPOINTS
+		// just for debugging
+		painter->setPen(QColor(Qt::GlobalColor::red));
+		QRectF gluePointRect(0,0,10,10);
+		for (int i=0; i < m_gluePoints.length(); i++) {
+			gluePointRect.moveTo(m_gluePoints[i].x() - gluePointRect.width()/2, m_gluePoints[i].y() - gluePointRect.height()/2);
+			painter->fillRect(gluePointRect, QColor(Qt::GlobalColor::red));
+		}
+	#endif
 }
 
 QVariant TextLabelPrivate::itemChange(GraphicsItemChange change, const QVariant &value) {
@@ -941,7 +1090,7 @@ QVariant TextLabelPrivate::itemChange(GraphicsItemChange change, const QVariant 
 
 		//emit the signals in order to notify the UI.
 		if(m_coordBinding)
-			logicalPos = cSystem->mapSceneToLogical(tempPosition.point);
+			logicalPos = cSystem->mapSceneToLogical(tempPosition.point, AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
 		emit q->positionChanged(tempPosition);
 	}
 

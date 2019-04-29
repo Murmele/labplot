@@ -65,6 +65,12 @@ public:
 	bool m_printing;
 	double x_pos;
 
+	// TextLabel Gluepoint
+	bool automaticGluePoint{true};
+	int gluePointIndex{0}; // negative value means automatic mode
+	// connect to this curve
+	QString connectionLineCurveName;
+
 	QColor connectionLineColor;
 	double connectionLineWidth; // drawing linewidth
 	bool xposLineVisible;

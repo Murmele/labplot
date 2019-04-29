@@ -30,6 +30,8 @@
 #ifndef TEXTLABELPRIVATE_H
 #define TEXTLABELPRIVATE_H
 
+#include "src/backend/worksheet/plots/cartesian/CartesianCoordinateSystem.h"
+
 #include <QStaticText>
 #include <QFutureWatcher>
 #include <QGraphicsItem>
@@ -90,8 +92,10 @@ public:
 	void updateText();
 	void updateTeXImage();
 	void updateBorder();
-	QPointF getLogicalPos();
+	QPointF getLogicalPos(AbstractCoordinateSystem::MappingFlags flag = AbstractCoordinateSystem::MappingFlag::DefaultMapping);
 	QRectF getSize();
+	QPointF findNearestGluePoint(QPointF scenePoint);
+	QPointF gluePointAt(int index);
 
 	QStaticText staticText;
         QPointF logicalPos;
@@ -113,6 +117,10 @@ public:
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
 
 	TextLabel* const q;
+
+	// used in the WorksheetInfoElement (Marker) to attach the line to the label
+	QVector<QPointF> m_gluePoints;
+
 
 private:
 	void contextMenuEvent(QGraphicsSceneContextMenuEvent*) override;

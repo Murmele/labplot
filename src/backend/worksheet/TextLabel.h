@@ -33,6 +33,7 @@
 #include "backend/lib/macros.h"
 #include "tools/TeXRenderer.h"
 #include "backend/worksheet/WorksheetElement.h"
+#include "backend/worksheet/plots/cartesian/CartesianCoordinateSystem.h"
 
 #include <QPen>
 
@@ -116,7 +117,10 @@ public:
     bool isAttachedToCoordEnabled() const;
 	void setPrinting(bool) override;
     QRectF getSize();
-    QPointF getLogicalPos();
+	QPointF getLogicalPos(AbstractCoordinateSystem::MappingFlags flag = AbstractCoordinateSystem::MappingFlag::DefaultMapping);
+	QPointF findNearestGluePoint(QPointF scenePoint);
+	int gluePointCount();
+	QPointF gluePointAt(int index);
 
 	void retransform() override;
 	void handleResize(double horizontalRatio, double verticalRatio, bool pageResize) override;
