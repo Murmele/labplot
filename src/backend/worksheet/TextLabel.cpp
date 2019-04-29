@@ -1209,6 +1209,8 @@ void TextLabel::save(QXmlStreamWriter* writer) const {
 	writer->writeAttribute( "visible", QString::number(d->isVisible()) );
 	writer->writeAttribute( "enableCoordBinding", QString::number(d->m_coordBindingEnable));
 	writer->writeAttribute( "coordBinding", QString::number(d->m_coordBinding));
+	writer->writeAttribute( "logicalPosX", QString::number(d->logicalPos.x()));
+	writer->writeAttribute( "logicalPosY", QString::number(d->logicalPos.y()));
 	writer->writeEndElement();
 
 	writer->writeStartElement( "text" );
@@ -1307,6 +1309,18 @@ bool TextLabel::load(XmlStreamReader* reader, bool preview) {
 				reader->raiseWarning(attributeWarning.subs("coordBinding").toString());
 			else
 				setCoordBinding(str.toInt());
+
+			str = attribs.value("logicalPosX").toString();
+			if(str.isEmpty())
+				reader->raiseWarning(attributeWarning.subs("logicalPosX").toString());
+			else
+				d->logicalPos.setX(str.toDouble());
+
+			str = attribs.value("logicalPosY").toString();
+			if(str.isEmpty())
+				reader->raiseWarning(attributeWarning.subs("logicalPosY").toString());
+			else
+				d->logicalPos.setY(str.toDouble());
 
 		} else if (!preview && reader->name() == "text") {
 			d->textWrapper.text = reader->readElementText();
