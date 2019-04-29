@@ -113,6 +113,17 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 }
 
 WorksheetInfoElement::~WorksheetInfoElement() {
+//	m_suppressChildRemoved = true;
+//	// this function is not called, when deleting marker
+//	// don't understand why I have to remove them manually
+//	// I think it is because of the graphicsitem, which exists
+//	for (auto markerpoint : markerpoints) {
+//		removeChild(markerpoint.customPoint);
+//	}
+
+//	removeChild(label);
+
+//	m_suppressChildRemoved = false;
 }
 
 void WorksheetInfoElement::init() {
@@ -173,8 +184,11 @@ void WorksheetInfoElement::addCurve(const XYCurve* curve, CustomPoint* custompoi
 		custompoint = new CustomPoint(d->plot, "Markerpoint");
 		addChild(custompoint);
 		bool valueFound;
-		double x_new;
-		double y = curve->y(d->x_pos, x_new, valueFound);
+		double x_new, y;
+		if (markerpoints.isEmpty())
+			y = curve->y(d->x_pos, x_new, valueFound);
+		else
+			y = curve->y(markerpoints[0].customPoint->position().x(), x_new, valueFound);
 		custompoint->setPosition(QPointF(x_new,y));
 	} else
 		addChild(custompoint);
@@ -385,37 +399,37 @@ void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const Abst
 	// does not work, because when the childs are reordered this function is called and everything will be deleted. find other way
 	// function works as expected when child was removed
 
-//	if (m_suppressChildRemoved)
-//		return;
+	if (m_suppressChildRemoved)
+		return;
 
-//	if (parent != this)
-//		return;
-//	// problem: when the order was changed the elements are deleted for a short time and recreated. This function will called then
-//	const CustomPoint* point = dynamic_cast<const CustomPoint*> (child);
-//	if (point != nullptr){
-//		for (int i =0; i< markerpoints.length(); i++)
-//			if (point == markerpoints[i].customPoint)
-//				markerpoints.removeAt(i);
-//	}
-//	if (markerpoints.empty()) {
-//		m_suppressChildRemoved = true;
-//		removeChild(label);
-//		m_suppressChildRemoved = false;
-//		remove();
-//	} else
-//		d->retransform();
+	if (parent != this)
+		return;
+	// problem: when the order was changed the elements are deleted for a short time and recreated. This function will called then
+	const CustomPoint* point = dynamic_cast<const CustomPoint*> (child);
+	if (point != nullptr){
+		for (int i =0; i< markerpoints.length(); i++)
+			if (point == markerpoints[i].customPoint)
+				markerpoints.removeAt(i);
+	}
+	if (markerpoints.empty()) {
+		m_suppressChildRemoved = true;
+		removeChild(label);
+		m_suppressChildRemoved = false;
+		remove();
+	} else
+		d->retransform();
 
-//	const TextLabel* textlabel = dynamic_cast<const TextLabel*>(child);
-//	if (label != nullptr) {
-//		if (textlabel == label) {
-//			for (auto markerpoint : markerpoints) {
-//				m_suppressChildRemoved = true;
-//				removeChild(markerpoint.customPoint);
-//				m_suppressChildRemoved = false;
-//			}
-//			remove();
-//		}
-//	}
+	const TextLabel* textlabel = dynamic_cast<const TextLabel*>(child);
+	if (label != nullptr) {
+		if (textlabel == label) {
+			for (auto markerpoint : markerpoints) {
+				m_suppressChildRemoved = true;
+				removeChild(markerpoint.customPoint);
+				m_suppressChildRemoved = false;
+			}
+			remove();
+		}
+	}
 }
 
 void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
@@ -638,6 +652,7 @@ void WorksheetInfoElementPrivate::retransform() {
 
 	if (!q->label)
 		return;
+
 	if (q->markerpoints.isEmpty())
 		return;
 
