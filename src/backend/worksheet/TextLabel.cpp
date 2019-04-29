@@ -1065,7 +1065,7 @@ void TextLabelPrivate::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 		painter->drawPath(labelShape);
 	}
 
-	#define DEBUG_TEXTLABEL_GLUEPOINTS 1
+	#define DEBUG_TEXTLABEL_GLUEPOINTS 0
 	#if DEBUG_TEXTLABEL_GLUEPOINTS
 		// just for debugging
 		painter->setPen(QColor(Qt::GlobalColor::red));
