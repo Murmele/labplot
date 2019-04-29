@@ -23,6 +23,9 @@ WorksheetInfoElementDock::WorksheetInfoElementDock(QWidget *parent) :
     connect(ui->kcbXPosLineColor, &KColorButton::changed, this, &WorksheetInfoElementDock::xposLineColorChanged);
     connect(ui->kcbConnectionLineColor, &KColorButton::changed, this, &WorksheetInfoElementDock::connectionLineColorChanged);
     connect(ui->chbXPosLineVisible, &QCheckBox::toggled, this, &WorksheetInfoElementDock::xposLineVisibilityChanged);
+
+	connect(ui->cb_gluePoint, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WorksheetInfoElementDock::gluePointChanged);
+	connect(ui->cb_curve, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WorksheetInfoElementDock::curveChanged);
 }
 
 void WorksheetInfoElementDock::setWorksheetInfoElements(QList<WorksheetInfoElement *> &list, bool sameParent) {
@@ -32,6 +35,7 @@ void WorksheetInfoElementDock::setWorksheetInfoElements(QList<WorksheetInfoEleme
 
     ui->lstAvailableCurves->clear();
     ui->lstSelectedCurves->clear();
+	ui->cb_curve->clear();
 
     ui->chbVisible->setChecked(m_element->isVisible());
 
@@ -41,13 +45,17 @@ void WorksheetInfoElementDock::setWorksheetInfoElements(QList<WorksheetInfoEleme
 				ui->lstAvailableCurves->addItem(curves[i]->name());
 
         for (int i=0; i<m_element->markerPointsCount(); i++)
-			if (m_element->markerPointAt(i).curve != nullptr)
+			if (m_element->markerPointAt(i).curve != nullptr) {
 				ui->lstSelectedCurves->addItem(m_element->markerPointAt(i).curve->name());
+				ui->cb_curve->addItem(m_element->markerPointAt(i).curve->name());
+			}
 
     } else {
         ui->lstAvailableCurves->setEnabled(false);
         ui->lstSelectedCurves->setEnabled(false);
     }
+
+	elementLabelBorderShapeChanged(m_element->gluePointsCount());
 
     ui->chbXPosLineVisible->setChecked(m_element->xposLineVisible());
     ui->kcbXPosLineColor->setColor(m_element->xposLineColor());
@@ -71,6 +79,15 @@ void WorksheetInfoElementDock::initConnections() {
              this, &WorksheetInfoElementDock::elementXposLineColorChanged );
     connect( m_element, &WorksheetInfoElement::xposLineVisibleChanged,
              this, &WorksheetInfoElementDock::elementXPosLineVisibleChanged );
+	connect (m_element, &WorksheetInfoElement::gluePointIndexChanged,
+			 this, &WorksheetInfoElementDock::elementGluePointIndexChanged );
+	connect (m_element, &WorksheetInfoElement::connectionLineCurveNameChanged,
+			 this, &WorksheetInfoElementDock::elementConnectionLineCurveChanged );
+	connect (m_element, &WorksheetInfoElement::labelBorderShapeChangedSignal,
+			 this, &WorksheetInfoElementDock::elementLabelBorderShapeChanged );
+	connect (m_element, &WorksheetInfoElement::curveRemoved,
+			 this, &WorksheetInfoElementDock::elementCurveRemoved);
+
 }
 
 WorksheetInfoElementDock::~WorksheetInfoElementDock() {
@@ -123,6 +140,23 @@ void WorksheetInfoElementDock::xposLineVisibilityChanged(bool visible) {
 
     for (auto* worksheetInfoElement: m_elements)
         worksheetInfoElement->setXPosLineVisible(visible);
+}
+
+void WorksheetInfoElementDock::gluePointChanged(int index) {
+	if (m_initializing)
+		return;
+
+	for (auto* worksheetInfoElement: m_elements)
+		worksheetInfoElement->setGluePointIndex(index-1); // index 0 means automatic, which is defined as -1
+}
+
+void WorksheetInfoElementDock::curveChanged(int index) {
+	if (m_initializing)
+		return;
+
+	QString name = ui->cb_curve->currentText();
+	for (auto* worksheetInfoElement: m_elements)
+		worksheetInfoElement->setConnectionLineCurveName(name); // index 0 means automatic, which is defined as -1
 }
 
 void WorksheetInfoElementDock::addCurve() {
@@ -225,6 +259,44 @@ void WorksheetInfoElementDock::elementVisibilityChanged(const bool visible) {
     m_initializing = false;
 }
 
-void WorksheetInfoElementDock::worksheetInfoElementCurveRemoved(QString curve) {
+void WorksheetInfoElementDock::elementGluePointIndexChanged(const int index) {
+	m_initializing = true;
+	if (index < 0)
+		ui->cb_gluePoint->setCurrentIndex(0);
+	else
+		ui->cb_gluePoint->setCurrentIndex(index + 1); // automatic label is in same combo box
+	m_initializing = false;
+}
 
+void WorksheetInfoElementDock::elementConnectionLineCurveChanged(const QString name) {
+	m_initializing = true;
+	for (int i=0; i< ui->cb_curve->count(); i++) {
+		if (ui->cb_curve->itemData(i).toString().compare(name) == 0) {
+			ui->cb_curve->setCurrentIndex(i);
+			break;
+		}
+	}
+	m_initializing = false;
+}
+
+void WorksheetInfoElementDock::elementLabelBorderShapeChanged(const int gluePointCount) {
+	m_initializing = true;
+	ui->cb_gluePoint->clear();
+	ui->cb_gluePoint->addItem("Automatic");
+	for (int i=0; i < m_element->gluePointsCount(); i++) {
+		ui->cb_gluePoint->addItem(QString::number(i+1));
+	}
+	m_initializing = false;
+}
+
+void WorksheetInfoElementDock::elementCurveRemoved(QString name) {
+	m_initializing = true;
+	for (int i=0; i < ui->lstSelectedCurves->count(); i++) {
+		QListWidgetItem *item = ui->lstSelectedCurves->item(i);
+		if (item->data(Qt::DisplayRole).toString().compare(name) == 0) {
+			ui->lstSelectedCurves->takeItem(i);
+			break;
+		}
+	}
+	m_initializing = false;
 }

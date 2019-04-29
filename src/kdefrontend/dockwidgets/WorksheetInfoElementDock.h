@@ -19,7 +19,7 @@ public:
     void setWorksheetInfoElements(QList<WorksheetInfoElement*> &list, bool sameParent);
     void initConnections();
 public slots:
-    void worksheetInfoElementCurveRemoved(QString curve);
+	void elementCurveRemoved(QString name);
 
 private slots:
     void visibilityChanged(bool state);
@@ -30,6 +30,8 @@ private slots:
     void xposLineWidthChanged(double value);
     void xposLineColorChanged(QColor color);
     void xposLineVisibilityChanged(bool visible);
+	void gluePointChanged(int index);
+	void curveChanged(int index);
 
     // slots triggered in the WorksheetInfoElement
     void elementConnectionLineWidthChanged(const double width);
@@ -38,6 +40,9 @@ private slots:
     void elementXposLineColorChanged(const QColor color);
     void elementXPosLineVisibleChanged(const bool visible);
     void elementVisibilityChanged(const bool visible);
+	void elementGluePointIndexChanged(const int index);
+	void elementConnectionLineCurveChanged(const QString name);
+	void elementLabelBorderShapeChanged(const int gluePointCount);
 
 private:
     Ui::WorksheetInfoElementDock *ui;

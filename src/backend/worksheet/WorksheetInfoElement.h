@@ -71,6 +71,7 @@ public:
 	void setZValue(qreal) override;
 	int markerPointsCount();
 	MarkerPoints_T markerPointAt(int index);
+	int gluePointsCount();
 	TextLabel::TextWrapper createTextLabelText();
 	QMenu* createContextMenu();
 	CartesianPlot* getPlot();
@@ -88,6 +89,8 @@ public:
 	BASIC_D_ACCESSOR_DECL(double, connectionLineWidth, ConnectionLineWidth);
 	BASIC_D_ACCESSOR_DECL(QColor, connectionLineColor, ConnectionLineColor);
 	BASIC_D_ACCESSOR_DECL(bool, visible, Visible);
+	BASIC_D_ACCESSOR_DECL(int, gluePointIndex, GluePointIndex);
+	BASIC_D_ACCESSOR_DECL(QString, connectionLineCurveName, ConnectionLineCurveName);
 
 	typedef  WorksheetInfoElementPrivate Private;
 
@@ -96,6 +99,8 @@ public slots:
 	void pointPositionChanged(QPointF pos);
 	void childRemoved(const AbstractAspect *parent, const AbstractAspect *before, const AbstractAspect *child);
 	void childAdded(const AbstractAspect* child);
+	void labelBorderShapeChanged();
+	void labelTextWrapperChanged(TextLabel::TextWrapper wrapper);
 protected:
 	WorksheetInfoElementPrivate* const d_ptr;
 private:
@@ -105,6 +110,7 @@ private:
 	bool m_menusInitialized {false};
 	bool m_suppressChildRemoved {false};
 	bool m_suppressPointPositionChanged {false};
+	bool m_setTextLabelText{false};
 
 	// Actions
 	QAction* visibilityAction;
@@ -115,6 +121,10 @@ signals:
 	void connectionLineWidthChanged(const double width);
 	void connectionLineColorChanged(const QColor color);
 	void visibleChanged(const bool visible);
+	void gluePointIndexChanged(const int index);
+	void connectionLineCurveNameChanged(const QString name);
+	void labelBorderShapeChangedSignal(int gluePointsCount);
+	void curveRemoved(const QString name);
 };
 
 #endif // WORKSHEETINFOELEMENT_H
