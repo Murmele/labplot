@@ -661,8 +661,8 @@ void WorksheetInfoElementPrivate::retransform() {
 
 	// line goes to the fist pointPos
 	// TODO: better would be to direct to the highest point or also possible to make it changeable
-	QPointF pointPos = cSystem->mapLogicalToScene(q->markerpoints[0].customPoint->position());;
-	for (int i=0; i< q->markerPointsCount(); i++) {
+	QPointF pointPos = cSystem->mapLogicalToScene(q->markerpoints[0].customPoint->position());
+	for (int i=1; i< q->markerPointsCount(); i++) {
 		if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
 			pointPos = cSystem->mapLogicalToScene(q->markerpoints[i].customPoint->position());
 			break;
@@ -672,7 +672,7 @@ void WorksheetInfoElementPrivate::retransform() {
 	// use limit function like in the cursor! So the line will be drawn only till the border of the cartesian Plot
 	QPointF labelPos;
 	if (automaticGluePoint)
-		labelPos = q->label->findNearestGluePoint(pointPos);//cSystem->mapLogicalToScene(q->label->getLogicalPos(AbstractCoordinateSystem::MappingFlag::SuppressPageClipping), AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
+		labelPos = q->label->findNearestGluePoint(pointPos);
 	else
 		labelPos = q->label->gluePointAt(gluePointIndex);
 
@@ -751,6 +751,9 @@ QRectF WorksheetInfoElementPrivate::boundingRect() const {
 
 void WorksheetInfoElementPrivate::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget* widget) {
 	if (!visible)
+		return;
+
+	if (q->markerpoints.isEmpty())
 		return;
 
 	QPen pen(connectionLineColor, connectionLineWidth);
@@ -897,21 +900,34 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event) {
 		else
 			index = -1;
 
-		double x,y;
+		double x,y, xNew;
 		bool valueFound;
 		QPointF pointPosition;
-		for (int i =0; i< q->markerpoints.length(); i++) {
-			QPointF position = q->markerpoints[i].customPoint->position();
-			q->markerpoints[i].curve->getNextValue(q->markerpoints[i].customPoint->position().x(), index,x,y,valueFound);
-			if (valueFound) {
+
+		// problem: when curves have different number of samples, the points are anymore aligned
+		// with the vertical line
+		QPointF position = q->markerpoints[0].customPoint->position();
+		q->markerpoints[0].curve->getNextValue(position.x(), index,x,y,valueFound);
+		for (int i=1; i< q->markerPointsCount(); i++) {
+			if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
+				position = q->markerpoints[i].customPoint->position();
+				q->markerpoints[i].curve->getNextValue(position.x(), index,x,y,valueFound);
+				break;
+			}
+		}
+
+		if (valueFound) {
+			for (int i =0; i< q->markerpoints.length(); i++) {
 				q->markerpoints[i].x = x;
-				q->markerpoints[i].y = y;
-				pointPosition.setX(x);
-				pointPosition.setY(y);
-				DEBUG("X_old: " << q->markerpoints[i].customPoint->position().x() << "X_new: " << x);
-				q->m_suppressPointPositionChanged = true;
-				q->markerpoints[i].customPoint->setPosition(pointPosition);
-				q->m_suppressPointPositionChanged = false;
+				q->markerpoints[i].y = q->markerpoints[i].curve->y(x, xNew, valueFound);
+				if (valueFound) {
+					pointPosition.setX(xNew);
+					pointPosition.setY(q->markerpoints[i].y);
+					DEBUG("X_old: " << q->markerpoints[i].customPoint->position().x() << "X_new: " << x);
+					q->m_suppressPointPositionChanged = true;
+					q->markerpoints[i].customPoint->setPosition(pointPosition);
+					q->m_suppressPointPositionChanged = false;
+				}
 			}
 		}
 		q->label->setText(q->createTextLabelText());
