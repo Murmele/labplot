@@ -941,8 +941,9 @@ void WorksheetInfoElement::save(QXmlStreamWriter* writer) const {
 	writer->writeAttribute("xposLineColor_g", QString::number(xposLineColor().green()));
 	writer->writeAttribute("xposLineColor_b", QString::number(xposLineColor().blue()));
 	writer->writeAttribute("xposLineVisible", QString::number(xposLineVisible()));
+	writer->writeAttribute("connectionLineCurveName", connectionLineCurveName());
+	writer->writeAttribute("gluePointIndex", QString::number(gluePointIndex()));
 	writer->writeEndElement();
-
 
 	label->save(writer);
 	QString path;
@@ -1041,6 +1042,25 @@ bool WorksheetInfoElement::load(XmlStreamReader* reader, bool preview) {
 				reader->raiseWarning(attributeWarning.subs("x").toString());
 			else
 				setXPosLineVisible(str.toInt());
+
+			str = attribs.value("connectionLineCurveName").toString();
+			if (str.isEmpty())
+				reader->raiseWarning(attributeWarning.subs("x").toString());
+			else
+				setConnectionLineCurveName(str);
+
+			str = attribs.value("gluePointIndex").toString();
+			if (str.isEmpty())
+				reader->raiseWarning(attributeWarning.subs("x").toString());
+			else {
+				int index = str.toInt();
+				if (index < 0)
+					d->automaticGluePoint = true;
+				else
+					d->automaticGluePoint = false;
+
+				setGluePointIndex(index);
+			}
 
 		} else if (reader->name() == "textLabel") {
 			reader->readNext();
