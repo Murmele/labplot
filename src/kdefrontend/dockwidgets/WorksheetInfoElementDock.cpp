@@ -54,8 +54,16 @@ void WorksheetInfoElementDock::setWorksheetInfoElements(QList<WorksheetInfoEleme
         ui->lstAvailableCurves->setEnabled(false);
         ui->lstSelectedCurves->setEnabled(false);
     }
+	QString curveName = m_element->connectionLineCurveName();
+//	for (int i=0; i< ui->cb_curve->count(); i++) {
+//		if (ui->cb_curve->itemData(i, Qt::DisplayRole).toString().compare(curveName) == 0) {
+//			ui->cb_curve->setCurrentIndex(i);
+//			break;
+//		}
+//	}
 
 	elementLabelBorderShapeChanged(m_element->gluePointsCount());
+	//ui->cb_gluePoint->setCurrentIndex(m_element->gluePointIndex()+1);
 
     ui->chbXPosLineVisible->setChecked(m_element->xposLineVisible());
     ui->kcbXPosLineColor->setColor(m_element->xposLineColor());
