@@ -597,26 +597,14 @@ void WorksheetInfoElement::setConnectionLineCurveName(const QString name) {
 
 WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner,CartesianPlot *plot):
 	q(owner),
-	plot(plot),
-	xposLineWidth(5),
-	connectionLineWidth(5),
-	xposLineVisible(true),
-	connectionLineColor(QColor(Qt::black)),
-	xposLineColor(QColor(Qt::black)),
-	visible(true)
+	plot(plot)
 {
 	init();
 }
 
 WorksheetInfoElementPrivate::WorksheetInfoElementPrivate(WorksheetInfoElement* owner, CartesianPlot *plot, const XYCurve* curve):
 	q(owner),
-	plot(plot),
-	xposLineWidth(5),
-	connectionLineWidth(5),
-	xposLineVisible(true),
-	connectionLineColor(QColor(Qt::black)),
-	xposLineColor(QColor(Qt::black)),
-	visible(true)
+	plot(plot)
 {
 	init();
 }

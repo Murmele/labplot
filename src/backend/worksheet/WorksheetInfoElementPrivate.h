@@ -61,7 +61,7 @@ public:
 	void updateConnectionLine();
 	void visibilityChanged();
 
-	bool visible;
+        bool visible{true};
 	bool m_printing;
 	double x_pos;
 
@@ -71,11 +71,11 @@ public:
 	// connect to this curve
 	QString connectionLineCurveName;
 
-	QColor connectionLineColor;
-	double connectionLineWidth; // drawing linewidth
-	bool xposLineVisible;
-	QColor xposLineColor;
-	double xposLineWidth; // drawing linewidth
+        QColor connectionLineColor{QColor(Qt::black)};
+        double connectionLineWidth{5}; // drawing linewidth
+        bool xposLineVisible{true};
+        QColor xposLineColor{QColor(Qt::black)};
+        double xposLineWidth{5}; // drawing linewidth
 
 	CartesianPlot* plot;
 	const CartesianCoordinateSystem* cSystem;
