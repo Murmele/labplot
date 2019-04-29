@@ -516,6 +516,8 @@ BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, QColor, xposLineColor, xposLine
 BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, double, connectionLineWidth, connectionLineWidth);
 BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, QColor, connectionLineColor, connectionLineColor);
 BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, bool, visible, visible);
+BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, int, gluePointIndex, gluePointIndex);
+BASIC_SHARED_D_READER_IMPL(WorksheetInfoElement, QString, connectionLineCurveName, connectionLineCurveName);
 /* ============================ setter methods ================= */
 
 // Problem: No member named 'Private' in 'WorksheetInfoElement':
