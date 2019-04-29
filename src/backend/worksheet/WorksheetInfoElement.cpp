@@ -227,10 +227,11 @@ bool WorksheetInfoElement::assignCurve(const QVector<XYCurve *> &curves) {
 		}
 	}
 
-	// check if all markerpoints have a valid curve otherwise return false
-	for (auto markerpoint: markerpoints){
-		if (markerpoint.curve == nullptr)
-			return false;
+	// check if all markerpoints have a valid curve
+	// otherwise delete customPoint with no valid curve
+	for (int i=markerpoints.count()-1; i >= 0; i--){
+		if (markerpoints[i].curve == nullptr)
+			removeChild(markerpoints[i].customPoint);
 	}
 	return true;
 }
