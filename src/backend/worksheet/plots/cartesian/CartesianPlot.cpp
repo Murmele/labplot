@@ -104,7 +104,7 @@ CartesianPlot::~CartesianPlot() {
 
 	delete m_coordinateSystem;
 
-	//don't need to delete objects added with addChild()
+	//no need to delete objects added with addChild()
 
 	//no need to delete the d-pointer here - it inherits from QGraphicsItem
 	//and is deleted during the cleanup in QGraphicsScene

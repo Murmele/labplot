@@ -61,21 +61,21 @@ public:
 	void updateConnectionLine();
 	void visibilityChanged();
 
-        bool visible{true};
+	bool visible{true};
 	bool m_printing;
 	double x_pos;
 
 	// TextLabel Gluepoint
 	bool automaticGluePoint{true};
-        int gluePointIndex{-1}; // negative value means automatic mode
+	int gluePointIndex{-1}; // negative value means automatic mode
 	// connect to this curve
 	QString connectionLineCurveName;
 
-        QColor connectionLineColor{QColor(Qt::black)};
-        double connectionLineWidth{5}; // drawing linewidth
-        bool xposLineVisible{true};
-        QColor xposLineColor{QColor(Qt::black)};
-        double xposLineWidth{5}; // drawing linewidth
+	QColor connectionLineColor{QColor(Qt::black)};
+	double connectionLineWidth{5}; // drawing linewidth
+	bool xposLineVisible{true};
+	QColor xposLineColor{QColor(Qt::black)};
+	double xposLineWidth{5}; // drawing linewidth
 
 	CartesianPlot* plot;
 	const CartesianCoordinateSystem* cSystem;
