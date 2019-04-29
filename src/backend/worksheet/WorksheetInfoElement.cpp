@@ -233,6 +233,7 @@ bool WorksheetInfoElement::assignCurve(const QVector<XYCurve *> &curves) {
 		if (markerpoints[i].curve == nullptr)
 			removeChild(markerpoints[i].customPoint);
 	}
+	retransform();
 	return true;
 }
 
