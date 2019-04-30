@@ -384,6 +384,26 @@ void WorksheetInfoElement::labelTextWrapperChanged(TextLabel::TextWrapper wrappe
 	m_setTextLabelText = false;
 }
 
+/*!
+ * \brief WorksheetInfoElement::moveElementBegin
+ * Called, when a child is moved in front or behind another element.
+ * Needed, because the child calls child removed, when moving and then
+ * everything will be deleted
+ */
+void WorksheetInfoElement::moveElementBegin() {
+	m_suppressChildRemoved = true;
+}
+
+/*!
+ * \brief WorksheetInfoElement::moveElementEnd
+ * Called, when a child is moved in front or behind another element.
+ * Needed, because the child calls child removed, when moving and then
+ * everything will be deleted
+ */
+void WorksheetInfoElement::moveElementEnd() {
+	m_suppressChildRemoved = false;
+}
+
 void WorksheetInfoElement::labelBorderShapeChanged() {
 	Q_D(WorksheetInfoElement);
 	emit labelBorderShapeChangedSignal(label->gluePointCount());
@@ -437,6 +457,8 @@ void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
 	const CustomPoint* point = dynamic_cast<const CustomPoint*>(child);
 	if (point) {
 		connect(point, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
+		connect(point, &CustomPoint::moveBegin, this, &WorksheetInfoElement::moveElementBegin);
+		connect(point, &CustomPoint::moveEnd, this, &WorksheetInfoElement::moveElementEnd);
 
 		CustomPoint* p = const_cast<CustomPoint*>(point);
 		p->setParentGraphicsItem(d->plot->graphicsItem());
@@ -451,6 +473,8 @@ void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
 		connect(label, &TextLabel::positionChanged, this, &WorksheetInfoElement::labelPositionChanged);
 		connect(label, &TextLabel::textWrapperChanged, this, &WorksheetInfoElement::labelTextWrapperChanged);
 		connect(label, &TextLabel::borderShapeChanged, this, &WorksheetInfoElement::labelBorderShapeChanged);
+		connect(label, &TextLabel::moveBegin, this, &WorksheetInfoElement::moveElementBegin);
+		connect(label, &TextLabel::moveEnd, this, &WorksheetInfoElement::moveElementEnd);
 
 		TextLabel* l = const_cast<TextLabel*>(labelChild);
 		l->setParentGraphicsItem(d->plot->graphicsItem());
@@ -674,8 +698,7 @@ void WorksheetInfoElementPrivate::retransform() {
 	}
 	setZValue(zValueMin-0.001); // low enough that it is not behind other elements
 
-	// line goes to the fist pointPos
-	// TODO: better would be to direct to the highest point or also possible to make it changeable
+	// line goes to the first pointPos
 	QPointF pointPos = cSystem->mapLogicalToScene(q->markerpoints[0].customPoint->position());
 	for (int i=1; i< q->markerPointsCount(); i++) {
 		if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
@@ -861,7 +884,16 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 	bool newMarkerPointPos = false;
 
 	q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
-	double x = q->markerpoints[0].x+delta_logic.x();
+
+	// TODO: find better method to do this. It's inefficient.
+	double x = q->markerpoints[0].x;
+	for (int i=1; i< q->markerPointsCount(); i++) {
+		if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
+			x = q->markerpoints[i].x;
+			break;
+		}
+	}
+	x += delta_logic.x();
 	DEBUG("markerpoints[0].x: " << q->markerpoints[0].x << ", markerpoints[0].y: " << q->markerpoints[0].y << ", Scene xpos: " << x);
 	for (int i =0; i < q->markerpoints.length(); i++) {
 		bool valueFound;
@@ -1097,7 +1129,7 @@ bool WorksheetInfoElement::load(XmlStreamReader* reader, bool preview) {
 		} else if (reader->name() == "textLabel") {
 			reader->readNext();
 			if (!label) {
-				label = new TextLabel("TextLabel", d->plot);
+				label = new TextLabel("Markerlabel", d->plot);
 				this->addChild(label);
 			}
 			if (!label->load(reader, preview))

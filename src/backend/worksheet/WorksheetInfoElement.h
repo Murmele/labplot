@@ -101,6 +101,8 @@ public slots:
 	void childAdded(const AbstractAspect* child);
 	void labelBorderShapeChanged();
 	void labelTextWrapperChanged(TextLabel::TextWrapper wrapper);
+	void moveElementBegin();
+	void moveElementEnd();
 protected:
 	WorksheetInfoElementPrivate* const d_ptr;
 private:
