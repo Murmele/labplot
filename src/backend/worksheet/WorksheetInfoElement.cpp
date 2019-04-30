@@ -887,9 +887,11 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 
 	// TODO: find better method to do this. It's inefficient.
 	double x = q->markerpoints[0].x;
+	int activeIndex = 0;
 	for (int i=1; i< q->markerPointsCount(); i++) {
 		if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
 			x = q->markerpoints[i].x;
+			activeIndex = i;
 			break;
 		}
 	}
@@ -908,7 +910,7 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 		}
 
 		if (valueFound) {
-			if (abs(x_new - q->markerpoints[i].x) > 0)
+			if (abs(x_new - q->markerpoints[i].x) > 0 && i == activeIndex)
 				newMarkerPointPos = true;
 			q->markerpoints[i].y = y;
 			q->markerpoints[i].x = x_new;
