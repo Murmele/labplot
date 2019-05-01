@@ -495,11 +495,6 @@ void WorksheetInfoElement::pointPositionChanged(QPointF pos) {
 	if (point == nullptr)
 		return;
 
-	// TODO: Find better solution, this is not a good solution!
-	// Problem: pointPositionChanged will also be called outside of itemchange() in custompoint. Don't know why
-	//    if (!point->graphicsItem()->flags().operator&=(QGraphicsItem::ItemSendsGeometryChanges))
-	//        return;
-
 	// caĺculate new y value
 	double x = point->position().x();
 	double x_new;
@@ -686,17 +681,12 @@ void WorksheetInfoElementPrivate::retransform() {
 	q->label->retransform();
 	q->label->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 
-	double zValueMin = q->label->graphicsItem()->zValue();
 	// TODO: find better solution
+	q->m_suppressPointPositionChanged = true;
 	for (auto markerpoint: q->markerpoints) {
-		markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 		markerpoint.customPoint->retransform();
-		double zValuePoint = markerpoint.customPoint->graphicsItem()->zValue();
-		if (zValuePoint < zValueMin)
-			zValueMin = zValuePoint;
-		markerpoint.customPoint->graphicsItem()->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 	}
-	setZValue(zValueMin-0.001); // low enough that it is not behind other elements
+	q->m_suppressPointPositionChanged = false;
 
 	// line goes to the first pointPos
 	QPointF pointPos = cSystem->mapLogicalToScene(q->markerpoints[0].customPoint->position());
