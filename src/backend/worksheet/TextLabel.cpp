@@ -75,7 +75,8 @@ TextLabel::TextLabel(const QString &name, TextLabelPrivate *dd, Type type)
 	init();
 }
 
-TextLabel::TextLabel(const QString &name, CartesianPlot* plot, Type type):WorksheetElement(name),
+TextLabel::TextLabel(const QString &name, CartesianPlot* plot, Type type):
+	WorksheetElement(name, AspectType::WorksheetInfoElement),
 	d_ptr(new TextLabelPrivate(this,plot)), m_type(type), visibilityAction(nullptr) {
 	init();
 }

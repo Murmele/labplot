@@ -48,7 +48,7 @@
 
 
 WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *plot):
-	WorksheetElement(name),
+	WorksheetElement(name, AspectType::WorksheetInfoElement),
 	d_ptr(new WorksheetInfoElementPrivate(this,plot))
 {
 	Q_D(WorksheetInfoElement);
@@ -946,13 +946,38 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event) {
 		// problem: when curves have different number of samples, the points are anymore aligned
 		// with the vertical line
 		QPointF position = q->markerpoints[0].customPoint->position();
-		q->markerpoints[0].curve->getNextValue(position.x(), index,x,y,valueFound);
-		for (int i=1; i< q->markerPointsCount(); i++) {
-			if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
-				position = q->markerpoints[i].customPoint->position();
-				q->markerpoints[i].curve->getNextValue(position.x(), index,x,y,valueFound);
-				break;
+		if (m_index < 0) {
+			m_index = q->markerpoints[0].curve->getNextValue(position.x(), index, x, y, valueFound);
+			for (int i=1; i< q->markerPointsCount(); i++) {
+				if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
+					position = q->markerpoints[i].customPoint->position();
+					m_index = q->markerpoints[i].curve->getNextValue(position.x(), index, x, y, valueFound);
+					break;
+				}
 			}
+		} else {
+			m_index += index;
+			auto* column = q->markerpoints[0].curve->xColumn();
+			if (column->rowCount() - 1 < m_index)
+				m_index = m_index % column->rowCount();
+			if (m_index < 0)
+				m_index = column->rowCount() - m_index % column->rowCount();
+
+			x = column->valueAt(m_index);
+			for (int i=1; i< q->markerPointsCount(); i++) {
+				if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
+					position = q->markerpoints[i].customPoint->position();
+
+					auto* column = q->markerpoints[i].curve->xColumn();
+					if (column->rowCount() - 1 < m_index)
+						m_index = m_index % column->rowCount();
+					if (m_index < 0)
+						m_index = column->rowCount() - m_index % column->rowCount();
+					q->markerpoints[i].curve->xColumn()->valueAt(m_index);
+					break;
+				}
+			}
+			valueFound = true;
 		}
 
 		if (valueFound) {

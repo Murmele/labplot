@@ -365,7 +365,7 @@ void GuiObserver::selectedAspectsChanged(QList<AbstractAspect*>& selectedAspects
 		raiseDock(m_mainWindow->notesDock, m_mainWindow->stackedWidget);
 		m_mainWindow->notesDock->setNotesList(castList<Note>(selectedAspects));
 		break;
-	case AspectType::WorksheetInfoElement:
+	case AspectType::WorksheetInfoElement: {
         m_mainWindow->m_propertiesDock->setWindowTitle(i18nc("@title:window", "Marker"));
 
         if (!m_mainWindow->worksheetInfoElementDock) {
@@ -388,7 +388,8 @@ void GuiObserver::selectedAspectsChanged(QList<AbstractAspect*>& selectedAspects
         m_mainWindow->worksheetInfoElementDock->setWorksheetInfoElements(list, sameParent);
         m_mainWindow->stackedWidget->setCurrentWidget(m_mainWindow->worksheetInfoElementDock);
         m_mainWindow->worksheetInfoElementDock->show();
-	case AspectType::MQTTClient:
+		break;
+	} case AspectType::MQTTClient:
 #ifdef HAVE_MQTT
 		m_mainWindow->m_propertiesDock->setWindowTitle(i18nc("@title:window", "MQTT Data Source"));
 		raiseDock(m_mainWindow->m_liveDataDock, m_mainWindow->stackedWidget);

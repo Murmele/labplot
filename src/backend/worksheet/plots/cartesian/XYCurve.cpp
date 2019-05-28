@@ -780,7 +780,7 @@ bool XYCurve::columnRemoved(const AbstractColumn* column, const AbstractAspect* 
  * @param y y value at the found index
  * @param valueFound True when value found, otherwise false
  */
-void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& valueFound) const {
+int XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& valueFound) const {
 
 	valueFound = false;
 	AbstractColumn::Properties properties = xColumn()->properties();
@@ -789,7 +789,7 @@ void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& 
 
 	int index = indexForX(xpos);
 	if (index < 0) {
-		return;
+		return -1;
 	}
 	if (offset > 0 && index+offset < xColumn()->rowCount())
 		index += offset;
@@ -811,7 +811,7 @@ void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& 
 			 xMode == AbstractColumn::ColumnMode::Month)
 		x = xColumn()->dateTimeAt(index).toMSecsSinceEpoch();
 	else
-		return;
+		return index;
 
 
 	AbstractColumn::ColumnMode yMode = yColumn()->columnMode();
@@ -824,9 +824,10 @@ void XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& 
 			 yMode == AbstractColumn::ColumnMode::Month)
 		y = yColumn()->dateTimeAt(index).toMSecsSinceEpoch();
 	else
-		return;
+		return index;
 
 	valueFound = true;
+	return index;
 }
 
 void XYCurve::xColumnAboutToBeRemoved(const AbstractAspect* aspect) {
@@ -2800,6 +2801,10 @@ void XYCurvePrivate::updatePixmap() {
 }
 
 QVariant XYCurvePrivate::itemChange(GraphicsItemChange change, const QVariant & value) {
+
+	if (!cSystem)
+		return QGraphicsItem::itemChange(change,value);
+
     // signalize, that the curve was selected. Will be used to create a new WorksheetInfoElement (Marker)
     if (change == QGraphicsItem::ItemSelectedChange)
         if (value.toBool())
