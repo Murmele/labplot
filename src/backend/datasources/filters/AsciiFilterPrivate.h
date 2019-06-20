@@ -36,6 +36,7 @@ class AbstractColumn;
 class AbstractAspect;
 class Spreadsheet;
 class MQTTTopic;
+class LiveDataHandler;
 
 class AsciiFilterPrivate {
 
@@ -53,10 +54,13 @@ public:
 			AbstractFileFilter::ImportMode = AbstractFileFilter::Replace);
 	void write(const QString& fileName, AbstractDataSource*);
 
+	QVector<QStringList> preview(LiveDataHandler *handle, int nbrOfLines); // read from internal buffer
 	QVector<QStringList> preview(const QString& fileName, int lines);
 	QVector<QStringList> preview(QIODevice& device);
+	bool getLine(QString& string);
 
 	QString separator() const;
+	QString determineSeparator() const;
 
 #ifdef HAVE_MQTT
 	int prepareToRead(const QString&);
@@ -97,7 +101,7 @@ public:
 
 private:
 	static const unsigned int m_dataTypeLines = 10;	// maximum lines to read for determining data types
-	QString m_separator;
+	QString m_separator{""}; // the separator must be a valid character
 	int m_actualStartRow{1};
 	int m_actualRows{0};
 	int m_actualCols{0};

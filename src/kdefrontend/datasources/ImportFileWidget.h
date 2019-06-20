@@ -56,6 +56,7 @@ class QCompleter;
 class QTimer;
 class QTreeWidgetItem;
 class QStringList;
+class LiveDataHandler;
 
 class ImportFileWidget : public QWidget {
 	Q_OBJECT
@@ -80,10 +81,10 @@ public:
 	void showAsciiHeaderOptions(bool);
 	void showJsonModel(bool);
 
-	QString host() const;
-	QString port() const;
-	QString serialPort() const;
-	int baudRate() const;
+	QString host() const; // LiveDataHandler
+	QString port() const; // LiveDataHandler
+	QString serialPort() const; // LiveDataHandler
+	int baudRate() const; // LiveDataHandler
 
 private:
 	Ui::ImportFileWidget ui;
@@ -108,6 +109,7 @@ private:
 	bool m_fileEmpty{false};
 	bool m_liveDataSource;
 	bool m_suppressRefresh{false};
+	LiveDataHandler* m_liveDataHandler{nullptr};
 
 private slots:
 	void fileNameChanged(const QString&);
@@ -123,14 +125,27 @@ private slots:
 	void selectFile();
 	void fileInfoDialog();
 	void refreshPreview();
-
+	void settingsChanged();
+	void updatePreviewWindow(QVector<QStringList> importedStrings, QStringList vectorNameList, QVector<AbstractColumn::ColumnMode> columnModes);
 signals:
 	void fileNameChanged();
 	void sourceTypeChanged();
-	void hostChanged();
-	void portChanged();
 	void previewRefreshed();
+	void preview(int nbrOfLines);
 	void checkedFitsTableToMatrix(const bool enable);
+	void checkOKButton(bool deviceOK, QString toolTip);
+	void fileTypeToAscii(int index, int startRow, int endRow, int startColumn, int endColumn);
+	void fileTypeToBinary(int index, int startRow, int endRow);
+	void fileTypeToROOT(int startRow, int endRow, QVector<QStringList> columns);
+	void fileTypeToHDF5(int startRow, int endRow, int startColumn, int endColumn);
+	void fileTypeToNETCDF(int startRow, int endRow, int startColumn, int endColumn);
+	void fileTypeToFITS(int startRow, int endRow, int startColumn, int endColumn);
+	void fileTypeToImage(int startRow, int endRow, int startColumn, int endColumn);
+	void fileTypeToNgspiceRawAscii(int startRow, int endRow);
+	void fileTypeToNgspiceRawBinary(int startRow, int endRow);
+	void filterTypeToJSON(int startRow, int endRow, int startColumn, int endColumn);
+
+
 
 	friend class HDF5OptionsWidget;	// to access refreshPreview()
 	friend class NetCDFOptionsWidget;	// to access refreshPreview() and others

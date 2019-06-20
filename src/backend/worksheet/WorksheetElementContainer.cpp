@@ -142,8 +142,8 @@ void WorksheetElementContainer::handleResize(double horizontalRatio, double vert
 		setRect(rect);
 	} else {
 		//TODO
-// 		for (auto* elem : children<WorksheetElement>(IncludeHidden))
-// 			elem->handleResize(horizontalRatio, verticalRatio);
+		for (auto* elem : children<WorksheetElement>(IncludeHidden))
+			elem->handleResize(horizontalRatio, verticalRatio);
 
 // 		retransform();
 	}

@@ -75,6 +75,7 @@ void HDF5OptionsWidget::updateContent(HDF5Filter* filter, const QString& fileNam
 	updates the selected data set of a HDF5 file when a new tree widget item is selected
 */
 void HDF5OptionsWidget::hdf5TreeWidgetSelectionChanged() {
+	emit selectionChanged(selectedNames());
 	DEBUG("hdf5TreeWidgetSelectionChanged()");
 	auto items = ui.twContent->selectedItems();
 	QDEBUG("SELECTED ITEMS =" << items);

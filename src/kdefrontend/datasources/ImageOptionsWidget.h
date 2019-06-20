@@ -40,6 +40,10 @@ public:
 	ImageFilter::ImportFormat currentFormat() const {
 		return (ImageFilter::ImportFormat)ui.cbImportFormat->currentIndex();
 	}
+private slots:
+	void cbImportFormatIndexChanged();
+signals:
+	void currentFormatChanged(ImageFilter::ImportFormat format);
 
 private:
 	Ui::ImageOptionsWidget ui;

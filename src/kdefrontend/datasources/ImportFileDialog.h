@@ -68,6 +68,7 @@ private:
 	QPushButton* m_optionsButton;
 
 protected  slots:
+	void checkOkButton(bool deviceOK, QString toolTip);
 	void checkOkButton() override;
 
 private slots:

@@ -77,7 +77,7 @@ void NetCDFOptionsWidget::updateContent(NetCDFFilter *filter, const QString& fil
 void NetCDFOptionsWidget::netcdfTreeWidgetSelectionChanged() {
 	DEBUG("netcdfTreeWidgetSelectionChanged()");
 	QDEBUG("SELECTED ITEMS =" << ui.twContent->selectedItems());
-
+	emit selectionChanged(selectedNames());
 	if (ui.twContent->selectedItems().isEmpty())
 		return;
 

@@ -50,6 +50,8 @@ private:
 
 private slots:
 	void netcdfTreeWidgetSelectionChanged();
+signals:
+	void selectionChanged(QStringList);
 };
 
 #endif

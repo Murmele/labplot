@@ -53,6 +53,8 @@ private:
 
 private slots:
 	void fitsTreeWidgetSelectionChanged();
+signals:
+	void selectionChanged(QStringList);
 };
 
 #endif // FITSOPTIONSWIDGET_H

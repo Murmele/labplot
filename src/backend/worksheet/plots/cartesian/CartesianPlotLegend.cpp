@@ -177,7 +177,14 @@ void CartesianPlotLegend::handleResize(double horizontalRatio, double verticalRa
 	Q_UNUSED(verticalRatio);
 	Q_UNUSED(pageResize);
 	//TODO
-// 	Q_D(const CartesianPlotLegend);
+	Q_D(CartesianPlotLegend);
+
+	qDebug()<<"in handle resize";
+	if (d->position.horizontalPosition == CartesianPlotLegend::hPositionCustom)
+		d->position.point.setX(d->position.point.x()*horizontalRatio);
+
+	if (d->position.verticalPosition == CartesianPlotLegend::vPositionCustom)
+		d->position.point.setY(d->position.point.y()*verticalRatio);
 }
 
 //##############################################################################

@@ -38,6 +38,7 @@ class AsciiFilterPrivate;
 class QAbstractSocket;
 class MQTTTopic;
 class MQTTClient;
+class LiveDataHandler;
 
 class AsciiFilter : public AbstractFileFilter {
 	Q_OBJECT
@@ -68,9 +69,11 @@ public:
 
 	QVector<QStringList> preview(const QString& fileName, int lines);
 	QVector<QStringList> preview(QIODevice& device);
+	QVector<QStringList> preview(LiveDataHandler* handle, int nbrOfLines);
 
 	void loadFilterSettings(const QString&) override;
 	void saveFilterSettings(const QString&) const override;
+
 
 #ifdef HAVE_MQTT
 	QVector<QStringList> preview(const QString& message);

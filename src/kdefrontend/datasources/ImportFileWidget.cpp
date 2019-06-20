@@ -40,6 +40,7 @@ Copyright            : (C) 2018-2019 Kovacs Ferencz (kferike98@gmail.com)
 #include "FITSOptionsWidget.h"
 #include "JsonOptionsWidget.h"
 #include "ROOTOptionsWidget.h"
+#include "backend/datasources/LiveDataHandler.h"
 
 #include <QCompleter>
 #include <QDir>
@@ -84,7 +85,8 @@ Copyright            : (C) 2018-2019 Kovacs Ferencz (kferike98@gmail.com)
 */
 ImportFileWidget::ImportFileWidget(QWidget* parent, bool liveDataSource, const QString& fileName) : QWidget(parent),
 	m_fileName(fileName),
-	m_liveDataSource(liveDataSource)
+	m_liveDataSource(liveDataSource),
+	m_liveDataHandler(new LiveDataHandler(this))
 #ifdef HAVE_MQTT
 	,
 	m_connectTimeoutTimer(new QTimer(this)),
@@ -275,6 +277,7 @@ void ImportFileWidget::loadSettings() {
 }
 
 ImportFileWidget::~ImportFileWidget() {
+
 	// save current settings
 	QString confName;
 	if (m_liveDataSource)
@@ -336,11 +339,9 @@ ImportFileWidget::~ImportFileWidget() {
 void ImportFileWidget::initSlots() {
 	//SLOTs for the general part of the data source configuration
 	connect(ui.cbSourceType, static_cast<void (QComboBox::*) (int)>(&QComboBox::currentIndexChanged),
-	        this, static_cast<void (ImportFileWidget::*) (int)>(&ImportFileWidget::sourceTypeChanged));
+			this, static_cast<void (ImportFileWidget::*) (int)>(&ImportFileWidget::sourceTypeChanged));
 	connect(ui.leFileName, &QLineEdit::textChanged,
 	        this, static_cast<void (ImportFileWidget::*) (const QString&)>(&ImportFileWidget::fileNameChanged));
-	connect(ui.leHost, &QLineEdit::textChanged, this, &ImportFileWidget::hostChanged);
-	connect(ui.lePort, &QLineEdit::textChanged, this, &ImportFileWidget::portChanged);
 	connect(ui.tvJson, &QTreeView::clicked, this, &ImportFileWidget::refreshPreview);
 	connect(ui.bOpen, &QPushButton::clicked, this, &ImportFileWidget::selectFile);
 	connect(ui.bFileInfo, &QPushButton::clicked, this, &ImportFileWidget::fileInfoDialog);
@@ -354,6 +355,28 @@ void ImportFileWidget::initSlots() {
 	        this, &ImportFileWidget::readingTypeChanged);
 	connect(ui.cbFilter, static_cast<void (KComboBox::*) (int)>(&KComboBox::activated), this, &ImportFileWidget::filterChanged);
 	connect(ui.bRefreshPreview, &QPushButton::clicked, this, &ImportFileWidget::refreshPreview);
+
+	connect(this, &ImportFileWidget::preview, m_liveDataHandler, QOverload<int>::of(&LiveDataHandler::preview));
+	connect(m_liveDataHandler, &LiveDataHandler::previewData, this, &ImportFileWidget::updatePreviewWindow);
+
+	// Queued connection, when m_liveDataHandler is in it's own thread
+	connect(ui.leHost, &QLineEdit::textChanged, m_liveDataHandler, &LiveDataHandler::setHost);
+	connect(ui.lePort, &QLineEdit::textChanged, m_liveDataHandler, &LiveDataHandler::setPort);
+	connect(ui.cbSerialPort, &QComboBox::currentTextChanged, m_liveDataHandler, &LiveDataHandler::setSerialPort);
+	connect(ui.cbBaudRate, &QComboBox::currentTextChanged, m_liveDataHandler, &LiveDataHandler::setBaudRate);
+	connect(ui.leFileName, &QLineEdit::textChanged, m_liveDataHandler, &LiveDataHandler::setFileName);
+	connect(ui.cbSourceType, QOverload<int>::of(&QComboBox::currentIndexChanged), m_liveDataHandler, &LiveDataHandler::setSourceType, Qt::ConnectionType::BlockingQueuedConnection);
+	//connect(ui.cbFileType, QOverload<int>::of(&QComboBox::currentIndexChanged), m_liveDataHandler, &LiveDataHandler::setFileType, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(ui.cbFilter, QOverload<int>::of(&QComboBox::currentIndexChanged), m_liveDataHandler, &LiveDataHandler::setAutoModeEnabled, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(ui.sbStartRow, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setStartRow, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(ui.sbEndRow, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setEndRow, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(ui.sbStartColumn, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setStartColumn, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(ui.sbEndColumn, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setEndColumn, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(m_rootOptionsWidget.get(), &ROOTOptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentObject, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(m_netcdfOptionsWidget.get(), &NetCDFOptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentVarName, Qt::ConnectionType::BlockingQueuedConnection);
+	//connect(m_fitsOptionsWidget, &FITSOptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentObject, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(m_hdf5OptionsWidget.get(), &HDF5OptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentDataSetName, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(m_imageOptionsWidget.get(), &ImageOptionsWidget::currentFormatChanged, m_liveDataHandler, &LiveDataHandler::setImportFormat, Qt::ConnectionType::BlockingQueuedConnection);
 
 #ifdef HAVE_MQTT
 	connect(ui.cbConnection, static_cast<void (QComboBox::*) (int)>(&QComboBox::currentIndexChanged), this, &ImportFileWidget::mqttConnectionChanged);
@@ -579,7 +602,8 @@ AbstractFileFilter* ImportFileWidget::currentFileFilter() const {
 		DEBUG("	ASCII");
 		if (!m_currentFilter)
 			m_currentFilter.reset(new AsciiFilter);
-		auto filter = static_cast<AsciiFilter*>(m_currentFilter.get());
+		AsciiFilter* filter = static_cast<AsciiFilter*>(m_currentFilter.get());
+
 
 		if (ui.cbFilter->currentIndex() == 0)     //"automatic"
 			filter->setAutoModeEnabled(true);
@@ -887,7 +911,7 @@ void ImportFileWidget::fileNameChanged(const QString& name) {
 		m_twPreview->clear();
 		initOptionsWidget();
 
-		emit fileNameChanged();
+		settingsChanged();
 		return;
 	}
 
@@ -899,7 +923,7 @@ void ImportFileWidget::fileNameChanged(const QString& name) {
 				if (ui.cbFileType->currentIndex() != i) {
 					ui.cbFileType->setCurrentIndex(i); // will call the slot fileTypeChanged which updates content and preview
 
-					emit fileNameChanged();
+					settingsChanged();
 					return;
 				} else {
 					initOptionsWidget();
@@ -910,7 +934,7 @@ void ImportFileWidget::fileNameChanged(const QString& name) {
 		}
 	}
 
-	emit fileNameChanged();
+	settingsChanged();
 	refreshPreview();
 }
 
@@ -970,19 +994,25 @@ void ImportFileWidget::fileTypeChanged(int index) {
 
 	switch (fileType) {
 	case AbstractFileFilter::Ascii:
+		emit fileTypeToAscii(ui.cbFilter->currentIndex(), ui.sbStartRow->value(), ui.sbEndRow->value(), ui.sbStartColumn->value(), ui.sbEndColumn->value());
 		break;
 	case AbstractFileFilter::Binary:
 		ui.lStartColumn->hide();
 		ui.sbStartColumn->hide();
 		ui.lEndColumn->hide();
 		ui.sbEndColumn->hide();
+		emit fileTypeToBinary(ui.cbFilter->currentIndex(), ui.sbStartRow->value(), ui.sbEndRow->value());
 		break;
 	case AbstractFileFilter::ROOT:
 		ui.tabWidget->removeTab(1);
+		emit fileTypeToROOT(m_rootOptionsWidget->startRow(), m_rootOptionsWidget->endRow(), m_rootOptionsWidget->columns());
 	// falls through
 	case AbstractFileFilter::HDF5:
+		emit fileTypeToHDF5(ui.sbStartRow->value(), ui.sbEndRow->value(), ui.sbStartColumn->value(), ui.sbEndColumn->value());
 	case AbstractFileFilter::NETCDF:
+		emit fileTypeToNETCDF(ui.sbStartRow->value(), ui.sbEndRow->value(), ui.sbStartColumn->value(), ui.sbEndColumn->value());
 	case AbstractFileFilter::FITS:
+		emit fileTypeToFITS(ui.sbStartRow->value(), ui.sbEndRow->value(), ui.sbStartColumn->value(), ui.sbEndColumn->value());
 		ui.lFilter->hide();
 		ui.cbFilter->hide();
 		// hide global preview tab. we have our own
@@ -991,13 +1021,16 @@ void ImportFileWidget::fileTypeChanged(int index) {
 		ui.tabWidget->setCurrentIndex(0);
 		break;
 	case AbstractFileFilter::Image:
+		emit fileTypeToImage(ui.sbStartRow->value(), ui.sbEndRow->value(), ui.sbStartColumn->value(), ui.sbEndColumn->value());
 		ui.lFilter->hide();
 		ui.cbFilter->hide();
 		ui.lPreviewLines->hide();
 		ui.sbPreviewLines->hide();
 		break;
 	case AbstractFileFilter::NgspiceRawAscii:
+		emit fileTypeToNgspiceRawAscii(ui.sbStartRow->value(), ui.sbEndRow->value());
 	case AbstractFileFilter::NgspiceRawBinary:
+		emit fileTypeToNgspiceRawBinary(ui.sbStartRow->value(), ui.sbEndRow->value());
 		ui.lFilter->hide();
 		ui.cbFilter->hide();
 		ui.lStartColumn->hide();
@@ -1008,6 +1041,7 @@ void ImportFileWidget::fileTypeChanged(int index) {
 		ui.tabWidget->setCurrentIndex(0);
 		break;
 	case AbstractFileFilter::JSON:
+		emit filterTypeToJSON(ui.sbStartRow->value(), ui.sbEndRow->value(), ui.sbStartColumn->value(), ui.sbEndColumn->value());
 		ui.lFilter->hide();
 		ui.cbFilter->hide();
 		showJsonModel(true);
@@ -1189,281 +1223,45 @@ void ImportFileWidget::refreshPreview() {
 	if (m_suppressRefresh)
 		return;
 
-	DEBUG("ImportFileWidget::refreshPreview()");
-	WAIT_CURSOR;
-
-	QString fileName = absolutePath(ui.leFileName->text());
-	AbstractFileFilter::FileType fileType = currentFileType();
-	LiveDataSource::SourceType sourceType = currentSourceType();
 	int lines = ui.sbPreviewLines->value();
 
-	if (sourceType == LiveDataSource::SourceType::FileOrPipe)
-		DEBUG("refreshPreview(): file name = " << fileName.toStdString());
-
-	// generic table widget
-	if (fileType == AbstractFileFilter::Ascii || fileType == AbstractFileFilter::Binary
-	        || fileType == AbstractFileFilter::JSON || fileType == AbstractFileFilter::NgspiceRawAscii
-	        || fileType == AbstractFileFilter::NgspiceRawBinary)
-		m_twPreview->show();
-	else
-		m_twPreview->hide();
-
-	bool ok = true;
-	QTableWidget* tmpTableWidget = m_twPreview;
-	QVector<QStringList> importedStrings;
-	QStringList vectorNameList;
-	QVector<AbstractColumn::ColumnMode> columnModes;
-	DEBUG("Data File Type: " << ENUM_TO_STRING(AbstractFileFilter, FileType, fileType));
-	switch (fileType) {
-	case AbstractFileFilter::Ascii: {
-		ui.tePreview->clear();
-
-		auto filter = static_cast<AsciiFilter*>(currentFileFilter());
-
-		DEBUG("Data Source Type: " << ENUM_TO_STRING(LiveDataSource, SourceType, sourceType));
-		switch (sourceType) {
-		case LiveDataSource::SourceType::FileOrPipe: {
-			importedStrings = filter->preview(fileName, lines);
-			break;
-		}
-		case LiveDataSource::SourceType::LocalSocket: {
-			QLocalSocket lsocket{this};
-			DEBUG("Local socket: CONNECT PREVIEW");
-			lsocket.connectToServer(fileName, QLocalSocket::ReadOnly);
-			if (lsocket.waitForConnected()) {
-				DEBUG("connected to local socket " << fileName.toStdString());
-				if (lsocket.waitForReadyRead())
-					importedStrings = filter->preview(lsocket);
-				DEBUG("Local socket: DISCONNECT PREVIEW");
-				lsocket.disconnectFromServer();
-				// read-only socket is disconnected immediately (no waitForDisconnected())
-			} else
-				DEBUG("failed connect to local socket " << fileName.toStdString() << " - " << lsocket.errorString().toStdString());
-
-			break;
-		}
-		case LiveDataSource::SourceType::NetworkTcpSocket: {
-			QTcpSocket tcpSocket{this};
-			tcpSocket.connectToHost(host(), port().toInt(), QTcpSocket::ReadOnly);
-			if (tcpSocket.waitForConnected()) {
-				DEBUG("connected to TCP socket");
-				if ( tcpSocket.waitForReadyRead() )
-					importedStrings = filter->preview(tcpSocket);
-
-				tcpSocket.disconnectFromHost();
-			} else
-				DEBUG("failed to connect to TCP socket " << " - " << tcpSocket.errorString().toStdString());
-
-			break;
-		}
-		case LiveDataSource::SourceType::NetworkUdpSocket: {
-			QUdpSocket udpSocket{this};
-			DEBUG("UDP Socket: CONNECT PREVIEW, state = " << udpSocket.state());
-			udpSocket.bind(QHostAddress(host()), port().toInt());
-			udpSocket.connectToHost(host(), 0, QUdpSocket::ReadOnly);
-			if (udpSocket.waitForConnected()) {
-				DEBUG("	connected to UDP socket " << host().toStdString() << ':' << port().toInt());
-				if (!udpSocket.waitForReadyRead(2000) )
-					DEBUG("	ERROR: not ready for read after 2 sec");
-				if (udpSocket.hasPendingDatagrams()) {
-					DEBUG("	has pending data");
-				} else {
-					DEBUG("	has no pending data");
-				}
-				importedStrings = filter->preview(udpSocket);
-
-				DEBUG("UDP Socket: DISCONNECT PREVIEW, state = " << udpSocket.state());
-				udpSocket.disconnectFromHost();
-			} else
-				DEBUG("failed to connect to UDP socket " << " - " << udpSocket.errorString().toStdString());
-
-			break;
-		}
-		case LiveDataSource::SourceType::SerialPort: {
-			QSerialPort sPort{this};
-			DEBUG("	Port: " << serialPort().toStdString() << ", Settings: " << baudRate() << ',' << sPort.dataBits()
-			      << ',' << sPort.parity() << ',' << sPort.stopBits());
-			sPort.setPortName(serialPort());
-			sPort.setBaudRate(baudRate());
-
-			if (sPort.open(QIODevice::ReadOnly)) {
-				if (sPort.waitForReadyRead(2000))
-					importedStrings = filter->preview(sPort);
-				else
-					DEBUG("	ERROR: not ready for read after 2 sec");
-
-				sPort.close();
-			} else
-				DEBUG("	ERROR: failed to open serial port. error: " << sPort.error());
-
-			break;
-		}
-		case LiveDataSource::SourceType::MQTT: {
-#ifdef HAVE_MQTT
-			//show the preview for the currently selected topic
-			auto* item = m_subscriptionWidget->currentItem();
-			if (item && item->childCount() == 0) { //only preview if the lowest level (i.e. a topic) is selected
-				const QString& topicName = item->text(0);
-				auto i = m_lastMessage.find(topicName);
-				if (i != m_lastMessage.end())
-					importedStrings = filter->preview(i.value().payload().data());
-				else
-					importedStrings << QStringList{i18n("No data arrived yet for the selected topic")};
-			}
-#endif
-			break;
-		}
-		}
-
-		vectorNameList = filter->vectorNames();
-		columnModes = filter->columnModes();
-		break;
-	}
-	case AbstractFileFilter::Binary: {
-		ui.tePreview->clear();
-		auto filter = static_cast<BinaryFilter*>(currentFileFilter());
-		importedStrings = filter->preview(fileName, lines);
-		break;
-	}
-	case AbstractFileFilter::Image: {
-		ui.tePreview->clear();
-
-		QImage image(fileName);
-		QTextCursor cursor = ui.tePreview->textCursor();
-		cursor.insertImage(image);
-		RESET_CURSOR;
-		return;
-	}
-	case AbstractFileFilter::HDF5: {
-		DEBUG("ImportFileWidget::refreshPreview: HDF5");
-		auto filter = static_cast<HDF5Filter*>(currentFileFilter());
+	switch (currentFileType()) {
+	case AbstractFileFilter::HDF5:
 		lines = m_hdf5OptionsWidget->lines();
-
-		importedStrings = filter->readCurrentDataSet(fileName, nullptr, ok, AbstractFileFilter::Replace, lines);
-		tmpTableWidget = m_hdf5OptionsWidget->previewWidget();
+		emit preview(lines);
 		break;
-	}
-	case AbstractFileFilter::NETCDF: {
-		auto filter = static_cast<NetCDFFilter*>(currentFileFilter());
+	case AbstractFileFilter::NETCDF:
 		lines = m_netcdfOptionsWidget->lines();
-
-		importedStrings = filter->readCurrentVar(fileName, nullptr, AbstractFileFilter::Replace, lines);
-		tmpTableWidget = m_netcdfOptionsWidget->previewWidget();
+		emit preview(lines);
 		break;
-	}
-	case AbstractFileFilter::FITS: {
-		auto filter = static_cast<FITSFilter*>(currentFileFilter());
+	case AbstractFileFilter::FITS:
 		lines = m_fitsOptionsWidget->lines();
-
-		QString extensionName = m_fitsOptionsWidget->extensionName(&ok);
-		if (!extensionName.isEmpty()) {
-			DEBUG("	extension name = " << extensionName.toStdString());
-			fileName = extensionName;
-		}
-		DEBUG("	file name = " << fileName.toStdString());
-
-		bool readFitsTableToMatrix;
-		importedStrings = filter->readChdu(fileName, &readFitsTableToMatrix, lines);
-		emit checkedFitsTableToMatrix(readFitsTableToMatrix);
-
-		tmpTableWidget = m_fitsOptionsWidget->previewWidget();
+		emit preview(lines);
 		break;
-	}
-	case AbstractFileFilter::JSON: {
-		ui.tePreview->clear();
-		auto filter = static_cast<JsonFilter*>(currentFileFilter());
-		m_jsonOptionsWidget->applyFilterSettings(filter, ui.tvJson->currentIndex());
-		importedStrings = filter->preview(fileName);
-
-		vectorNameList = filter->vectorNames();
-		columnModes = filter->columnModes();
-		break;
-	}
-	case AbstractFileFilter::ROOT: {
-		auto filter = static_cast<ROOTFilter*>(currentFileFilter());
+	case AbstractFileFilter::ROOT:
 		lines = m_rootOptionsWidget->lines();
-		m_rootOptionsWidget->setNRows(filter->rowsInCurrentObject(fileName));
-		importedStrings = filter->previewCurrentObject(
-		                      fileName,
-		                      m_rootOptionsWidget->startRow(),
-		                      qMin(m_rootOptionsWidget->startRow() + m_rootOptionsWidget->lines() - 1,
-		                           m_rootOptionsWidget->endRow())
-		                  );
-		tmpTableWidget = m_rootOptionsWidget->previewWidget();
-		// the last vector element contains the column names
-		vectorNameList = importedStrings.last();
-		importedStrings.removeLast();
-		columnModes = QVector<AbstractColumn::ColumnMode>(vectorNameList.size(), AbstractColumn::Numeric);
+		emit preview(lines);
+		break;
+	case AbstractFileFilter::JSON:
+		//emit preview(); // only for debugging off
+		break;
+	case AbstractFileFilter::NgspiceRawBinary:
+		//emit preview();
+		break;
+	case AbstractFileFilter::Binary:
+		//emit preview();
+		break;
+	case AbstractFileFilter::Ascii:
+		emit preview(lines);
+		break;
+	case AbstractFileFilter::Image:
+		break;
+	case AbstractFileFilter::NgspiceRawAscii:
+		emit preview(lines);
 		break;
 	}
-	case AbstractFileFilter::NgspiceRawAscii: {
-		ui.tePreview->clear();
-		auto filter = static_cast<NgspiceRawAsciiFilter*>(currentFileFilter());
-		importedStrings = filter->preview(fileName, lines);
-		vectorNameList = filter->vectorNames();
-		columnModes = filter->columnModes();
-		break;
-	}
-	case AbstractFileFilter::NgspiceRawBinary: {
-		ui.tePreview->clear();
-		auto filter = static_cast<NgspiceRawBinaryFilter*>(currentFileFilter());
-		importedStrings = filter->preview(fileName, lines);
-		vectorNameList = filter->vectorNames();
-		columnModes = filter->columnModes();
-		break;
-	}
-	}
 
-	// fill the table widget
-	tmpTableWidget->setRowCount(0);
-	tmpTableWidget->setColumnCount(0);
-	if ( !importedStrings.isEmpty() ) {
-		if (!ok) {
-			// show imported strings as error message
-			tmpTableWidget->setRowCount(1);
-			tmpTableWidget->setColumnCount(1);
-			auto* item = new QTableWidgetItem();
-			item->setText(importedStrings[0][0]);
-			tmpTableWidget->setItem(0, 0, item);
-		} else {
-			//TODO: maxrows not used
-			const int rows = qMax(importedStrings.size(), 1);
-			const int maxColumns = 300;
-			tmpTableWidget->setRowCount(rows);
 
-			for (int i = 0; i < rows; ++i) {
-				const int cols = importedStrings[i].size() > maxColumns ? maxColumns : importedStrings[i].size();
-				if (cols > tmpTableWidget->columnCount())
-					tmpTableWidget->setColumnCount(cols);
-
-				for (int j = 0; j < cols; ++j) {
-					auto* item = new QTableWidgetItem(importedStrings[i][j]);
-					tmpTableWidget->setItem(i, j, item);
-				}
-			}
-
-			// set header if columnMode available
-			for (int i = 0; i < qMin(tmpTableWidget->columnCount(), columnModes.size()); ++i) {
-				QString columnName = QString::number(i+1);
-				if (i < vectorNameList.size())
-					columnName = vectorNameList[i];
-
-				auto* item = new QTableWidgetItem(columnName + QLatin1String(" {") + ENUM_TO_STRING(AbstractColumn, ColumnMode, columnModes[i]) + QLatin1String("}"));
-				item->setTextAlignment(Qt::AlignLeft);
-				item->setIcon(AbstractColumn::iconForMode(columnModes[i]));
-
-				tmpTableWidget->setHorizontalHeaderItem(i, item);
-			}
-		}
-
-		tmpTableWidget->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
-		m_fileEmpty = false;
-	} else
-		m_fileEmpty = true;
-
-	emit previewRefreshed();
-
-	RESET_CURSOR;
 }
 
 void ImportFileWidget::updateContent(const QString& fileName) {
@@ -1542,6 +1340,8 @@ void ImportFileWidget::sourceTypeChanged(int idx) {
 	const auto* model = qobject_cast<const QStandardItemModel*>(ui.cbUpdateType->model());
 	QStandardItem* item = model->item(LiveDataSource::UpdateType::NewData);
 
+	QString fileName = absolutePath(ui.leFileName->text());
+
 	switch (sourceType) {
 	case LiveDataSource::SourceType::FileOrPipe:
 		ui.lFileName->show();
@@ -1610,7 +1410,7 @@ void ImportFileWidget::sourceTypeChanged(int idx) {
 		ui.lFileType->show();
 		setMQTTVisible(false);
 		break;
-	case LiveDataSource::SourceType::LocalSocket:
+	case LiveDataSource::SourceType::LocalSocket: {
 		ui.lFileName->show();
 		ui.leFileName->show();
 		ui.bOpen->show();
@@ -1638,7 +1438,7 @@ void ImportFileWidget::sourceTypeChanged(int idx) {
 		ui.lFileType->show();
 		setMQTTVisible(false);
 		break;
-	case LiveDataSource::SourceType::SerialPort:
+	} case LiveDataSource::SourceType::SerialPort: {
 		ui.lBaudRate->show();
 		ui.cbBaudRate->show();
 		ui.lSerialPort->show();
@@ -1665,8 +1465,8 @@ void ImportFileWidget::sourceTypeChanged(int idx) {
 		ui.cbFilter->setEnabled(true);
 		ui.lFileType->show();
 		setMQTTVisible(false);
-		break;
-	case LiveDataSource::SourceType::MQTT:
+	break;
+	} case LiveDataSource::SourceType::MQTT:
 #ifdef HAVE_MQTT
 		item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 
@@ -1712,6 +1512,8 @@ void ImportFileWidget::sourceTypeChanged(int idx) {
 		break;
 	}
 
+	emit settingsChanged();
+
 	//deactivate/activate options that are specific to file of pipe sources only
 	auto* typeModel = qobject_cast<const QStandardItemModel*>(ui.cbFileType->model());
 	if (sourceType != LiveDataSource::FileOrPipe) {
@@ -1743,6 +1545,183 @@ void ImportFileWidget::sourceTypeChanged(int idx) {
 
 	emit sourceTypeChanged();
 	refreshPreview();
+}
+
+void ImportFileWidget::settingsChanged() {
+}
+
+/*!
+ * Slot called from m_liveDataHandler
+ */
+void ImportFileWidget::updatePreviewWindow(QVector<QStringList> importedStrings, QStringList vectorNameList, QVector<AbstractColumn::ColumnMode> columnModes) {
+	QString fileName = absolutePath(ui.leFileName->text());
+	AbstractFileFilter::FileType fileType = currentFileType();
+	LiveDataSource::SourceType sourceType = currentSourceType();
+	int lines = ui.sbPreviewLines->value();
+
+	if (sourceType == LiveDataSource::SourceType::FileOrPipe)
+		DEBUG("refreshPreview(): file name = " << fileName.toStdString());
+
+	// generic table widget
+	if (fileType == AbstractFileFilter::Ascii || fileType == AbstractFileFilter::Binary
+			|| fileType == AbstractFileFilter::JSON || fileType == AbstractFileFilter::NgspiceRawAscii
+			|| fileType == AbstractFileFilter::NgspiceRawBinary)
+		m_twPreview->show();
+	else
+		m_twPreview->hide();
+
+	bool ok = true;
+	QTableWidget* tmpTableWidget = m_twPreview;
+	DEBUG("Data File Type: " << ENUM_TO_STRING(AbstractFileFilter, FileType, fileType));
+	switch (fileType) {
+	case AbstractFileFilter::Ascii: {
+		ui.tePreview->clear();
+
+		auto filter = static_cast<AsciiFilter*>(currentFileFilter());
+
+		DEBUG("Data Source Type: " << ENUM_TO_STRING(LiveDataSource, SourceType, sourceType));
+
+		vectorNameList = filter->vectorNames();
+		columnModes = filter->columnModes();
+		break;
+	}
+	case AbstractFileFilter::Binary: {
+		ui.tePreview->clear();
+		break;
+	}
+	case AbstractFileFilter::Image: {
+		ui.tePreview->clear();
+
+		QImage image(fileName);
+		QTextCursor cursor = ui.tePreview->textCursor();
+		cursor.insertImage(image);
+		RESET_CURSOR;
+		return;
+	}
+	case AbstractFileFilter::HDF5: {
+		DEBUG("ImportFileWidget::refreshPreview: HDF5");
+		auto filter = static_cast<HDF5Filter*>(currentFileFilter());
+
+		importedStrings = filter->readCurrentDataSet(fileName, nullptr, ok, AbstractFileFilter::Replace, lines);
+		tmpTableWidget = m_hdf5OptionsWidget->previewWidget();
+		break;
+	}
+	case AbstractFileFilter::NETCDF: {
+		auto filter = static_cast<NetCDFFilter*>(currentFileFilter());
+
+		importedStrings = filter->readCurrentVar(fileName, nullptr, AbstractFileFilter::Replace, lines);
+		tmpTableWidget = m_netcdfOptionsWidget->previewWidget();
+		break;
+	}
+	case AbstractFileFilter::FITS: {
+		auto filter = static_cast<FITSFilter*>(currentFileFilter());
+
+
+		QString extensionName = m_fitsOptionsWidget->extensionName(&ok);
+		if (!extensionName.isEmpty()) {
+			DEBUG("	extension name = " << extensionName.toStdString());
+			fileName = extensionName;
+		}
+		DEBUG("	file name = " << fileName.toStdString());
+
+		bool readFitsTableToMatrix;
+		importedStrings = filter->readChdu(fileName, &readFitsTableToMatrix, lines);
+		emit checkedFitsTableToMatrix(readFitsTableToMatrix);
+
+		tmpTableWidget = m_fitsOptionsWidget->previewWidget();
+		break;
+	}
+	case AbstractFileFilter::JSON: {
+		ui.tePreview->clear();
+		auto filter = static_cast<JsonFilter*>(currentFileFilter());
+		m_jsonOptionsWidget->applyFilterSettings(filter, ui.tvJson->currentIndex());
+		importedStrings = filter->preview(fileName);
+
+		vectorNameList = filter->vectorNames();
+		columnModes = filter->columnModes();
+		break;
+	}
+	case AbstractFileFilter::ROOT: {
+		auto filter = static_cast<ROOTFilter*>(currentFileFilter());
+		lines = m_rootOptionsWidget->lines();
+		m_rootOptionsWidget->setNRows(filter->rowsInCurrentObject(fileName));
+		importedStrings = filter->previewCurrentObject(
+							  fileName,
+							  m_rootOptionsWidget->startRow(),
+							  qMin(m_rootOptionsWidget->startRow() + m_rootOptionsWidget->lines() - 1,
+								   m_rootOptionsWidget->endRow())
+						  );
+		tmpTableWidget = m_rootOptionsWidget->previewWidget();
+		// the last vector element contains the column names
+		vectorNameList = importedStrings.last();
+		importedStrings.removeLast();
+		columnModes = QVector<AbstractColumn::ColumnMode>(vectorNameList.size(), AbstractColumn::Numeric);
+		break;
+	}
+	case AbstractFileFilter::NgspiceRawAscii: {
+		ui.tePreview->clear();
+		auto filter = static_cast<NgspiceRawAsciiFilter*>(currentFileFilter());
+		importedStrings = filter->preview(fileName, lines);
+		vectorNameList = filter->vectorNames();
+		columnModes = filter->columnModes();
+		break;
+	}
+	case AbstractFileFilter::NgspiceRawBinary: {
+		ui.tePreview->clear();
+		break;
+	}
+	}
+
+	// fill the table widget
+	tmpTableWidget->setRowCount(0);
+	tmpTableWidget->setColumnCount(0);
+	if ( !importedStrings.isEmpty() ) {
+		if (!ok) {
+			// show imported strings as error message
+			tmpTableWidget->setRowCount(1);
+			tmpTableWidget->setColumnCount(1);
+			auto* item = new QTableWidgetItem();
+			item->setText(importedStrings[0][0]);
+			tmpTableWidget->setItem(0, 0, item);
+		} else {
+			//TODO: maxrows not used
+			const int rows = qMax(importedStrings.size(), 1);
+			const int maxColumns = 300;
+			tmpTableWidget->setRowCount(rows);
+
+			for (int i = 0; i < rows; ++i) {
+				const int cols = importedStrings[i].size() > maxColumns ? maxColumns : importedStrings[i].size();
+				if (cols > tmpTableWidget->columnCount())
+					tmpTableWidget->setColumnCount(cols);
+
+				for (int j = 0; j < cols; ++j) {
+					auto* item = new QTableWidgetItem(importedStrings[i][j]);
+					tmpTableWidget->setItem(i, j, item);
+				}
+			}
+
+			// set header if columnMode available
+			for (int i = 0; i < qMin(tmpTableWidget->columnCount(), columnModes.size()); ++i) {
+				QString columnName = QString::number(i+1);
+				if (i < vectorNameList.size())
+					columnName = vectorNameList[i];
+
+				auto* item = new QTableWidgetItem(columnName + QLatin1String(" {") + ENUM_TO_STRING(AbstractColumn, ColumnMode, columnModes[i]) + QLatin1String("}"));
+				item->setTextAlignment(Qt::AlignLeft);
+				item->setIcon(AbstractColumn::iconForMode(columnModes[i]));
+
+				tmpTableWidget->setHorizontalHeaderItem(i, item);
+			}
+		}
+
+		tmpTableWidget->horizontalHeader()->resizeSections(QHeaderView::ResizeToContents);
+		m_fileEmpty = false;
+	} else
+		m_fileEmpty = true;
+
+	emit previewRefreshed();
+
+	RESET_CURSOR;
 }
 
 #ifdef HAVE_MQTT

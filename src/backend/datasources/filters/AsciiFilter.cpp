@@ -35,6 +35,7 @@ Copyright            : (C) 2009-2019 Alexander Semke (alexander.semke@web.de)
 #include "backend/worksheet/plots/cartesian/XYCurve.h"
 #include "backend/lib/macros.h"
 #include "backend/lib/trace.h"
+#include "backend/datasources/LiveDataHandler.h"
 
 #ifdef HAVE_MQTT
 #include "backend/datasources/MQTTClient.h"
@@ -136,6 +137,10 @@ QVector<QStringList> AsciiFilter::preview(const QString& fileName, int lines) {
 
 QVector<QStringList> AsciiFilter::preview(QIODevice& device) {
 	return d->preview(device);
+}
+
+QVector<QStringList> AsciiFilter::preview(LiveDataHandler* handle, int nbrOfLines) {
+	return d->preview(handle, nbrOfLines);
 }
 
 /*!
@@ -457,8 +462,10 @@ QStringList AsciiFilterPrivate::getLineString(QIODevice& device) {
 int AsciiFilterPrivate::prepareDeviceToRead(QIODevice& device) {
 	DEBUG("AsciiFilterPrivate::prepareDeviceToRead(): is sequential = " << device.isSequential() << ", can readLine = " << device.canReadLine());
 
-	if (!device.open(QIODevice::ReadOnly))
-		return -1;
+	if (!device.isOpen()) { // for serial device / network device the device will be opened before this function
+		if (!device.open(QIODevice::ReadOnly))
+			return -1;
+	}
 
 	if (device.atEnd() && !device.isSequential()) // empty file
 		return 1;
@@ -700,18 +707,13 @@ qint64 AsciiFilterPrivate::readFromLiveDevice(QIODevice& device, AbstractDataSou
 		case LiveDataSource::SourceType::NetworkTcpSocket:
 		case LiveDataSource::SourceType::NetworkUdpSocket:
 		case LiveDataSource::SourceType::LocalSocket:
-		case LiveDataSource::SourceType::SerialPort:
-			m_actualRows = 1;
-			if (createIndexEnabled) {
-				m_actualCols = 2;
-				columnModes << AbstractColumn::Integer << AbstractColumn::Numeric;
-				vectorNames << i18n("Index") << i18n("Value");
-			} else {
-				m_actualCols = 1;
-				columnModes << AbstractColumn::Numeric;
-				vectorNames << i18n("Value");
+		case LiveDataSource::SourceType::SerialPort: {
+			const int deviceError = prepareDeviceToRead(device);
+			if (deviceError != 0) {
+				DEBUG("	Device error = " << deviceError);
+				return 0;
 			}
-			QDEBUG("	vector names = " << vectorNames);
+		}
 		case LiveDataSource::SourceType::MQTT:
 			break;
 		}
@@ -1407,6 +1409,8 @@ void AsciiFilterPrivate::readDataFromDevice(QIODevice& device, AbstractDataSourc
  * preview for special devices (local/UDP/TCP socket or serial port)
  */
 QVector<QStringList> AsciiFilterPrivate::preview(QIODevice &device) {
+	if (!&device) // if device is nullptr
+		return QVector<QStringList>();
 	DEBUG("AsciiFilterPrivate::preview(): bytesAvailable = " << device.bytesAvailable() << ", isSequential = " << device.isSequential());
 	QVector<QStringList> dataStrings;
 
@@ -1427,11 +1431,13 @@ QVector<QStringList> AsciiFilterPrivate::preview(QIODevice &device) {
 
 	//TODO: serial port "read(nBytes)"?
 	while (!device.atEnd()) {
-		if (device.canReadLine())
+		if (device.canReadLine()) {
 			newData.push_back(device.readLine());
-		else	// UDP fails otherwise
-			newData.push_back(device.readAll());
-		linesToRead++;
+			linesToRead++;
+		} else {	// UDP fails otherwise
+			//newData.push_back(device.readAll());
+			break;
+		}
 	}
 	QDEBUG("	data = " << newData);
 
@@ -1450,6 +1456,112 @@ QVector<QStringList> AsciiFilterPrivate::preview(QIODevice &device) {
 	vectorNames.append(i18n("Value"));
 	QDEBUG("	vector names = " << vectorNames);
 
+	for (const auto& valueString : newData.at(0).split(' ', QString::SkipEmptyParts)) {
+		if (col == colMax)
+			break;
+		columnModes[col++] = AbstractFileFilter::columnMode(valueString, dateTimeFormat, numberFormat);
+	}
+
+	for (int i = 0; i < linesToRead; ++i) {
+		QString line = newData.at(i);
+
+		// remove any newline
+		line = line.remove('\n');
+		line = line.remove('\r');
+
+		if (simplifyWhitespacesEnabled)
+			line = line.simplified();
+
+		if (line.isEmpty() || line.startsWith(commentCharacter)) // skip empty or commented lines
+			continue;
+
+		QLocale locale(numberFormat);
+
+		// TODO: why here ' '
+		QStringList lineStringList = line.split(' ', QString::SkipEmptyParts);
+		if (createIndexEnabled)
+			lineStringList.prepend(QString::number(i + 1));
+
+		QStringList lineString;
+		for (int n = 0; n < lineStringList.size(); ++n) {
+			if (n < lineStringList.size()) {
+				QString valueString = lineStringList.at(n);
+				if (removeQuotesEnabled)
+					valueString.remove(QLatin1Char('"'));
+
+				switch (columnModes[n]) {
+				case AbstractColumn::Numeric: {
+					bool isNumber;
+					const double value = locale.toDouble(valueString, &isNumber);
+					lineString += QString::number(isNumber ? value : nanValue, 'g', 16);
+					break;
+				}
+				case AbstractColumn::Integer: {
+					bool isNumber;
+					const int value = locale.toInt(valueString, &isNumber);
+					lineString += QString::number(isNumber ? value : 0);
+					break;
+				}
+				case AbstractColumn::DateTime: {
+					const QDateTime valueDateTime = QDateTime::fromString(valueString, dateTimeFormat);
+					lineString += valueDateTime.isValid() ? valueDateTime.toString(dateTimeFormat) : QLatin1String(" ");
+					break;
+				}
+				case AbstractColumn::Text:
+					lineString += valueString;
+					break;
+				case AbstractColumn::Month:	// never happens
+				case AbstractColumn::Day:
+					break;
+				}
+			} else 	// missing columns in this line
+				lineString += QString();
+		}
+		dataStrings << lineString;
+	}
+
+	return dataStrings;
+}
+
+/*!
+ * Read from the buffer in LiveDataHandler
+ * \return
+ */
+QVector<QStringList> AsciiFilterPrivate::preview(LiveDataHandler *handle, int nbrOfLines) {
+	QVector<QStringList> dataStrings;
+
+
+#ifdef PERFTRACE_LIVE_IMPORT
+	PERFTRACE("AsciiLiveDataImportTotal: ");
+#endif
+
+	int linesToRead = 0;
+	QVector<QString> newData;
+
+	QString string;
+	//TODO: serial port "read(nBytes)"?
+	while (handle->getLine(string) && ((nbrOfLines > 0 && linesToRead < nbrOfLines) || nbrOfLines < 0)) {
+		newData.push_back(string);
+		linesToRead ++;
+	}
+	QDEBUG("	data = " << newData);
+
+	if (linesToRead == 0) return dataStrings;
+
+	int col = 0;
+	int colMax = newData.at(0).size();
+	if (createIndexEnabled)
+		colMax++;
+	columnModes.resize(colMax);
+	if (createIndexEnabled) {
+		columnModes[0] = AbstractColumn::ColumnMode::Integer;
+		col = 1;
+		vectorNames.prepend(i18n("Index"));
+	}
+	vectorNames.append(i18n("Value"));
+	QDEBUG("	vector names = " << vectorNames);
+
+	// why here  ' ' and not the
 	for (const auto& valueString : newData.at(0).split(' ', QString::SkipEmptyParts)) {
 		if (col == colMax)
 			break;
@@ -2624,5 +2736,16 @@ void AsciiFilterPrivate::setPreparedForMQTT(bool prepared, MQTTTopic* topic, con
  * \return
  */
 QString AsciiFilterPrivate::separator() const {
-	return m_separator;
+	if (m_separator.compare("") != 0)
+		return m_separator;
+
+	return determineSeparator();
+}
+
+/*!
+ * \brief determines the separator from the first valid line and stores the separator in m_separator
+ * \return
+ */
+QString AsciiFilterPrivate::determineSeparator() const {
+	return "";
 }

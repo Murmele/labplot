@@ -107,10 +107,8 @@ ImportFileDialog::ImportFileDialog(MainWin* parent, bool liveDataSource, const Q
 
 		//do the signal-slot connections after all settings were loaded in import file widget and check the OK button after this
 		connect(m_importFileWidget, &ImportFileWidget::checkedFitsTableToMatrix, this, &ImportFileDialog::checkOnFitsTableToMatrix);
-		connect(m_importFileWidget, static_cast<void (ImportFileWidget::*)()>(&ImportFileWidget::fileNameChanged), this, &ImportFileDialog::checkOkButton);
-		connect(m_importFileWidget, static_cast<void (ImportFileWidget::*)()>(&ImportFileWidget::sourceTypeChanged), this, &ImportFileDialog::checkOkButton);
-		connect(m_importFileWidget, &ImportFileWidget::hostChanged, this, &ImportFileDialog::checkOkButton);
-		connect(m_importFileWidget, &ImportFileWidget::portChanged, this, &ImportFileDialog::checkOkButton);
+		connect(m_importFileWidget, &ImportFileWidget::checkOKButton, this, QOverload<bool, QString>::of(&ImportFileDialog::checkOkButton)); // with C++14: connect(m_importFileWidget, &ImportFileWidget::checkOKButton, this, qOverload<bool, QString>::(&ImportFileDialog::checkOkButton));
+
 		//TODO: do we really need to check the ok button when the preview was refreshed?
 		//If not, remove this together with the previewRefreshed signal in ImportFileWidget
 		//connect(m_importFileWidget, &ImportFileWidget::previewRefreshed, this, &ImportFileDialog::checkOkButton);
@@ -124,8 +122,6 @@ ImportFileDialog::ImportFileDialog(MainWin* parent, bool liveDataSource, const Q
 		resize(windowHandle()->size()); // workaround for QTBUG-40584
 	} else
 		resize(QSize(0, 0).expandedTo(minimumSize()));
-
-	checkOkButton();
 }
 
 ImportFileDialog::~ImportFileDialog() {
@@ -331,158 +327,30 @@ void ImportFileDialog::checkOnFitsTableToMatrix(const bool enable) {
 }
 
 void ImportFileDialog::checkOkButton() {
+	checkOkButton(true, "");
+}
+
+void ImportFileDialog::checkOkButton(bool deviceOK, QString toolTip) {
 	DEBUG("ImportFileDialog::checkOkButton()");
 	if (cbAddTo) { //only check for the target container when no file data source is being added
 		QDEBUG(" cbAddTo->currentModelIndex() = " << cbAddTo->currentModelIndex());
 		AbstractAspect* aspect = static_cast<AbstractAspect*>(cbAddTo->currentModelIndex().internalPointer());
-		if (!aspect) {
+		if (!aspect || !deviceOK) {
 			okButton->setEnabled(false);
 			okButton->setToolTip(i18n("Select a data container where the data has to be imported into."));
 			lPosition->setEnabled(false);
 			cbPosition->setEnabled(false);
+			okButton->setToolTip(i18n("Close the dialog and import the data."));
 			return;
 		} else {
 			lPosition->setEnabled(true);
 			cbPosition->setEnabled(true);
-
+			okButton->setToolTip(toolTip);
 			//when doing ASCII import to a matrix, hide the options for using the file header (first line)
 			//to name the columns since the column names are fixed in a matrix
 			const auto* matrix = dynamic_cast<const Matrix*>(aspect);
 			m_importFileWidget->showAsciiHeaderOptions(matrix == nullptr);
 		}
-	}
-
-	QString fileName = m_importFileWidget->fileName();
-#ifndef HAVE_WINDOWS
-	if (!fileName.isEmpty() && fileName.at(0) != QDir::separator())
-		fileName = QDir::homePath() + QDir::separator() + fileName;
-#endif
-
-	DEBUG("Data Source Type: " << ENUM_TO_STRING(LiveDataSource, SourceType, m_importFileWidget->currentSourceType()));
-	switch (m_importFileWidget->currentSourceType()) {
-	case LiveDataSource::SourceType::FileOrPipe: {
-		DEBUG("fileName = " << fileName.toUtf8().constData());
-		const bool enable = QFile::exists(fileName);
-		okButton->setEnabled(enable);
-		if (enable)
-			okButton->setToolTip(i18n("Close the dialog and import the data."));
-		else
-			okButton->setToolTip(i18n("Provide an existing file."));
-
-		break;
-	}
-	case LiveDataSource::SourceType::LocalSocket: {
-		const bool enable = QFile::exists(fileName);
-		if (enable) {
-			QLocalSocket lsocket{this};
-			DEBUG("CONNECT");
-			lsocket.connectToServer(fileName, QLocalSocket::ReadOnly);
-			if (lsocket.waitForConnected()) {
-
-				// this is required for server that send data as soon as connected
-				lsocket.waitForReadyRead();
-
-				DEBUG("DISCONNECT");
-				lsocket.disconnectFromServer();
-				// read-only socket is disconnected immediately (no waitForDisconnected())
-				okButton->setEnabled(true);
-				okButton->setToolTip(i18n("Close the dialog and import the data."));
-			} else {
-				DEBUG("failed connect to local socket - " << lsocket.errorString().toStdString());
-				okButton->setEnabled(false);
-				okButton->setToolTip(i18n("Could not connect to the provided local socket."));
-			}
-		} else {
-			okButton->setEnabled(false);
-			okButton->setToolTip(i18n("Selected local socket does not exist."));
-		}
-
-		break;
-	}
-	case LiveDataSource::SourceType::NetworkTcpSocket: {
-		const bool enable = !m_importFileWidget->host().isEmpty() && !m_importFileWidget->port().isEmpty();
-		if (enable) {
-			QTcpSocket socket(this);
-			socket.connectToHost(m_importFileWidget->host(), m_importFileWidget->port().toUShort(), QTcpSocket::ReadOnly);
-			if (socket.waitForConnected()) {
-				okButton->setEnabled(true);
-				okButton->setToolTip(i18n("Close the dialog and import the data."));
-				socket.disconnectFromHost();
-			} else {
-				DEBUG("failed to connect to TCP socket - " << socket.errorString().toStdString());
-				okButton->setEnabled(false);
-				okButton->setToolTip(i18n("Could not connect to the provided TCP socket."));
-			}
-		} else {
-			okButton->setEnabled(false);
-			okButton->setToolTip(i18n("Either the host name or the port number is missing."));
-		}
-		break;
-	}
-	case LiveDataSource::SourceType::NetworkUdpSocket: {
-		const bool enable = !m_importFileWidget->host().isEmpty() && !m_importFileWidget->port().isEmpty();
-		if (enable) {
-			QUdpSocket socket(this);
-			socket.bind(QHostAddress(m_importFileWidget->host()), m_importFileWidget->port().toUShort());
-			socket.connectToHost(m_importFileWidget->host(), 0, QUdpSocket::ReadOnly);
-			if (socket.waitForConnected()) {
-				okButton->setEnabled(true);
-				okButton->setToolTip(i18n("Close the dialog and import the data."));
-				socket.disconnectFromHost();
-				// read-only socket is disconnected immediately (no waitForDisconnected())
-			} else {
-				DEBUG("failed to connect to UDP socket - " << socket.errorString().toStdString());
-				okButton->setEnabled(false);
-				okButton->setToolTip(i18n("Could not connect to the provided UDP socket."));
-			}
-		} else {
-			okButton->setEnabled(false);
-			okButton->setToolTip(i18n("Either the host name or the port number is missing."));
-		}
-
-		break;
-	}
-	case LiveDataSource::SourceType::SerialPort: {
-		const QString sPort = m_importFileWidget->serialPort();
-		const int baudRate = m_importFileWidget->baudRate();
-
-		if (!sPort.isEmpty()) {
-			QSerialPort serialPort{this};
-
-			DEBUG("	Port: " << sPort.toStdString() << ", Settings: " << baudRate << ',' << serialPort.dataBits()
-					<< ',' << serialPort.parity() << ',' << serialPort.stopBits());
-			serialPort.setPortName(sPort);
-			serialPort.setBaudRate(baudRate);
-
-			const bool serialPortOpened = serialPort.open(QIODevice::ReadOnly);
-			okButton->setEnabled(serialPortOpened);
-			if (serialPortOpened) {
-				okButton->setToolTip(i18n("Close the dialog and import the data."));
-				serialPort.close();
-			} else {
-				DEBUG("Could not connect to the provided serial port");
-				okButton->setToolTip(i18n("Could not connect to the provided serial port."));
-			}
-		} else {
-			okButton->setEnabled(false);
-			okButton->setToolTip(i18n("Serial port number is missing."));
-		}
-		break;
-    }
-	case LiveDataSource::SourceType::MQTT: {
-#ifdef HAVE_MQTT
-		const bool enable = m_importFileWidget->isMqttValid();
-		if (enable) {
-			okButton->setEnabled(true);
-			okButton->setToolTip(i18n("Close the dialog and import the data."));
-		}
-		else {
-			okButton->setEnabled(false);
-			okButton->setToolTip(i18n("Either there is no connection, or no subscriptions were made, or the file filter is not ASCII."));
-		}
-#endif
-		break;
-	}
 	}
 }
 

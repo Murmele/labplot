@@ -64,6 +64,8 @@ void ROOTOptionsWidget::updateContent(ROOTFilter *filter, const QString& fileNam
 
 void ROOTOptionsWidget::rootObjectSelectionChanged() {
 	DEBUG("rootObjectSelectionChanged()");
+	emit selectionChanged(selectedNames());
+
 	auto items = ui.twContent->selectedItems();
 	QDEBUG("SELECTED ITEMS =" << items);
 

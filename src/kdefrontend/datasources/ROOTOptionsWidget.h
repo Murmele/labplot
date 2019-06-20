@@ -63,6 +63,8 @@ private:
 private slots:
 	/// Updates the selected data set of a ROOT file when a new item is selected
 	void rootObjectSelectionChanged();
+signals:
+	void selectionChanged(QStringList);
 };
 
 #endif

@@ -47,6 +47,12 @@ ImageOptionsWidget::ImageOptionsWidget(QWidget* parent) : QWidget(parent) {
 	ui.lImportFormat->setWhatsThis(textImageFormatShort);
 	ui.cbImportFormat->setToolTip(textImageFormatShort);
 	ui.cbImportFormat->setWhatsThis(textImageFormatShort);
+
+	connect(ui.cbImportFormat, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ImageOptionsWidget::cbImportFormatIndexChanged);
+}
+
+void ImageOptionsWidget::cbImportFormatIndexChanged() {
+	emit currentFormatChanged(static_cast<ImageFilter::ImportFormat>(ui.cbImportFormat->currentIndex()));
 }
 
 void ImageOptionsWidget::loadSettings() const {

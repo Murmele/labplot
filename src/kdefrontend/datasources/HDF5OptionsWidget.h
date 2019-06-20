@@ -50,6 +50,8 @@ private:
 
 private slots:
 	void hdf5TreeWidgetSelectionChanged();
+signals:
+	void selectionChanged(QStringList);
 };
 
 #endif

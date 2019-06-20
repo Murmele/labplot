@@ -75,7 +75,7 @@ void FITSOptionsWidget::updateContent(FITSFilter* filter, const QString& fileNam
 void FITSOptionsWidget::fitsTreeWidgetSelectionChanged() {
 	DEBUG("fitsTreeWidgetSelectionChanges()");
 	QDEBUG("SELECTED ITEMS =" << ui.twExtensions->selectedItems());
-
+	emit selectionChanged(selectedExtensions());
 	if (ui.twExtensions->selectedItems().isEmpty())
 		return;
 
