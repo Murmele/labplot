@@ -77,6 +77,7 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 		double y = curve->y(pos,xpos,valueFound);
 		if (valueFound) {
 			d->x_pos = xpos;
+			d->m_index = curve->indexForX(xpos);
 			markerpoints.last().x = xpos;
 			markerpoints.last().y = y;
 			custompoint->setPosition(QPointF(xpos,y));
@@ -192,6 +193,11 @@ void WorksheetInfoElement::addCurve(const XYCurve* curve, CustomPoint* custompoi
 		custompoint->setPosition(QPointF(x_new,y));
 	} else
 		addChild(custompoint);
+
+	if (d->m_index < 0)
+		d->m_index = curve->indexForX(custompoint->position().x());
+	if (d->m_index < 0)
+		d->m_index = 0;
 
 	struct MarkerPoints_T markerpoint = {custompoint, curve, curve->path()};
 	markerpoints.append(markerpoint);
@@ -939,7 +945,7 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event) {
 		else
 			index = -1;
 
-		double x,y, xNew;
+		double x, y, xNew;
 		bool valueFound;
 		QPointF pointPosition;
 		int rowCount;
@@ -947,59 +953,43 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event) {
 		// problem: when curves have different number of samples, the points are anymore aligned
 		// with the vertical line
 		QPointF position = q->markerpoints[0].customPoint->position();
-		if (m_index < 0) {
-			rowCount = q->markerpoints[0].curve->xColumn()->rowCount();
-			m_index = q->markerpoints[0].curve->getNextValue(position.x(), index, x, y, valueFound);
-			for (int i=1; i< q->markerPointsCount(); i++) {
-				if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
-					position = q->markerpoints[i].customPoint->position();
-					m_index = q->markerpoints[i].curve->getNextValue(position.x(), index, x, y, valueFound);
-					rowCount = q->markerpoints[i].curve->xColumn()->rowCount();
-					break;
-				}
-			}
-		} else {
-			m_index += index;
-			auto* column = q->markerpoints[0].curve->xColumn();
-			rowCount = column->rowCount();
-			if (rowCount - 1 < m_index)
-				m_index = m_index % column->rowCount();
-			if (m_index < 0)
-				m_index = column->rowCount() - m_index % column->rowCount();
+		m_index += index;
+		auto* column = q->markerpoints[0].curve->xColumn();
+		rowCount = column->rowCount();
+		if (m_index > rowCount - 1)
+			m_index = rowCount - 1;
+		if (m_index < 0)
+			m_index = 0;
 
-			x = column->valueAt(m_index);
-			for (int i=1; i< q->markerPointsCount(); i++) {
-				if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
-					position = q->markerpoints[i].customPoint->position();
-
-					auto* column = q->markerpoints[i].curve->xColumn();
-					if (column->rowCount() - 1 < m_index)
-						m_index = m_index % column->rowCount();
-					if (m_index < 0)
-						m_index = column->rowCount() - m_index % column->rowCount();
-					q->markerpoints[i].curve->xColumn()->valueAt(m_index);
-					break;
-				}
+		x = column->valueAt(m_index);
+		for (int i=1; i< q->markerPointsCount(); i++) {
+			if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
+				position = q->markerpoints[i].customPoint->position();
+				auto* column = q->markerpoints[i].curve->xColumn();
+				if (m_index > rowCount - 1)
+					m_index = rowCount - 1;
+				if (m_index < 0)
+					m_index = 0;
+				q->markerpoints[i].curve->xColumn()->valueAt(m_index);
+				break;
 			}
-			valueFound = true;
 		}
 
-		if (valueFound) {
-			for (int i =0; i< q->markerpoints.length(); i++) {
-				q->markerpoints[i].x = x;
-				auto* curve = q->markerpoints[i].curve;
-				if (curve->xColumn()->rowCount() == rowCount)
-					q->markerpoints[i].y = curve->yColumn()->valueAt(index);
-				else
-					q->markerpoints[i].y = curve->y(x, xNew, valueFound);
-				if (valueFound) { // new set by curve->y()
-					pointPosition.setX(xNew);
-					pointPosition.setY(q->markerpoints[i].y);
-					DEBUG("X_old: " << q->markerpoints[i].customPoint->position().x() << "X_new: " << x);
-					q->m_suppressPointPositionChanged = true;
-					q->markerpoints[i].customPoint->setPosition(pointPosition);
-					q->m_suppressPointPositionChanged = false;
-				}
+		xNew = x;
+		for (int i =0; i< q->markerpoints.length(); i++) {
+			q->markerpoints[i].x = x;
+			auto* curve = q->markerpoints[i].curve;
+			if (curve->xColumn()->rowCount() == rowCount) // if the other curves have the same length
+				q->markerpoints[i].y = curve->yColumn()->valueAt(m_index);
+			else
+				q->markerpoints[i].y = curve->y(x, xNew, valueFound);
+			if (valueFound) { // new set by curve->y()
+				pointPosition.setX(xNew);
+				pointPosition.setY(q->markerpoints[i].y);
+				DEBUG("X_old: " << q->markerpoints[i].customPoint->position().x() << "X_new: " << x);
+				q->m_suppressPointPositionChanged = true;
+				q->markerpoints[i].customPoint->setPosition(pointPosition);
+				q->m_suppressPointPositionChanged = false;
 			}
 		}
 		q->label->setText(q->createTextLabelText());
