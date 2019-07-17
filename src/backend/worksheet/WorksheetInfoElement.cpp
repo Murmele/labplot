@@ -697,10 +697,10 @@ void WorksheetInfoElementPrivate::retransform() {
 	q->m_suppressPointPositionChanged = false;
 
 	// line goes to the first pointPos
-	QPointF pointPos = cSystem->mapLogicalToScene(q->markerpoints[0].customPoint->position());
+	QPointF pointPos = cSystem->mapLogicalToScene(q->markerpoints[0].customPoint->position(), AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
 	for (int i=1; i< q->markerPointsCount(); i++) {
 		if (q->markerpoints[i].curve->name().compare(connectionLineCurveName) == 0) {
-			pointPos = cSystem->mapLogicalToScene(q->markerpoints[i].customPoint->position());
+			pointPos = cSystem->mapLogicalToScene(q->markerpoints[i].customPoint->position(), AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
 			break;
 		}
 	}
@@ -724,8 +724,15 @@ void WorksheetInfoElementPrivate::retransform() {
 
 	setFlag(QGraphicsItem::ItemSendsGeometryChanges, false);
 
-	xposLine = QLineF(pointPosItemCoords.x(), 0, pointPosItemCoords.x(), 2*y);
-	connectionLine = QLineF(labelPosItemCoords.x(),labelPosItemCoords.y(),pointPosItemCoords.x(),pointPosItemCoords.y());
+	boundingRectangle.setTopLeft(mapFromParent(plot->plotArea()->graphicsItem()->boundingRect().topLeft()));
+	boundingRectangle.setBottomRight(mapFromParent(plot->plotArea()->graphicsItem()->boundingRect().bottomRight()));
+
+	if (boundingRectangle.contains(labelPosItemCoords) && boundingRectangle.contains(pointPosItemCoords))
+		connectionLine = QLineF(labelPosItemCoords.x(), labelPosItemCoords.y(), pointPosItemCoords.x(), pointPosItemCoords.y());
+	else
+		connectionLine = QLineF();
+
+	xposLine = QLineF(pointPosItemCoords.x(), 0, pointPosItemCoords.x(), 2 * y);
 
 	QPointF itemPos;
 
@@ -742,10 +749,6 @@ void WorksheetInfoElementPrivate::retransform() {
 		itemPos.setX(min_scene.x());
 
 	setPos(itemPos);
-	boundingRectangle.setX(0);
-	boundingRectangle.setWidth(2*x);
-	boundingRectangle.setY(0);
-	boundingRectangle.setHeight(2*y);
 
 	update(boundingRect());
 	setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
