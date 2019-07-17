@@ -297,7 +297,7 @@ void TextLabel::setPosition(QPointF point) {
 	if (point != d->position.point) {
 		d->position.point = point;
 		if(d->m_coordBindingEnable)
-			d->logicalPos = d->cSystem->mapSceneToLogical(point);
+			d->logicalPos = d->cSystem->mapSceneToLogical(point, AbstractCoordinateSystem::SuppressPageClipping);
 		retransform();
 	}
 }
@@ -372,7 +372,7 @@ void TextLabel::setCoordBinding(bool on) {
 	if (!d->m_coordBindingEnable)
 		return;
 	d->m_coordBinding = on;
-	d->logicalPos = d->cSystem->mapSceneToLogical(d->pos());
+	d->logicalPos = d->cSystem->mapSceneToLogical(d->pos(), AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
 }
 
 /*!
@@ -635,7 +635,7 @@ void TextLabelPrivate::retransform() {
 			break;
 		}
 	}else{
-		itemPos = cSystem->mapLogicalToScene(logicalPos);
+		itemPos = cSystem->mapLogicalToScene(logicalPos, AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
 	}
 
 	suppressItemChangeEvent = true;
@@ -1098,7 +1098,7 @@ QVariant TextLabelPrivate::itemChange(GraphicsItemChange change, const QVariant 
 
 void TextLabelPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event){
 	if(m_coordBinding){
-		logicalPos = cSystem->mapSceneToLogical(pos());
+		logicalPos = cSystem->mapSceneToLogical(pos(), AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
 	}
 	return QGraphicsItem::mouseMoveEvent(event);
 }
