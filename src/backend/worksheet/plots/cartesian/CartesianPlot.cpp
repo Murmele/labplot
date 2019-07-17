@@ -3077,6 +3077,7 @@ void CartesianPlotPrivate::paint(QPainter* painter, const QStyleOptionGraphicsIt
 
 	float penWidth = 6.;
 	QRectF rect = q->m_plotArea->graphicsItem()->boundingRect();
+	// the sign must be oposite for penWidth??
 	rect = QRectF(-rect.width()/2 - penWidth / 2, -rect.height()/2 - penWidth / 2,
 				  rect.width() + penWidth, rect.height() + penWidth);
 
