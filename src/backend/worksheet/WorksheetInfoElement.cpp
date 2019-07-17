@@ -482,6 +482,7 @@ void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
 		connect(label, &TextLabel::borderShapeChanged, this, &WorksheetInfoElement::labelBorderShapeChanged);
 		connect(label, &TextLabel::moveBegin, this, &WorksheetInfoElement::moveElementBegin);
 		connect(label, &TextLabel::moveEnd, this, &WorksheetInfoElement::moveElementEnd);
+		connect(label, &TextLabel::rotationAngleChanged, this, &WorksheetInfoElement::retransform);
 
 		TextLabel* l = const_cast<TextLabel*>(labelChild);
 		l->setParentGraphicsItem(d->plot->graphicsItem());
