@@ -793,8 +793,11 @@ void AbstractAspect::childSelected(const AbstractAspect* aspect) {
 	if (aspect->parentAspect()
 		&& !aspect->parentAspect()->inherits(AspectType::Folder)
 		&& !aspect->parentAspect()->inherits(AspectType::XYFitCurve)
-		&& !aspect->parentAspect()->inherits(AspectType::CantorWorksheet))
-		emit aspect->parentAspect()->selected(aspect);
+		&& !aspect->parentAspect()->inherits(AspectType::CantorWorksheet)) {
+		AspectType type = aspect->parentAspect()->type();
+		if (type != AspectType::WorksheetInfoElement) // why there is a loop without this condition? Why paren->selected() does not call childSelected for the cartesianPlot?
+			emit aspect->parentAspect()->selected(aspect);
+	}
 }
 
 void AbstractAspect::childDeselected(const AbstractAspect* aspect) {
