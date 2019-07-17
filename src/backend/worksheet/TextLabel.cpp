@@ -535,7 +535,7 @@ QPointF TextLabelPrivate::findNearestGluePoint(QPointF scenePoint) {
 		return boundingRectangle.center();
 
 	if (m_gluePoints.length() == 1)
-		return m_gluePoints[0];
+		return mapToParent(m_gluePoints[0]);
 
 	QPointF point = mapToParent(m_gluePoints[0]);
 	QPointF nearestPoint = point;
