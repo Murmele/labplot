@@ -76,13 +76,9 @@ TextLabel::TextLabel(const QString &name, TextLabelPrivate *dd, Type type)
 }
 
 TextLabel::TextLabel(const QString &name, CartesianPlot* plot, Type type):
-	WorksheetElement(name, AspectType::WorksheetInfoElement),
+	WorksheetElement(name, AspectType::TextLabel),
 	d_ptr(new TextLabelPrivate(this,plot)), m_type(type), visibilityAction(nullptr) {
 	init();
-}
-
-TextLabel::Type TextLabel::type() const {
-	return m_type;
 }
 
 void TextLabel::init() {
@@ -102,6 +98,8 @@ void TextLabel::init() {
 	case PlotLegendTitle:
 		groupName = "PlotLegendTitle";
 		break;
+	case MarkerLable:
+		groupName = "MarkerLabel";
 	}
 
 	const KConfig config;
