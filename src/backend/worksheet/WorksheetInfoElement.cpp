@@ -979,7 +979,7 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event) {
 		for (int i =0; i< q->markerpoints.length(); i++) {
 			q->markerpoints[i].x = x;
 			auto* curve = q->markerpoints[i].curve;
-			if (curve->xColumn()->rowCount() == rowCount) // if the other curves have the same length
+			if (curve->xColumn()->rowCount() == rowCount) // if the other columns have the same length
 				q->markerpoints[i].y = curve->yColumn()->valueAt(m_index);
 			else
 				q->markerpoints[i].y = curve->y(x, xNew, valueFound);
