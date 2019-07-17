@@ -1090,6 +1090,7 @@ QVariant TextLabelPrivate::itemChange(GraphicsItemChange change, const QVariant 
 		//emit the signals in order to notify the UI.
 		if(m_coordBinding)
 			logicalPos = cSystem->mapSceneToLogical(tempPosition.point, AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
+		// don't use setPosition here, because then all small changes are on the undo stack
 		emit q->positionChanged(tempPosition);
 	}
 
