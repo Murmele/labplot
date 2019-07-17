@@ -716,8 +716,8 @@ void WorksheetInfoElementPrivate::retransform() {
 	QPointF min_scene = cSystem->mapLogicalToScene(QPointF(plot->xMin(),plot->yMin()));
 	QPointF max_scene = cSystem->mapLogicalToScene(QPointF(plot->xMax(),plot->yMax()));
 
-	y = abs(max_scene.y()-min_scene.y())/2;
-	x = abs(max_scene.x()-min_scene.x())/2;
+	y = abs(max_scene.y() - min_scene.y()) / 2;
+	x = abs(max_scene.x() - min_scene.x()) / 2;
 
 	QPointF labelPosItemCoords = mapFromParent(labelPos); // calculate item coords from scene coords
 	QPointF pointPosItemCoords = mapFromParent(pointPos); // calculate item coords from scene coords
@@ -735,7 +735,6 @@ void WorksheetInfoElementPrivate::retransform() {
 	xposLine = QLineF(pointPosItemCoords.x(), 0, pointPosItemCoords.x(), 2 * y);
 
 	QPointF itemPos;
-
 	//DEBUG("ConnectionLine: P1.x: " << (connectionLine.p1()).x() << "P2.x: " << (connectionLine.p2()).x());
 	itemPos.setX(x); // x is always between the labelpos and the point pos
 	if (max_scene.y() < min_scene.y())
