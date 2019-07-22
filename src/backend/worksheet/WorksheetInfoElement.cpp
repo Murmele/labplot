@@ -422,41 +422,28 @@ void WorksheetInfoElement::labelBorderShapeChanged() {
 void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const AbstractAspect* before, const AbstractAspect* child) {
 	Q_D(WorksheetInfoElement);
 
-	// does not work, because when the childs are reordered this function is called and everything will be deleted. find other way
-	// function works as expected when child was removed
+	// when childs are reordered, don't remove them
+	if (m_suppressChildRemoved)
+		return;
 
-	// Don't delete childs if custom points are removed, because you can add them again if you like
-//	if (m_suppressChildRemoved)
-//		return;
+	if (parent != this)
+		return;
+	// problem: when the order was changed the elements are deleted for a short time and recreated. This function will called then
+	const CustomPoint* point = dynamic_cast<const CustomPoint*> (child);
+	if (point != nullptr){
+		for (int i =0; i< markerpoints.length(); i++) {
+			if (point == markerpoints[i].customPoint)
+				markerpoints.removeAt(i);
+		}
+	}
 
-//	if (parent != this)
-//		return;
-//	// problem: when the order was changed the elements are deleted for a short time and recreated. This function will called then
-//	const CustomPoint* point = dynamic_cast<const CustomPoint*> (child);
-//	if (point != nullptr){
-//		for (int i =0; i< markerpoints.length(); i++)
-//			if (point == markerpoints[i].customPoint)
-//				markerpoints.removeAt(i);
-//	}
-//	if (markerpoints.empty()) {
-//		m_suppressChildRemoved = true;
-//		removeChild(label);
-//		m_suppressChildRemoved = false;
-//		remove();
-//	} else
-//		d->retransform();
+	const TextLabel* textlabel = dynamic_cast<const TextLabel*>(child);
+	if (label != nullptr) {
+		if (label == textlabel)
+			label = nullptr;
+	}
 
-//	const TextLabel* textlabel = dynamic_cast<const TextLabel*>(child);
-//	if (label != nullptr) {
-//		if (textlabel == label) {
-//			for (auto markerpoint : markerpoints) {
-//				m_suppressChildRemoved = true;
-//				removeChild(markerpoint.customPoint);
-//				m_suppressChildRemoved = false;
-//			}
-//			remove();
-//		}
-//	}
+	d->retransform();
 }
 
 void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
