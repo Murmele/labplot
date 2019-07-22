@@ -970,9 +970,10 @@ void WorksheetInfoElementPrivate::keyPressEvent(QKeyEvent * event) {
 		for (int i =0; i< q->markerpoints.length(); i++) {
 			q->markerpoints[i].x = x;
 			auto* curve = q->markerpoints[i].curve;
-			if (curve->xColumn()->rowCount() == rowCount) // if the other columns have the same length
+			if (curve->xColumn()->rowCount() == rowCount) { // if the other columns have the same length it can simply used the index
 				q->markerpoints[i].y = curve->yColumn()->valueAt(m_index);
-			else
+				valueFound = true;
+			} else // if the length of the columns of the other curves are different, the y value must be searched
 				q->markerpoints[i].y = curve->y(x, xNew, valueFound);
 			if (valueFound) { // new set by curve->y()
 				pointPosition.setX(xNew);
