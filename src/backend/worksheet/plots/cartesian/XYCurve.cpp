@@ -3010,6 +3010,7 @@ void XYCurvePrivate::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 		event->ignore();
 		return QGraphicsItem::mousePressEvent(event);
 	}
+	mousePos = event->pos();
 
 	if(q->activateCurve(event->pos())){
 		setSelected(true);

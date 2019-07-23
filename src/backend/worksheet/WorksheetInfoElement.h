@@ -76,6 +76,7 @@ public:
 	QMenu* createContextMenu();
 	CartesianPlot* getPlot();
 	bool isVisible() const override;
+        bool isTextLabel() const;
 
 	QGraphicsItem* graphicsItem() const override;
 	void setPrinting(bool on) override;
