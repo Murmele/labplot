@@ -62,8 +62,10 @@ void WorksheetInfoElementDock::setWorksheetInfoElements(QList<WorksheetInfoEleme
 		}
 	}
 
-	elementLabelBorderShapeChanged(m_element->gluePointsCount());
-	ui->cb_gluePoint->setCurrentIndex(m_element->gluePointIndex()+1);
+	if (m_element->isTextLabel()) {
+		elementLabelBorderShapeChanged(m_element->gluePointsCount());
+		ui->cb_gluePoint->setCurrentIndex(m_element->gluePointIndex()+1);
+	}
 
     ui->chbXPosLineVisible->setChecked(m_element->xposLineVisible());
     ui->kcbXPosLineColor->setColor(m_element->xposLineColor());

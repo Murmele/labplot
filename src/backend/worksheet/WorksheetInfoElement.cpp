@@ -370,6 +370,11 @@ bool WorksheetInfoElement::isVisible() const {
 	return d->visible;
 }
 
+bool WorksheetInfoElement::isTextLabel() const {
+	Q_D(const WorksheetInfoElement);
+	return label != nullptr;
+}
+
 /*!
  * Will be called, when the label changes his position
  * @param position
@@ -441,6 +446,13 @@ void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const Abst
 	if (label != nullptr) {
 		if (label == textlabel)
 			label = nullptr;
+		for (int i = 0; i < markerpoints.length(); i++) { // why it's not working without?
+			m_suppressChildRemoved = true;
+			markerpoints[i].customPoint->remove();
+			markerpoints.removeAt(i);
+			m_suppressChildRemoved = false;
+		}
+		remove(); // delete marker if textlabel was deleted, because there is no use case of this
 	}
 
 	d->retransform();
@@ -1016,6 +1028,10 @@ void WorksheetInfoElement::save(QXmlStreamWriter* writer) const {
 	writer->writeAttribute("gluePointIndex", QString::number(gluePointIndex()));
 	writer->writeEndElement();
 
+	writer->writeStartElement("settings");
+	writer->writeAttribute("markerIndex", QString::number(d->m_index));
+	writer->writeEndElement();
+
 	label->save(writer);
 	QString path;
 	for (auto custompoint: markerpoints) {
@@ -1161,6 +1177,13 @@ bool WorksheetInfoElement::load(XmlStreamReader* reader, bool preview) {
 			attribs = reader->attributes();
 			path = attribs.value("curvepath").toString();
 			addCurvePath(path, markerpoint);
+		} else if (reader->name() == "settings") {
+			attribs = reader->attributes();
+			str = attribs.value("markerIndex").toString();
+			if (str.isEmpty())
+				reader->raiseWarning(attributeWarning.subs("x").toString());
+			else
+				d->m_index = str.toInt();
 		}
 	}
 
