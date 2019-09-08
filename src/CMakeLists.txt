@@ -210,7 +210,7 @@ set(BACKEND_SOURCES
 	${BACKEND_DIR}/core/plugin/PluginManager.cpp
 	${BACKEND_DIR}/datasources/AbstractDataSource.cpp
         ${BACKEND_DIR}/datasources/LiveDataHandler.cpp
-        ${BACKEND_DIR}/datasources/Livedatahandlerprivate.cpp
+        ${BACKEND_DIR}/datasources/LiveDataHandlerPrivate.cpp
 	${BACKEND_DIR}/datasources/LiveDataSource.cpp
 	${BACKEND_DIR}/datasources/MQTTClient.cpp
 	${BACKEND_DIR}/datasources/MQTTSubscription.cpp

@@ -15,7 +15,7 @@ class QIODevice;
 class LiveDataHandlerPrivate : public QObject{
 	Q_OBJECT
 public:
-	LiveDataHandlerPrivate(QObject* parent);//LiveDataHandler* owner);
+	LiveDataHandlerPrivate(QObject* parent, LiveDataHandler* owner);
 	~LiveDataHandlerPrivate();
 
 	void changeSettings();
@@ -33,13 +33,13 @@ public:
 	mutable AbstractFileFilter* m_currentFilter; // was macht mutable nochmals?
 
 	QIODevice* m_device{nullptr};
-	//LiveDataHandler* const q {nullptr};
+	LiveDataHandler* const q {nullptr};
 	QString m_host{""};
 	QString m_port{""};
 	int m_baudrate{9200};
 	QString m_serialPort{""};
 	AbstractFileFilter::FileType m_fileType{AbstractFileFilter::FileType::Ascii};
-	//LiveDataHandler::SourceType m_sourceType{LiveDataHandler::SourceType::FileOrPipe};
+	LiveDataHandler::SourceType m_sourceType{LiveDataHandler::SourceType::FileOrPipe};
 	QString m_fileName{""};
 
 	// filter
