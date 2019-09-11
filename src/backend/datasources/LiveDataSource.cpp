@@ -619,10 +619,10 @@ void LiveDataSource::readyRead() {
 
 void LiveDataSource::localSocketError(QLocalSocket::LocalSocketError socketError) {
 	Q_UNUSED(socketError);
-	/*disconnect(m_localSocket, SIGNAL(error(QLocalSocket::LocalSocketError)), this, SLOT(localSocketError(QLocalSocket::LocalSocketError)));
-	disconnect(m_localSocket, SIGNAL(readyRead()), this, SLOT(readyRead()));*/
+	disconnect(m_localSocket, SIGNAL(error(QLocalSocket::LocalSocketError)), this, SLOT(localSocketError(QLocalSocket::LocalSocketError)));
+	disconnect(m_localSocket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 
-	/*switch (socketError) {
+	switch (socketError) {
 	case QLocalSocket::ServerNotFoundError:
 		QMessageBox::critical(0, i18n("Local Socket Error"),
 		                      i18n("The socket was not found. Please check the socket name."));
@@ -638,12 +638,12 @@ void LiveDataSource::localSocketError(QLocalSocket::LocalSocketError socketError
 	default:
 		QMessageBox::critical(0, i18n("Local Socket Error"),
 		                      i18n("The following error occurred: %1.", m_localSocket->errorString()));
-	}*/
+	}
 }
 
 void LiveDataSource::tcpSocketError(QAbstractSocket::SocketError socketError) {
 	Q_UNUSED(socketError);
-	/*switch (socketError) {
+	switch (socketError) {
 	case QAbstractSocket::ConnectionRefusedError:
 		QMessageBox::critical(0, i18n("TCP Socket Error"),
 		                      i18n("The connection was refused by the peer. Make sure the server is running and check the host name and port settings."));
@@ -659,7 +659,7 @@ void LiveDataSource::tcpSocketError(QAbstractSocket::SocketError socketError) {
 	default:
 		QMessageBox::critical(0, i18n("TCP Socket Error"),
 		                      i18n("The following error occurred: %1.", m_tcpSocket->errorString()));
-	}*/
+	}
 }
 
 void LiveDataSource::serialPortError(QSerialPort::SerialPortError serialPortError) {

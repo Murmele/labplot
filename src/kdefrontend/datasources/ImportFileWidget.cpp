@@ -341,23 +341,24 @@ void ImportFileWidget::initSlots() {
 	connect(ui.cbSourceType, static_cast<void (QComboBox::*) (int)>(&QComboBox::currentIndexChanged),
 			this, static_cast<void (ImportFileWidget::*) (int)>(&ImportFileWidget::sourceTypeChanged));
 	connect(ui.leFileName, &QLineEdit::textChanged,
-	        this, static_cast<void (ImportFileWidget::*) (const QString&)>(&ImportFileWidget::fileNameChanged));
+			this, static_cast<void (ImportFileWidget::*) (const QString&)>(&ImportFileWidget::fileNameChanged));
 	connect(ui.tvJson, &QTreeView::clicked, this, &ImportFileWidget::refreshPreview);
 	connect(ui.bOpen, &QPushButton::clicked, this, &ImportFileWidget::selectFile);
 	connect(ui.bFileInfo, &QPushButton::clicked, this, &ImportFileWidget::fileInfoDialog);
 	connect(ui.bSaveFilter, &QPushButton::clicked, this, &ImportFileWidget::saveFilter);
 	connect(ui.bManageFilters, &QPushButton::clicked, this, &ImportFileWidget::manageFilters);
 	connect(ui.cbFileType, static_cast<void (KComboBox::*) (int)>(&KComboBox::currentIndexChanged),
-	        this, &ImportFileWidget::fileTypeChanged);
+			this, &ImportFileWidget::fileTypeChanged);
 	connect(ui.cbUpdateType, static_cast<void (QComboBox::*) (int)>(&QComboBox::currentIndexChanged),
-	        this, &ImportFileWidget::updateTypeChanged);
+			this, &ImportFileWidget::updateTypeChanged);
 	connect(ui.cbReadingType, static_cast<void (QComboBox::*) (int)>(&QComboBox::currentIndexChanged),
-	        this, &ImportFileWidget::readingTypeChanged);
+			this, &ImportFileWidget::readingTypeChanged);
 	connect(ui.cbFilter, static_cast<void (KComboBox::*) (int)>(&KComboBox::activated), this, &ImportFileWidget::filterChanged);
 	connect(ui.bRefreshPreview, &QPushButton::clicked, this, &ImportFileWidget::refreshPreview);
 
 	connect(this, &ImportFileWidget::preview, m_liveDataHandler, QOverload<int>::of(&LiveDataHandler::preview));
 	connect(m_liveDataHandler, &LiveDataHandler::previewData, this, &ImportFileWidget::updatePreviewWindow);
+	connect(m_liveDataHandler, QOverload<bool, QString>::of(&LiveDataHandler::feedback), this, &ImportFileWidget::checkOKButton);
 
 	// Queued connection, when m_liveDataHandler is in it's own thread
 	connect(ui.leHost, &QLineEdit::textChanged, m_liveDataHandler, &LiveDataHandler::setHost);
@@ -365,18 +366,24 @@ void ImportFileWidget::initSlots() {
 	connect(ui.cbSerialPort, &QComboBox::currentTextChanged, m_liveDataHandler, &LiveDataHandler::setSerialPort);
 	connect(ui.cbBaudRate, &QComboBox::currentTextChanged, m_liveDataHandler, &LiveDataHandler::setBaudRate);
 	connect(ui.leFileName, &QLineEdit::textChanged, m_liveDataHandler, &LiveDataHandler::setFileName);
-	connect(ui.cbSourceType, QOverload<int>::of(&QComboBox::currentIndexChanged), m_liveDataHandler, &LiveDataHandler::setSourceType, Qt::ConnectionType::BlockingQueuedConnection);
-	//connect(ui.cbFileType, QOverload<int>::of(&QComboBox::currentIndexChanged), m_liveDataHandler, &LiveDataHandler::setFileType, Qt::ConnectionType::BlockingQueuedConnection);
-	connect(ui.cbFilter, QOverload<int>::of(&QComboBox::currentIndexChanged), m_liveDataHandler, &LiveDataHandler::setAutoModeEnabled, Qt::ConnectionType::BlockingQueuedConnection);
-	connect(ui.sbStartRow, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setStartRow, Qt::ConnectionType::BlockingQueuedConnection);
-	connect(ui.sbEndRow, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setEndRow, Qt::ConnectionType::BlockingQueuedConnection);
-	connect(ui.sbStartColumn, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setStartColumn, Qt::ConnectionType::BlockingQueuedConnection);
-	connect(ui.sbEndColumn, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setEndColumn, Qt::ConnectionType::BlockingQueuedConnection);
-	connect(m_rootOptionsWidget.get(), &ROOTOptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentObject, Qt::ConnectionType::BlockingQueuedConnection);
-	connect(m_netcdfOptionsWidget.get(), &NetCDFOptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentVarName, Qt::ConnectionType::BlockingQueuedConnection);
+
+
+	// why Qt::ConnectionType::BlockingQueuedConnection does not work in this case?
+	connect(this, &ImportFileWidget::sourceTypeChangedSignal, m_liveDataHandler, &LiveDataHandler::setSourceType);
+	// //connect(ui.cbFileType, QOverload<int>::of(&QComboBox::currentIndexChanged), m_liveDataHandler, &LiveDataHandler::setFileType, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(ui.cbFilter, QOverload<int>::of(&QComboBox::currentIndexChanged), m_liveDataHandler, &LiveDataHandler::setAutoModeEnabled);
+
+
+	// For debugging purpose Qt::ConnectionType::BlockingQueuedConnection was removed
+	connect(ui.sbStartRow, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setStartRow);
+	connect(ui.sbEndRow, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setEndRow);
+	connect(ui.sbStartColumn, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setStartColumn);
+	connect(ui.sbEndColumn, QOverload<int>::of(&QSpinBox::valueChanged), m_liveDataHandler, &LiveDataHandler::setEndColumn);
+	connect(m_rootOptionsWidget.get(), &ROOTOptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentObject);
+	connect(m_netcdfOptionsWidget.get(), &NetCDFOptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentVarName);
 	//connect(m_fitsOptionsWidget, &FITSOptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentObject, Qt::ConnectionType::BlockingQueuedConnection);
-	connect(m_hdf5OptionsWidget.get(), &HDF5OptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentDataSetName, Qt::ConnectionType::BlockingQueuedConnection);
-	connect(m_imageOptionsWidget.get(), &ImageOptionsWidget::currentFormatChanged, m_liveDataHandler, &LiveDataHandler::setImportFormat, Qt::ConnectionType::BlockingQueuedConnection);
+	connect(m_hdf5OptionsWidget.get(), &HDF5OptionsWidget::selectionChanged, m_liveDataHandler, &LiveDataHandler::setCurrentDataSetName);
+	connect(m_imageOptionsWidget.get(), &ImageOptionsWidget::currentFormatChanged, m_liveDataHandler, &LiveDataHandler::setImportFormat);
 
 #ifdef HAVE_MQTT
 	connect(ui.cbConnection, static_cast<void (QComboBox::*) (int)>(&QComboBox::currentIndexChanged), this, &ImportFileWidget::mqttConnectionChanged);
@@ -1189,10 +1196,10 @@ const QStringList ImportFileWidget::selectedROOTNames() const {
 	shows the dialog with the information about the file(s) to be imported.
 */
 void ImportFileWidget::fileInfoDialog() {
-	QStringList files = ui.leFileName->text().split(';');
-	auto* dlg = new FileInfoDialog(this);
-	dlg->setFiles(files);
-	dlg->exec();
+//	QStringList files = ui.leFileName->text().split(';');
+//	auto* dlg = new FileInfoDialog(this);
+//	dlg->setFiles(files);
+//	dlg->exec();
 }
 
 /*!
@@ -1315,8 +1322,8 @@ void ImportFileWidget::readingTypeChanged(int idx) {
 	const LiveDataSource::SourceType sourceType = currentSourceType();
 
 	if (sourceType == LiveDataSource::SourceType::NetworkTcpSocket || sourceType == LiveDataSource::SourceType::LocalSocket
-	        || sourceType == LiveDataSource::SourceType::SerialPort
-	        || readingType == LiveDataSource::ReadingType::TillEnd || readingType == LiveDataSource::ReadingType::WholeFile) {
+			|| sourceType == LiveDataSource::SourceType::SerialPort
+			|| readingType == LiveDataSource::ReadingType::TillEnd || readingType == LiveDataSource::ReadingType::WholeFile) {
 		ui.lSampleSize->hide();
 		ui.sbSampleSize->hide();
 	} else {
@@ -1512,7 +1519,7 @@ void ImportFileWidget::sourceTypeChanged(int idx) {
 		break;
 	}
 
-	emit settingsChanged();
+	//emit settingsChanged();
 
 	//deactivate/activate options that are specific to file of pipe sources only
 	auto* typeModel = qobject_cast<const QStandardItemModel*>(ui.cbFileType->model());
@@ -1543,7 +1550,7 @@ void ImportFileWidget::sourceTypeChanged(int idx) {
 		item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 	}
 
-	emit sourceTypeChanged();
+	emit sourceTypeChangedSignal(idx);
 	refreshPreview();
 }
 

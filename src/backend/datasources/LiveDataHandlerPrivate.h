@@ -30,7 +30,7 @@ private slots:
 
 public:
 
-	mutable AbstractFileFilter* m_currentFilter; // was macht mutable nochmals?
+	mutable AbstractFileFilter* m_currentFilter{nullptr}; // was macht mutable nochmals?
 
 	QIODevice* m_device{nullptr};
 	LiveDataHandler* const q {nullptr};

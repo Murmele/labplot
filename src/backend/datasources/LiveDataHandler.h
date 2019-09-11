@@ -88,7 +88,7 @@ public slots: // don't access this functions directly when in an own thread! Use
 
 
 protected:
-	Private* d_ptr;
+	Private* d_ptr{nullptr};
 private:
 
 private:

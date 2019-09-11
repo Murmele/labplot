@@ -129,7 +129,7 @@ private slots:
 	void updatePreviewWindow(QVector<QStringList> importedStrings, QStringList vectorNameList, QVector<AbstractColumn::ColumnMode> columnModes);
 signals:
 	void fileNameChanged();
-	void sourceTypeChanged();
+		void sourceTypeChangedSignal(int sourceType);
 	void previewRefreshed();
 	void preview(int nbrOfLines);
 	void checkedFitsTableToMatrix(const bool enable);

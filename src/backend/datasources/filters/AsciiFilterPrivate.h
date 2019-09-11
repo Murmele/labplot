@@ -30,6 +30,8 @@
 #ifndef ASCIIFILTERPRIVATE_H
 #define ASCIIFILTERPRIVATE_H
 
+#include <QIODevice>
+
 class KFilterDev;
 class AbstractDataSource;
 class AbstractColumn;
@@ -37,6 +39,7 @@ class AbstractAspect;
 class Spreadsheet;
 class MQTTTopic;
 class LiveDataHandler;
+class AsciiFilter;
 
 class AsciiFilterPrivate {
 
@@ -57,10 +60,11 @@ public:
 	QVector<QStringList> preview(LiveDataHandler *handle, int nbrOfLines); // read from internal buffer
 	QVector<QStringList> preview(const QString& fileName, int lines);
 	QVector<QStringList> preview(QIODevice& device);
+	QVector<QStringList> preview(QVector<QString>& lines);
 	bool getLine(QString& string);
 
 	QString separator() const;
-	QString determineSeparator() const;
+	QString determineSeparator(QString line) const;
 
 #ifdef HAVE_MQTT
 	int prepareToRead(const QString&);

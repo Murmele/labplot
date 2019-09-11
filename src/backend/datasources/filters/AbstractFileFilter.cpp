@@ -45,6 +45,14 @@ bool AbstractFileFilter::isNan(QString s) {
 	return false;
 }
 
+/*!
+ * \brief AbstractFileFilter::columnMode
+ * Determine the column mode of a string
+ * \param valueString
+ * \param dateTimeFormat
+ * \param lang
+ * \return
+ */
 AbstractColumn::ColumnMode AbstractFileFilter::columnMode(const QString& valueString, const QString& dateTimeFormat, QLocale::Language lang) {
 	QLocale locale(lang);
 

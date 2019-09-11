@@ -132,6 +132,7 @@ void AsciiFilter::readDataFromFile(const QString& fileName, AbstractDataSource* 
 }
 
 QVector<QStringList> AsciiFilter::preview(const QString& fileName, int lines) {
+	DEBUG("Filename: " << fileName.toStdString() << ", Lines: " << lines)
 	return d->preview(fileName, lines);
 }
 
@@ -1542,90 +1543,8 @@ QVector<QStringList> AsciiFilterPrivate::preview(LiveDataHandler *handle, int nb
 	//TODO: serial port "read(nBytes)"?
 	while (handle->getLine(string) && ((nbrOfLines > 0 && linesToRead < nbrOfLines) || nbrOfLines < 0)) {
 		newData.push_back(string);
-		linesToRead ++;
 	}
-	QDEBUG("	data = " << newData);
-
-	if (linesToRead == 0) return dataStrings;
-
-	int col = 0;
-	int colMax = newData.at(0).size();
-	if (createIndexEnabled)
-		colMax++;
-	columnModes.resize(colMax);
-	if (createIndexEnabled) {
-		columnModes[0] = AbstractColumn::ColumnMode::Integer;
-		col = 1;
-		vectorNames.prepend(i18n("Index"));
-	}
-	vectorNames.append(i18n("Value"));
-	QDEBUG("	vector names = " << vectorNames);
-
-	// why here  ' ' and not the
-	for (const auto& valueString : newData.at(0).split(' ', QString::SkipEmptyParts)) {
-		if (col == colMax)
-			break;
-		columnModes[col++] = AbstractFileFilter::columnMode(valueString, dateTimeFormat, numberFormat);
-	}
-
-	for (int i = 0; i < linesToRead; ++i) {
-		QString line = newData.at(i);
-
-		// remove any newline
-		line = line.remove('\n');
-		line = line.remove('\r');
-
-		if (simplifyWhitespacesEnabled)
-			line = line.simplified();
-
-		if (line.isEmpty() || line.startsWith(commentCharacter)) // skip empty or commented lines
-			continue;
-
-		QLocale locale(numberFormat);
-
-		QStringList lineStringList = line.split(' ', QString::SkipEmptyParts);
-		if (createIndexEnabled)
-			lineStringList.prepend(QString::number(i + 1));
-
-		QStringList lineString;
-		for (int n = 0; n < lineStringList.size(); ++n) {
-			if (n < lineStringList.size()) {
-				QString valueString = lineStringList.at(n);
-				if (removeQuotesEnabled)
-					valueString.remove(QLatin1Char('"'));
-
-				switch (columnModes[n]) {
-				case AbstractColumn::Numeric: {
-					bool isNumber;
-					const double value = locale.toDouble(valueString, &isNumber);
-					lineString += QString::number(isNumber ? value : nanValue, 'g', 16);
-					break;
-				}
-				case AbstractColumn::Integer: {
-					bool isNumber;
-					const int value = locale.toInt(valueString, &isNumber);
-					lineString += QString::number(isNumber ? value : 0);
-					break;
-				}
-				case AbstractColumn::DateTime: {
-					const QDateTime valueDateTime = QDateTime::fromString(valueString, dateTimeFormat);
-					lineString += valueDateTime.isValid() ? valueDateTime.toString(dateTimeFormat) : QLatin1String(" ");
-					break;
-				}
-				case AbstractColumn::Text:
-					lineString += valueString;
-					break;
-				case AbstractColumn::Month:	// never happens
-				case AbstractColumn::Day:
-					break;
-				}
-			} else 	// missing columns in this line
-				lineString += QString();
-		}
-		dataStrings << lineString;
-	}
-
-	return dataStrings;
+	return preview(newData);
 }
 
 /*!
@@ -1744,6 +1663,100 @@ QVector<QStringList> AsciiFilterPrivate::preview(const QString& fileName, int li
 	return dataStrings;
 }
 
+QVector<QStringList> AsciiFilterPrivate::preview(QVector<QString>& lines) {
+
+	QVector<QStringList> dataStrings;
+	QDEBUG("	data = " << lines);
+	vectorNames.clear();
+
+	if (lines.length() == 0) return dataStrings;
+
+	// start after first non comment line
+	int startIndex = 0;
+	for (startIndex; startIndex < lines.length(); startIndex++ ) {
+		if (lines[startIndex].isEmpty() || lines[startIndex].startsWith(commentCharacter)) // skip empty or commented lines
+			continue;
+	}
+
+	m_separator = determineSeparator(lines[startIndex]);
+	int nbrCol = lines[0].split(m_separator).length();
+
+	int col = 0;
+	if (createIndexEnabled)
+		nbrCol++;
+	columnModes.resize(nbrCol);
+	if (createIndexEnabled) {
+		columnModes[0] = AbstractColumn::ColumnMode::Integer;
+		col = 1;
+		vectorNames.prepend(i18n("Index"));
+	}
+	// why?
+	vectorNames.append(i18n("Value"));
+	QDEBUG("	vector names = " << vectorNames);
+
+	// determine column modes
+	for (const auto& valueString : lines[0].split(m_separator, QString::SkipEmptyParts))
+		columnModes[col++] = AbstractFileFilter::columnMode(valueString, dateTimeFormat, numberFormat);
+
+	for (int i = startIndex; i < lines.length(); ++i) {
+		QString line = lines.at(i);
+
+		// remove any newline
+		line = line.remove('\n');
+		line = line.remove('\r');
+
+		if (simplifyWhitespacesEnabled)
+			line = line.simplified();
+
+		if (line.isEmpty() || line.startsWith(commentCharacter)) // skip empty or commented lines
+			continue;
+
+		QLocale locale(numberFormat);
+
+		QStringList lineStringList = line.split(' ', QString::SkipEmptyParts);
+		if (createIndexEnabled)
+			lineStringList.prepend(QString::number(i + 1));
+
+		QStringList lineString;
+		for (int n = 0; n < lineStringList.size(); ++n) {
+			if (n < lineStringList.size()) {
+				QString valueString = lineStringList.at(n);
+				if (removeQuotesEnabled)
+					valueString.remove(QLatin1Char('"'));
+
+				switch (columnModes[n]) {
+				case AbstractColumn::Numeric: {
+					bool isNumber;
+					const double value = locale.toDouble(valueString, &isNumber);
+					lineString += QString::number(isNumber ? value : nanValue, 'g', 16);
+					break;
+				}
+				case AbstractColumn::Integer: {
+					bool isNumber;
+					const int value = locale.toInt(valueString, &isNumber);
+					lineString += QString::number(isNumber ? value : 0);
+					break;
+				}
+				case AbstractColumn::DateTime: {
+					const QDateTime valueDateTime = QDateTime::fromString(valueString, dateTimeFormat);
+					lineString += valueDateTime.isValid() ? valueDateTime.toString(dateTimeFormat) : QLatin1String(" ");
+					break;
+				}
+				case AbstractColumn::Text:
+					lineString += valueString;
+					break;
+				case AbstractColumn::Month:	// never happens
+				case AbstractColumn::Day:
+					break;
+				}
+			} else 	// missing columns in this line
+				lineString += QString();
+		}
+		dataStrings << lineString;
+	}
+
+	return dataStrings;
+}
 /*!
     writes the content of \c dataSource to the file \c fileName.
 */
@@ -2736,16 +2749,41 @@ void AsciiFilterPrivate::setPreparedForMQTT(bool prepared, MQTTTopic* topic, con
  * \return
  */
 QString AsciiFilterPrivate::separator() const {
-	if (m_separator.compare("") != 0)
-		return m_separator;
-
-	return determineSeparator();
+	return m_separator;
 }
 
 /*!
  * \brief determines the separator from the first valid line and stores the separator in m_separator
  * \return
  */
-QString AsciiFilterPrivate::determineSeparator() const {
-	return "";
+QString AsciiFilterPrivate::determineSeparator(QString line) const {
+	// determine separator and split first line
+	QStringList firstLineStringList;
+	QString separator;
+	QString separatingCharacter = this->separatingCharacter;
+	if (separatingCharacter == "auto") {
+		DEBUG("automatic separator");
+		QRegExp regExp("(\\s+)|(,\\s+)|(;\\s+)|(:\\s+)");
+		firstLineStringList = line.split(regExp, (QString::SplitBehavior)skipEmptyParts);
+
+		if (!firstLineStringList.isEmpty()) {
+			int length1 = firstLineStringList.at(0).length();
+			if (firstLineStringList.size() > 1) {
+				int pos2 = line.indexOf(firstLineStringList.at(1), length1);
+				separator = line.mid(length1, pos2 - length1);
+			} else
+				separator = QString(" ");
+		}
+	} else {	// use given separator
+		// replace symbolic "TAB" with '\t'
+		separator = separatingCharacter.replace(QLatin1String("2xTAB"), "\t\t", Qt::CaseInsensitive);
+		separator = separatingCharacter.replace(QLatin1String("TAB"), "\t", Qt::CaseInsensitive);
+		// replace symbolic "SPACE" with ' '
+		separator = separator.replace(QLatin1String("2xSPACE"), QLatin1String("  "), Qt::CaseInsensitive);
+		separator = separator.replace(QLatin1String("3xSPACE"), QLatin1String("   "), Qt::CaseInsensitive);
+		separator = separator.replace(QLatin1String("4xSPACE"), QLatin1String("    "), Qt::CaseInsensitive);
+		separator = separator.replace(QLatin1String("SPACE"), QLatin1String(" "), Qt::CaseInsensitive);
+	}
+	DEBUG("separator: \'" << separator.toStdString() << '\'');
+	return separator;
 }

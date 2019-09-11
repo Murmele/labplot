@@ -26,7 +26,7 @@
 //######################### Private implementation #############################
 //##############################################################################
 LiveDataHandlerPrivate::LiveDataHandlerPrivate(QObject *parent, LiveDataHandler* owner): QObject(owner), q(owner){
-
+	changeFileFilter(); // initalize filter
 }
 
 LiveDataHandlerPrivate::~LiveDataHandlerPrivate() {
@@ -126,15 +126,14 @@ void LiveDataHandlerPrivate::changeSettings() {
 		break;
 	}
 	case LiveDataHandler::SourceType::SerialPort: {
-		const QString sPort = m_serialPort;
 
-		if (!sPort.isEmpty()) {
+		if (!m_serialPort.isEmpty()) {
 
 			QSerialPort* serialPort = new QSerialPort(q);
 
-			DEBUG("	Port: " << sPort.toStdString() << ", Settings: " << m_baudrate << ',' << serialPort->dataBits()
+			DEBUG("	Port: " << m_serialPort.toStdString() << ", Settings: " << m_baudrate << ',' << serialPort->dataBits()
 					<< ',' << serialPort->parity() << ',' << serialPort->stopBits());
-			serialPort->setPortName(sPort);
+			serialPort->setPortName(m_serialPort);
 			serialPort->setBaudRate(m_baudrate);
 
 			const bool serialPortOpened = serialPort->open(QIODevice::ReadOnly);
