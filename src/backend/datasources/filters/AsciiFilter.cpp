@@ -1676,7 +1676,11 @@ QVector<QStringList> AsciiFilterPrivate::preview(QVector<QString>& lines) {
 	for (startIndex; startIndex < lines.length(); startIndex++ ) {
 		if (lines[startIndex].isEmpty() || lines[startIndex].startsWith(commentCharacter)) // skip empty or commented lines
 			continue;
+		break;
 	}
+
+	if (startIndex >= lines.length())
+		return dataStrings;
 
 	m_separator = determineSeparator(lines[startIndex]);
 	int nbrCol = lines[0].split(m_separator).length();
@@ -1690,7 +1694,8 @@ QVector<QStringList> AsciiFilterPrivate::preview(QVector<QString>& lines) {
 		col = 1;
 		vectorNames.prepend(i18n("Index"));
 	}
-	// why?
+
+	// why do I add Value?
 	vectorNames.append(i18n("Value"));
 	QDEBUG("	vector names = " << vectorNames);
 
@@ -1713,7 +1718,7 @@ QVector<QStringList> AsciiFilterPrivate::preview(QVector<QString>& lines) {
 
 		QLocale locale(numberFormat);
 
-		QStringList lineStringList = line.split(' ', QString::SkipEmptyParts);
+		QStringList lineStringList = line.split(m_separator, QString::SkipEmptyParts);
 		if (createIndexEnabled)
 			lineStringList.prepend(QString::number(i + 1));
 
@@ -2769,10 +2774,9 @@ QString AsciiFilterPrivate::determineSeparator(QString line) const {
 		if (!firstLineStringList.isEmpty()) {
 			int length1 = firstLineStringList.at(0).length();
 			if (firstLineStringList.size() > 1) {
-				int pos2 = line.indexOf(firstLineStringList.at(1), length1);
+				int pos2 = line.indexOf(firstLineStringList[1], length1);
 				separator = line.mid(length1, pos2 - length1);
-			} else
-				separator = QString(" ");
+			}
 		}
 	} else {	// use given separator
 		// replace symbolic "TAB" with '\t'

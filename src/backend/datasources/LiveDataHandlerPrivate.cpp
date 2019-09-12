@@ -302,6 +302,9 @@ void LiveDataHandlerPrivate::changeFileFilter() {
 QVector<QStringList>  LiveDataHandlerPrivate::preview(int nbrOfLines) {
 	QVector<QStringList>  importedStrings;
 
+	if (!m_device)
+		changeSettings();
+
 	switch (m_fileType) {
 	case AbstractFileFilter::Ascii: {
 
@@ -420,6 +423,12 @@ void LiveDataHandlerPrivate::readyRead() {
 		m_deviceBuffer.remove(0, bufferSize - maxBufferSize);
 }
 
+/*!
+ * Get new line from the device buffer. The \n at the end is removed. So the line is plain data
+ * \brief LiveDataHandlerPrivate::getLine
+ * \param string
+ * \return
+ */
 bool LiveDataHandlerPrivate::getLine(QString& string) {
 	int begin = m_deviceBuffer.indexOf('\n');
 	if (begin < 0)

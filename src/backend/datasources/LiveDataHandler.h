@@ -17,7 +17,7 @@ class LiveDataHandler : public QObject
 {
     Q_OBJECT
 public:
-	LiveDataHandler(QObject* parent);
+	LiveDataHandler(QObject* parent, QString host, QString port, QString serialPort, int baudRate, int sourceType);
 	~LiveDataHandler();
 
 	typedef LiveDataHandlerPrivate Private;

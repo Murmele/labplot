@@ -20,8 +20,14 @@
 
 
 
-LiveDataHandler::LiveDataHandler(QObject *parent): QObject(parent), d_ptr(new LiveDataHandlerPrivate(this, this)) {
-
+LiveDataHandler::LiveDataHandler(QObject *parent, QString host, QString port, QString serialPort, int baudRate, int sourceType):
+	QObject(parent),
+	d_ptr(new LiveDataHandlerPrivate(this, this)) {
+	d_ptr->m_host = host;
+	d_ptr->m_port = port;
+	d_ptr->m_serialPort = serialPort;
+	d_ptr->m_baudrate = baudRate;
+	d_ptr->m_sourceType = static_cast<SourceType>(sourceType);
 }
 
 LiveDataHandler::~LiveDataHandler() {

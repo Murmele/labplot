@@ -85,8 +85,7 @@ Copyright            : (C) 2018-2019 Kovacs Ferencz (kferike98@gmail.com)
 */
 ImportFileWidget::ImportFileWidget(QWidget* parent, bool liveDataSource, const QString& fileName) : QWidget(parent),
 	m_fileName(fileName),
-	m_liveDataSource(liveDataSource),
-	m_liveDataHandler(new LiveDataHandler(this))
+	m_liveDataSource(liveDataSource)
 #ifdef HAVE_MQTT
 	,
 	m_connectTimeoutTimer(new QTimer(this)),
@@ -135,6 +134,14 @@ ImportFileWidget::ImportFileWidget(QWidget* parent, bool liveDataSource, const Q
 		ui.cbSerialPort->addItems(LiveDataSource::availablePorts());
 
 		ui.tabWidget->removeTab(2);
+
+		// initialize livedata Handler
+		m_liveDataHandler = new LiveDataHandler(this,
+												ui.leHost->text(),
+												ui.lePort->text(),
+												ui.cbSerialPort->currentText(),
+												ui.cbBaudRate->currentData().toInt(),
+												ui.cbSourceType->currentIndex());
 
 #ifdef HAVE_MQTT
 		m_connectTimeoutTimer->setInterval(6000);
