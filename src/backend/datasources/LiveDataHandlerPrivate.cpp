@@ -424,7 +424,7 @@ void LiveDataHandlerPrivate::readyRead() {
 }
 
 /*!
- * Get new line from the device buffer. The \n at the end is removed. So the line is plain data
+ * Get new line from the device buffer. The \n at the end is not removed
  * \brief LiveDataHandlerPrivate::getLine
  * \param string
  * \return
@@ -438,7 +438,7 @@ bool LiveDataHandlerPrivate::getLine(QString& string) {
 	if (end < 0)
 		return false;
 
-	string = m_deviceBuffer.mid(begin+1,end-begin);
+	string = m_deviceBuffer.mid(begin+1,end-begin); // string contains \n
 	m_deviceBuffer.remove(0, end); // don't remove last \n because it's the next start character
 	return true;
 }

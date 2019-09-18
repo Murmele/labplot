@@ -32,6 +32,14 @@ Copyright            : (C) 2015-2018 Stefan Gerlach (stefan.gerlach@uni.kn)
 #include <hdf5.h>
 #endif
 
+class HDF5FilterSettings : public AbstractFileFilterSettings {
+
+public:
+	HDF5FilterSettings() {}
+public:
+
+};
+
 class AbstractDataSource;
 
 class HDF5FilterPrivate {

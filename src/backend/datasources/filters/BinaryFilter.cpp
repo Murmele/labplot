@@ -137,35 +137,35 @@ void BinaryFilter::saveFilterSettings(const QString& filterName) const {
 ///////////////////////////////////////////////////////////////////////
 
 void BinaryFilter::setVectors(const size_t v) {
-	d->vectors = v;
+	d->settings.vectors = v;
 }
 
 size_t BinaryFilter::vectors() const {
-	return d->vectors;
+	return d->settings.vectors;
 }
 
 void BinaryFilter::setDataType(const BinaryFilter::DataType t) {
-	d->dataType = t;
+	d->settings.dataType = t;
 }
 
 BinaryFilter::DataType BinaryFilter::dataType() const {
-	return d->dataType;
+	return d->settings.dataType;
 }
 
 void BinaryFilter::setByteOrder(const QDataStream::ByteOrder b) {
-	d->byteOrder = b;
+	d->settings.byteOrder = b;
 }
 
 QDataStream::ByteOrder BinaryFilter::byteOrder() const {
-	return d->byteOrder;
+	return d->settings.byteOrder;
 }
 
 void BinaryFilter::setSkipStartBytes(const size_t s) {
-	d->skipStartBytes = s;
+	d->settings.skipStartBytes = s;
 }
 
 size_t BinaryFilter::skipStartBytes() const {
-	return d->skipStartBytes;
+	return d->settings.skipStartBytes;
 }
 
 void BinaryFilter::setStartRow(const int s) {
@@ -185,15 +185,15 @@ int BinaryFilter::endRow() const {
 }
 
 void BinaryFilter::setSkipBytes(const size_t s) {
-	d->skipBytes = s;
+	d->settings.skipBytes = s;
 }
 
 size_t BinaryFilter::skipBytes() const {
-	return d->skipBytes;
+	return d->settings.skipBytes;
 }
 
 void BinaryFilter::setCreateIndexEnabled(bool b) {
-	d->createIndexEnabled = b;
+	d->settings.createIndexEnabled = b;
 }
 
 void BinaryFilter::setAutoModeEnabled(bool b) {
@@ -228,7 +228,7 @@ void BinaryFilterPrivate::readDataFromFile(const QString& fileName, AbstractData
 	DEBUG("readDataFromFile()");
 
 	KFilterDev device(fileName);
-	numRows = BinaryFilter::rowNumber(fileName, vectors, dataType);
+	numRows = BinaryFilter::rowNumber(fileName, settings.vectors, settings.dataType);
 
 	if (! device.open(QIODevice::ReadOnly)) {
 		DEBUG("	could not open file " << fileName.toStdString());
@@ -243,21 +243,21 @@ void BinaryFilterPrivate::readDataFromFile(const QString& fileName, AbstractData
 int BinaryFilterPrivate::prepareStreamToRead(QDataStream& in) {
 	DEBUG("prepareStreamToRead()");
 
-	in.setByteOrder(byteOrder);
+	in.setByteOrder(settings.byteOrder);
 
 	// catch case that skipStartBytes or startRow is bigger than file
-	if (skipStartBytes >= BinaryFilter::dataSize(dataType) * vectors * numRows || startRow > (int)numRows)
+	if (settings.skipStartBytes >= BinaryFilter::dataSize(settings.dataType) * settings.vectors * numRows || startRow > (int)numRows)
 		return 1;
 
 	// skip bytes at start
-	for (size_t i = 0; i < skipStartBytes; ++i) {
+	for (size_t i = 0; i < settings.skipStartBytes; ++i) {
 		qint8 tmp;
 		in >> tmp;
 	}
 
 	// skip until start row
-	for (size_t i = 0; i < (startRow-1) * vectors; ++i) {
-		for (int j = 0; j < BinaryFilter::dataSize(dataType); ++j) {
+	for (size_t i = 0; i < (startRow-1) * settings.vectors; ++i) {
+		for (int j = 0; j < BinaryFilter::dataSize(settings.dataType); ++j) {
 			qint8 tmp;
 			in >> tmp;
 		}
@@ -270,7 +270,7 @@ int BinaryFilterPrivate::prepareStreamToRead(QDataStream& in) {
 		m_actualRows = (int)numRows;
 	else
 		m_actualRows = endRow - startRow + 1;
-	m_actualCols = (int)vectors;
+	m_actualCols = (int)settings.vectors;
 
 	DEBUG("numRows = " << numRows);
 	DEBUG("endRow = " << endRow);
@@ -291,7 +291,7 @@ QVector<QStringList> BinaryFilterPrivate::preview(const QString& fileName, int l
 	if (! device.open(QIODevice::ReadOnly))
 		return dataStrings << (QStringList() << i18n("could not open device"));
 
-	numRows = BinaryFilter::rowNumber(fileName, vectors, dataType);
+	numRows = BinaryFilter::rowNumber(fileName, settings.vectors, settings.dataType);
 
 	QDataStream in(&device);
 	const int deviceError = prepareStreamToRead(in);
@@ -305,7 +305,7 @@ QVector<QStringList> BinaryFilterPrivate::preview(const QString& fileName, int l
 	//TODO: use given names
 	QStringList vectorNames;
 
-	if (createIndexEnabled)
+	if (settings.createIndexEnabled)
 		vectorNames.prepend(i18n("Index"));
 
 	if (lines == -1)
@@ -317,67 +317,67 @@ QVector<QStringList> BinaryFilterPrivate::preview(const QString& fileName, int l
 		QStringList lineString;
 
 		//prepend the index if required
-		if (createIndexEnabled)
+		if (settings.createIndexEnabled)
 			lineString << QString::number(i+1);
 
 		for (int n = 0; n < m_actualCols; ++n) {
 			//TODO: use ColumnMode when it supports all types
-			switch (dataType) {
-			case BinaryFilter::INT8: {
+			switch (settings.dataType) {
+			case BinaryFilter::DataType::INT8: {
 					qint8 value;
 					in >> value;
 					lineString << QString::number(value);
 					break;
 				}
-			case BinaryFilter::INT16: {
+			case BinaryFilter::DataType::INT16: {
 					qint16 value;
 					in >> value;
 					lineString << QString::number(value);
 					break;
 				}
-			case BinaryFilter::INT32: {
+			case BinaryFilter::DataType::INT32: {
 					qint32 value;
 					in >> value;
 					lineString << QString::number(value);
 					break;
 				}
-			case BinaryFilter::INT64: {
+			case BinaryFilter::DataType::INT64: {
 					qint64 value;
 					in >> value;
 					lineString << QString::number(value);
 					break;
 				}
-			case BinaryFilter::UINT8: {
+			case BinaryFilter::DataType::UINT8: {
 					quint8 value;
 					in >> value;
 					lineString << QString::number(value);
 					break;
 				}
-			case BinaryFilter::UINT16: {
+			case BinaryFilter::DataType::UINT16: {
 					quint16 value;
 					in >> value;
 					lineString << QString::number(value);
 					break;
 				}
-			case BinaryFilter::UINT32: {
+			case BinaryFilter::DataType::UINT32: {
 					quint32 value;
 					in >> value;
 					lineString << QString::number(value);
 					break;
 				}
-			case BinaryFilter::UINT64: {
+			case BinaryFilter::DataType::UINT64: {
 					quint64 value;
 					in >> value;
 					lineString << QString::number(value);
 					break;
 				}
-			case BinaryFilter::REAL32: {
+			case BinaryFilter::DataType::REAL32: {
 					float value;
 					in >> value;
 					lineString << QString::number(value);
 					break;
 				}
-			case BinaryFilter::REAL64: {
+			case BinaryFilter::DataType::REAL64: {
 					double value;
 					in >> value;
 					lineString << QString::number(value);
@@ -408,7 +408,7 @@ void BinaryFilterPrivate::readDataFromDevice(QIODevice& device, AbstractDataSour
 		return;
 	}
 
-	if (createIndexEnabled)
+	if (settings.createIndexEnabled)
 		m_actualCols++;
 
 	QVector<void*> dataContainer;
@@ -420,7 +420,7 @@ void BinaryFilterPrivate::readDataFromDevice(QIODevice& device, AbstractDataSour
 	//TODO: use given names
 	QStringList vectorNames;
 
-	if (createIndexEnabled) {
+	if (settings.createIndexEnabled) {
 		vectorNames.prepend(i18n("Index"));
 		columnModes[0] = AbstractColumn::Integer;
 	}
@@ -432,7 +432,7 @@ void BinaryFilterPrivate::readDataFromDevice(QIODevice& device, AbstractDataSour
 
 	// start column
 	int startColumn = 0;
-	if (createIndexEnabled)
+	if (settings.createIndexEnabled)
 		startColumn++;
 
 	// read data
@@ -440,68 +440,68 @@ void BinaryFilterPrivate::readDataFromDevice(QIODevice& device, AbstractDataSour
 	for (int i = 0; i < qMin(m_actualRows, lines); ++i) {
 		DEBUG("reading row " << i);
 		//prepend the index if required
-		if (createIndexEnabled)
+		if (settings.createIndexEnabled)
 			static_cast<QVector<int>*>(dataContainer[0])->operator[](i) = i+1;
 
 		for (int n = startColumn; n < m_actualCols; ++n) {
 			DEBUG("reading column " << n);
 			//TODO: use ColumnMode when it supports all types
-			switch (dataType) {
-			case BinaryFilter::INT8: {
+			switch (settings.dataType) {
+			case BinaryFilter::DataType::INT8: {
 					qint8 value;
 					in >> value;
 					static_cast<QVector<double>*>(dataContainer[n])->operator[](i) = value;
 					break;
 				}
-			case BinaryFilter::INT16: {
+			case BinaryFilter::DataType::INT16: {
 					qint16 value;
 					in >> value;
 					static_cast<QVector<double>*>(dataContainer[n])->operator[](i) = value;
 					break;
 				}
-			case BinaryFilter::INT32: {
+			case BinaryFilter::DataType::INT32: {
 					qint32 value;
 					in >> value;
 					static_cast<QVector<double>*>(dataContainer[n])->operator[](i) = value;
 					break;
 				}
-			case BinaryFilter::INT64: {
+			case BinaryFilter::DataType::INT64: {
 					qint64 value;
 					in >> value;
 					static_cast<QVector<double>*>(dataContainer[n])->operator[](i) = value;
 					break;
 				}
-			case BinaryFilter::UINT8: {
+			case BinaryFilter::DataType::UINT8: {
 					quint8 value;
 					in >> value;
 					static_cast<QVector<double>*>(dataContainer[n])->operator[](i) = value;
 					break;
 				}
-			case BinaryFilter::UINT16: {
+			case BinaryFilter::DataType::UINT16: {
 					quint16 value;
 					in >> value;
 					static_cast<QVector<double>*>(dataContainer[n])->operator[](i) = value;
 					break;
 				}
-			case BinaryFilter::UINT32: {
+			case BinaryFilter::DataType::UINT32: {
 					quint32 value;
 					in >> value;
 					static_cast<QVector<double>*>(dataContainer[n])->operator[](i) = value;
 					break;
 				}
-			case BinaryFilter::UINT64: {
+			case BinaryFilter::DataType::UINT64: {
 					quint64 value;
 					in >> value;
 					static_cast<QVector<double>*>(dataContainer[n])->operator[](i) = value;
 					break;
 				}
-			case BinaryFilter::REAL32: {
+			case BinaryFilter::DataType::REAL32: {
 					float value;
 					in >> value;
 					static_cast<QVector<double>*>(dataContainer[n])->operator[](i) = value;
 					break;
 				}
-			case BinaryFilter::REAL64: {
+			case BinaryFilter::DataType::REAL64: {
 					double value;
 					in >> value;
 					static_cast<QVector<double>*>(dataContainer[n])->operator[](i) = value;
@@ -534,15 +534,15 @@ void BinaryFilterPrivate::write(const QString & fileName, AbstractDataSource* da
  */
 void BinaryFilter::save(QXmlStreamWriter* writer) const {
 	writer->writeStartElement("binaryFilter");
-	writer->writeAttribute("vectors", QString::number(d->vectors) );
-	writer->writeAttribute("dataType", QString::number(d->dataType) );
-	writer->writeAttribute("byteOrder", QString::number(d->byteOrder) );
+	writer->writeAttribute("vectors", QString::number(d->settings.vectors) );
+	writer->writeAttribute("dataType", QString::number(static_cast<int>(d->settings.dataType)) );
+	writer->writeAttribute("byteOrder", QString::number(d->settings.byteOrder) );
 	writer->writeAttribute("autoMode", QString::number(d->autoModeEnabled) );
 	writer->writeAttribute("startRow", QString::number(d->startRow) );
 	writer->writeAttribute("endRow", QString::number(d->endRow) );
-	writer->writeAttribute("skipStartBytes", QString::number(d->skipStartBytes) );
-	writer->writeAttribute("skipBytes", QString::number(d->skipBytes) );
-	writer->writeAttribute( "createIndex", QString::number(d->createIndexEnabled) );
+	writer->writeAttribute("skipStartBytes", QString::number(d->settings.skipStartBytes) );
+	writer->writeAttribute("skipBytes", QString::number(d->settings.skipBytes) );
+	writer->writeAttribute( "createIndex", QString::number(d->settings.createIndexEnabled) );
 	writer->writeEndElement();
 }
 
@@ -558,19 +558,19 @@ bool BinaryFilter::load(XmlStreamReader* reader) {
 	if (str.isEmpty())
 		reader->raiseWarning(attributeWarning.subs("vectors").toString());
 	else
-		d->vectors = (size_t)str.toULong();
+		d->settings.vectors = (size_t)str.toULong();
 
 	str = attribs.value("dataType").toString();
 	if (str.isEmpty())
 		reader->raiseWarning(attributeWarning.subs("dataType").toString());
 	else
-		d->dataType = (BinaryFilter::DataType) str.toInt();
+		d->settings.dataType = (BinaryFilter::DataType) str.toInt();
 
 	str = attribs.value("byteOrder").toString();
 	if (str.isEmpty())
 		reader->raiseWarning(attributeWarning.subs("byteOrder").toString());
 	else
-		d->byteOrder = (QDataStream::ByteOrder) str.toInt();
+		d->settings.byteOrder = (QDataStream::ByteOrder) str.toInt();
 
 	str = attribs.value("autoMode").toString();
 	if (str.isEmpty())
@@ -594,19 +594,19 @@ bool BinaryFilter::load(XmlStreamReader* reader) {
 	if (str.isEmpty())
 		reader->raiseWarning(attributeWarning.subs("skipStartBytes").toString());
 	else
-		d->skipStartBytes = (size_t)str.toULong();
+		d->settings.skipStartBytes = (size_t)str.toULong();
 
 	str = attribs.value("skipBytes").toString();
 	if (str.isEmpty())
 		reader->raiseWarning(attributeWarning.subs("skipBytes").toString());
 	else
-		d->skipBytes = (size_t)str.toULong();
+		d->settings.skipBytes = (size_t)str.toULong();
 
 	str = attribs.value("createIndex").toString();
 	if (str.isEmpty())
 		reader->raiseWarning(attributeWarning.subs("createIndex").toString());
 	else
-		d->createIndexEnabled = str.toInt();
+		d->settings.createIndexEnabled = str.toInt();
 
 	return true;
 }

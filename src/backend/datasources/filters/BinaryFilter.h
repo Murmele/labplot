@@ -26,9 +26,8 @@ Copyright            : (C) 2015-2018 Stefan Gerlach (stefan.gerlach@uni.kn)
 ***************************************************************************/
 #ifndef BINARYFILTER_H
 #define BINARYFILTER_H
-
-#include <QDataStream>
 #include "backend/datasources/filters/AbstractFileFilter.h"
+#include "backend/datasources/filters/BinaryFilterPrivate.h"
 
 class BinaryFilterPrivate;
 class QStringList;
@@ -40,14 +39,14 @@ class BinaryFilter : public AbstractFileFilter {
 
 public:
 	//TODO; use ColumnMode when it supports all these types
-	enum DataType {INT8, INT16, INT32, INT64, UINT8, UINT16, UINT32, UINT64, REAL32, REAL64};
+	typedef BinaryFilterSettings::DataType DataType;
 
 	BinaryFilter();
 	~BinaryFilter() override;
 
 	static QStringList dataTypes();
-	static int dataSize(BinaryFilter::DataType);
-	static size_t rowNumber(const QString& fileName, const size_t vectors, const BinaryFilter::DataType);
+	static int dataSize(DataType);
+	static size_t rowNumber(const QString& fileName, const size_t vectors, const DataType);
 	static QString fileInfoString(const QString&);
 
 	// read data from any device
@@ -63,8 +62,8 @@ public:
 	void setVectors(const size_t);
 	size_t vectors() const;
 
-	void setDataType(const BinaryFilter::DataType);
-	BinaryFilter::DataType dataType() const;
+	void setDataType(const DataType);
+	DataType dataType() const;
 	void setByteOrder(const QDataStream::ByteOrder);
 	QDataStream::ByteOrder byteOrder() const;
 	void setSkipStartBytes(const size_t);

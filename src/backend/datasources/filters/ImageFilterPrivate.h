@@ -26,8 +26,20 @@ Copyright            : (C) 2015 Stefan Gerlach (stefan.gerlach@uni.kn)
  ***************************************************************************/
 #ifndef IMAGEFILTERPRIVATE_H
 #define IMAGEFILTERPRIVATE_H
+#include "backend/datasources/filters/AbstractFileFilter.h"
 
 class AbstractDataSource;
+
+class ImageFilterSettings : public AbstractFileFilterSettings {
+public:
+	ImageFilterSettings() {}
+public:
+	ImageFilter::ImportFormat importFormat;
+	int startRow{1};
+	int endRow{-1};
+	int startColumn{1};
+	int endColumn{1};
+};
 
 class ImageFilterPrivate {
 

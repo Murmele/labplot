@@ -46,7 +46,6 @@ class AsciiFilterPrivate {
 public:
 	explicit AsciiFilterPrivate(AsciiFilter*);
 
-	QStringList getLineString(QIODevice&);
 	int prepareDeviceToRead(QIODevice&);
 	void readDataFromDevice(QIODevice&, AbstractDataSource* = nullptr,
 			AbstractFileFilter::ImportMode = AbstractFileFilter::Replace, int lines = -1);
@@ -57,14 +56,15 @@ public:
 			AbstractFileFilter::ImportMode = AbstractFileFilter::Replace);
 	void write(const QString& fileName, AbstractDataSource*);
 
+	bool prepareHeader(QString line);
 	QVector<QStringList> preview(LiveDataHandler *handle, int nbrOfLines); // read from internal buffer
 	QVector<QStringList> preview(const QString& fileName, int lines);
 	QVector<QStringList> preview(QIODevice& device);
-	QVector<QStringList> preview(QVector<QString>& lines);
+	QVector<QStringList> previewData(QVector<QString>& lines);
 	bool getLine(QString& string);
 
 	QString separator() const;
-	QString determineSeparator(QString line) const;
+	QString determineSeparator(QString line);
 
 #ifdef HAVE_MQTT
 	int prepareToRead(const QString&);

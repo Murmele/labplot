@@ -40,6 +40,25 @@ class MQTTTopic;
 class MQTTClient;
 class LiveDataHandler;
 
+class AsciiFilterSettings: public AbstractFileFilterSettings {
+public:
+	AsciiFilterSettings() {};
+public:
+	QString separatingCharacter;
+	QString commentCharacter;
+	QString dateTimeFormat;
+	QLocale numberFormat;
+	bool createIndex;
+	bool createTimeStamp;
+	bool simplifyWhitespaces;
+	bool nanValue;
+	bool removeQuotes;
+	bool skipEmptyParts;
+	QStringList vectorNames;
+	bool header;
+
+};
+
 class AsciiFilter : public AbstractFileFilter {
 	Q_OBJECT
 

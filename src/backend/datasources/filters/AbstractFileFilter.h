@@ -38,6 +38,11 @@ class AbstractDataSource;
 class XmlStreamReader;
 class QXmlStreamWriter;
 
+class AbstractFileFilterSettings {
+public:
+	AbstractFileFilterSettings() {}
+};
+
 class AbstractFileFilter : public QObject {
 	Q_OBJECT
 	Q_ENUMS(FileType)
