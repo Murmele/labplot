@@ -1140,6 +1140,7 @@ void Worksheet::updateCompleteCursorTreeModel() {
 		// add new entry for the plot
 		treeModel->insertRows(treeModel->rowCount(), 1); //, treeModel->index(0, 0));
 
+		// add plot name and X row if needed
 		if (cartesianPlotCursorMode() == Worksheet::CartesianPlotActionMode::ApplyActionToAll) {
 			plotName = treeModel->index(i + 1, WorksheetPrivate::TreeModelColumn::PLOTNAME); // plus one because first row are the x values
 			treeModel->setData(plotName, QVariant(plot->name()));
