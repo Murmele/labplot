@@ -75,10 +75,19 @@ bool TreeItem::insertChildren(int position, int count, int columns) {
 	for (int row = 0; row < count; ++row) {
 		QVector<QVariant> data(columns);
 		TreeItem *item = new TreeItem(data, this);
-		childItems.insert(position, item);
+		insertChild(item, position);
 	}
 
 	return true;
+}
+
+void TreeItem::setParent(TreeItem* parent) {
+	parentItem = parent;
+}
+
+bool TreeItem::insertChild(TreeItem* item, int position) {
+	item->setParent(this);
+	childItems.insert(position, item);
 }
 
 bool TreeItem::insertColumns(int position, int columns) {
@@ -201,6 +210,19 @@ QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int rol
 	return QVariant();
 }
 
+QModelIndex TreeModel::index(TreeItem* item, const QModelIndex& parent) const {
+	if (parent.isValid() && parent.column() != 0)
+		return QModelIndex();
+
+	TreeItem *parentItem = getItem(parent);
+
+	for (int i = 0; i < parentItem->childCount(); i++) {
+		TreeItem* child = parentItem->child(i);
+		if (child == item && item)
+			return createIndex(row, column, child);
+	}
+}
+
 QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) const {
 	if (parent.isValid() && parent.column() != 0)
 		return QModelIndex();
@@ -215,10 +237,11 @@ QModelIndex TreeModel::index(int row, int column, const QModelIndex &parent) con
 }
 
 bool TreeModel::insertColumns(int position, int columns, const QModelIndex &parent) {
+	TreeItem *parentItem = getItem(parent);
 	bool success;
 
 	beginInsertColumns(parent, position, position + columns - 1);
-	success = rootItem->insertColumns(position, columns);
+	success = parentItem->insertColumns(position, columns);
 	endInsertColumns();
 
 	return success;
@@ -230,6 +253,17 @@ bool TreeModel::insertRows(int position, int rows, const QModelIndex &parent) {
 
 	beginInsertRows(parent, position, position + rows - 1);
 	success = parentItem->insertChildren(position, rows, rootItem->columnCount());
+	endInsertRows();
+
+	return success;
+}
+
+bool TreeModel::insertRow(int position, TreeItem* item, const QModelIndex& parent) {
+	TreeItem *parentItem = getItem(parent);
+	bool success;
+
+	beginInsertRows(parent, position, position);
+	success = parentItem->insertChild(item, position);
 	endInsertRows();
 
 	return success;

@@ -137,7 +137,6 @@ public slots:
 	void cartesianPlotMouseModeChangedSlot(CartesianPlot::MouseMode);
 
 	// slots needed by the cursor
-	void updateCurveBackground(QPen pen, QString curveName);
 	void updateCompleteCursorTreeModel();
 	void cursorPosChanged(int cursorNumber, double xPos);
 	void curveAdded(const XYCurve* curve);

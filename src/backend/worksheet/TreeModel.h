@@ -46,6 +46,8 @@ public:
     int columnCount() const;
     QVariant data(int column) const;
     QVariant backgroundColor() const;
+	void setParent(TreeItem* parent);
+	bool insertChild(TreeItem* item, int position);
     bool insertChildren(int position, int count, int columns);
     bool insertColumns(int position, int columns);
     TreeItem *parent();
@@ -75,7 +77,7 @@ public:
     QVariant data(const QModelIndex &index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation,
                         int role = Qt::DisplayRole) const override;
-
+	QModelIndex index(TreeItem* item, const QModelIndex& parent) const;
     QModelIndex index(int row, int column,
                       const QModelIndex &parent = QModelIndex()) const override;
     QModelIndex parent(const QModelIndex &index) const override;
@@ -98,6 +100,8 @@ public:
                        const QModelIndex &parent = QModelIndex()) override;
     bool insertRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex()) override;
+	bool insertRow(int position, TreeItem* item,
+				   const QModelIndex& parent = QModelIndex());
     bool removeRows(int position, int rows,
                     const QModelIndex &parent = QModelIndex()) override;
 

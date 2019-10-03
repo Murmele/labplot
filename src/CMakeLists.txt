@@ -244,6 +244,7 @@ set(BACKEND_SOURCES
 	${BACKEND_DIR}/worksheet/WorksheetElementContainer.cpp
 	${BACKEND_DIR}/worksheet/WorksheetElementGroup.cpp
 	${BACKEND_DIR}/worksheet/TreeModel.cpp
+        ${BACKEND_DIR}/worksheet/CursorTreeItem.cpp
 	${BACKEND_DIR}/worksheet/plots/AbstractPlot.cpp
 	${BACKEND_DIR}/worksheet/plots/AbstractCoordinateSystem.cpp
 	${BACKEND_DIR}/worksheet/plots/PlotArea.cpp
