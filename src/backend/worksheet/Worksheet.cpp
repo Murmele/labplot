@@ -923,11 +923,12 @@ void Worksheet::cursorPosChanged(int cursorNumber, double xPos) {
 }
 
 void Worksheet::cursorModelPlotAdded(QString name) {
-	TreeModel* treeModel = cursorModel();
-	int rowCount = treeModel->rowCount();
-	// add plot at the end
-	treeModel->insertRows(rowCount, 1); // add empty rows. Then they become filled
-	treeModel->setTreeData(QVariant(name), rowCount, WorksheetPrivate::TreeModelColumn::PLOTNAME); // rowCount instead of rowCount -1 because first row is the x value
+//	TreeModel* treeModel = cursorModel();
+//	int rowCount = treeModel->rowCount();
+//	// add plot at the end
+//	treeModel->insertRows(rowCount, 1); // add empty rows. Then they become filled
+//	treeModel->setTreeData(QVariant(name), rowCount, WorksheetPrivate::TreeModelColumn::PLOTNAME); // rowCount instead of rowCount -1 because first row is the x value
+	updateCompleteCursorTreeModel();
 }
 
 void Worksheet::cursorModelPlotRemoved(QString name) {
