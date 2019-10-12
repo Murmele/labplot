@@ -787,7 +787,7 @@ int XYCurve::getNextValue(double xpos, int offset, double& x, double& y, bool& v
 	if (properties == AbstractColumn::Properties::MonotonicDecreasing)
 		offset *=-1;
 
-	int index = indexForX(xpos);
+	int index = xColumn()->indexForValue(xpos);
 	if (index < 0) {
 		return -1;
 	}
@@ -2154,7 +2154,7 @@ double XYCurve::y(double x, bool &valueFound) const {
  */
 double XYCurve::y(double x, double &x_new, bool &valueFound) const {
 	AbstractColumn::ColumnMode yColumnMode = yColumn()->columnMode();
-	int index = indexForX(x);
+	int index = xColumn()->indexForValue(x);
 	if (index < 0) {
 		valueFound = false;
 		return NAN;

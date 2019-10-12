@@ -573,22 +573,15 @@ bool Project::load(XmlStreamReader* reader, bool preview) {
 
 			curve->suppressRetransform(false);
 		}
-			// assign to all markers the curves they need
-			QVector<WorksheetInfoElement*> elements = children<WorksheetInfoElement>(AbstractAspect::Recursive);
-			for (auto element: elements) {
-				if (!element->assignCurve(curves)) {
-					reader->raiseWarning(i18n("unknown curve name '%1'", curves[0]->name()));
-					return false;
-				}
-			}
 
-			//axes
-			QVector<Axis*> axes = children<Axis>(AbstractAspect::Recursive);
-			for (auto* axis : axes) {
-				if (!axis) continue;
-				RESTORE_COLUMN_POINTER(axis, majorTicksColumn, MajorTicksColumn);
-				RESTORE_COLUMN_POINTER(axis, minorTicksColumn, MinorTicksColumn);
+		// assign to all markers the curves they need
+		QVector<WorksheetInfoElement*> elements = children<WorksheetInfoElement>(AbstractAspect::Recursive);
+		for (auto element: elements) {
+			if (!element->assignCurve(curves)) {
+				reader->raiseWarning(i18n("unknown curve name '%1'", curves[0]->name()));
+				return false;
 			}
+		}
 
 		//axes
 		QVector<Axis*> axes = children<Axis>(AbstractAspect::Recursive);

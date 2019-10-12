@@ -77,7 +77,7 @@ WorksheetInfoElement::WorksheetInfoElement(const QString &name, CartesianPlot *p
 		double y = curve->y(pos,xpos,valueFound);
 		if (valueFound) {
 			d->x_pos = xpos;
-			d->m_index = curve->indexForX(xpos);
+			d->m_index = curve->xColumn()->indexForValue(xpos);
 			markerpoints.last().x = xpos;
 			markerpoints.last().y = y;
 			custompoint->setPosition(QPointF(xpos,y));
@@ -195,7 +195,7 @@ void WorksheetInfoElement::addCurve(const XYCurve* curve, CustomPoint* custompoi
 		addChild(custompoint);
 
 	if (d->m_index < 0)
-		d->m_index = curve->indexForX(custompoint->position().x());
+		d->m_index = curve->xColumn()->indexForValue(custompoint->position().x());
 	if (d->m_index < 0)
 		d->m_index = 0;
 
