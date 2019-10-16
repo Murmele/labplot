@@ -20,9 +20,12 @@ public:
 	~WorksheetInfoElementDialog();
 	void setPlot(CartesianPlot* plot);
 	void setActiveCurve(const XYCurve* curve, double pos);
+	void updateSettings();
 private:
 	void createElement();
 	void updateSelectedCurveLabel(QListWidgetItem *item);
+	void removePlot();
+	void validateSettings();
 
 private:
 	Ui::WorksheetInfoElementDialog *ui;

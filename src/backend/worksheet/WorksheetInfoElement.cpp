@@ -431,7 +431,7 @@ void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const Abst
 	if (m_suppressChildRemoved)
 		return;
 
-	if (parent != this)
+	if (parent != this) // why do I need this?
 		return;
 	// problem: when the order was changed the elements are deleted for a short time and recreated. This function will called then
 	const CustomPoint* point = dynamic_cast<const CustomPoint*> (child);
