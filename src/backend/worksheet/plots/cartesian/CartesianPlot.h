@@ -232,8 +232,6 @@ private:
 	QMenu* dataAnalysisMenu{nullptr};
 	QMenu* themeMenu{nullptr};
 
-	bool m_marker{false};
-
 	Q_DECLARE_PRIVATE(CartesianPlot)
 
 public slots:
@@ -255,7 +253,7 @@ public slots:
 
 	void addLegend();
 	void addTextLabel();
-    void addWorksheetInfoElement();
+	void addWorksheetInfoElement(const XYCurve* curve, double pos);
 	void addCustomPoint();
 	void scaleAutoTriggered();
 	bool scaleAuto();
@@ -275,6 +273,7 @@ public slots:
 	void dataChanged();
 
 	void curveLinePenChanged(QPen);
+	void createWorksheetInfoElement(const XYCurve*, double pos);
 
 private slots:
 	void updateLegend();
@@ -289,6 +288,7 @@ private slots:
 	//SLOTs for changes triggered via QActions in the context menu
 	void visibilityChanged();
 	void loadTheme(const QString&);
+	void openWorksheetInfoElementCreationDialog();
 
 protected:
 	CartesianPlot(const QString &name, CartesianPlotPrivate *dd);
@@ -332,6 +332,9 @@ signals:
 	void mouseModeChanged(MouseMode);
 	void cursor0EnableChanged(bool enable);
 	void cursor1EnableChanged(bool enable);
+
+	void openWorksheetInfoElementCreationDialogSignal(CartesianPlot* plot);
+	void curveSelectedSignal(const XYCurve* curve, double pos); // called when a curve is selected in the plot and a worksheetelement should be created
 };
 
 #endif

@@ -449,7 +449,7 @@ void CartesianPlot::initActions() {
 	connect(addHorizontalAxisAction, &QAction::triggered, this, &CartesianPlot::addHorizontalAxis);
 	connect(addVerticalAxisAction, &QAction::triggered, this, &CartesianPlot::addVerticalAxis);
 	connect(addTextLabelAction, &QAction::triggered, this, &CartesianPlot::addTextLabel);
-    connect(addWorksheetInfoElementAction, &QAction::triggered, this, &CartesianPlot::addWorksheetInfoElement);
+	connect(addWorksheetInfoElementAction, &QAction::triggered, this, &CartesianPlot::openWorksheetInfoElementCreationDialog);
 	connect(addCustomPointAction, &QAction::triggered, this, &CartesianPlot::addCustomPoint);
 
 	//Analysis menu actions
@@ -1213,12 +1213,7 @@ void CartesianPlot::addHistogram() {
  */
 void CartesianPlot::curveSelected(double pos) {
 
-    if (m_marker) {
-        m_marker = false;
-        WorksheetInfoElement* marker = new WorksheetInfoElement("Marker", this, qobject_cast<const XYCurve*>(QObject::sender()),pos);
-        this->addChild(marker);
-        marker->setParentGraphicsItem(graphicsItem());
-    }
+	emit curveSelectedSignal(qobject_cast<const XYCurve*>(QObject::sender()), pos);
 }
 
 /*!
@@ -1421,13 +1416,19 @@ void CartesianPlot::addLegend() {
 		addLegendAction->setEnabled(false);
 }
 
+void CartesianPlot::openWorksheetInfoElementCreationDialog() {
+	emit openWorksheetInfoElementCreationDialogSignal(this);
+}
+
 /*!
  * \brief CartesianPlot::addWorksheetInfoElement
  * Marks cartesianPlot to add a new worksheetInfoElement.
- * When a curve will be selected, a WorksheetInfoElement will be added and m_marker will be reset
+ * When a curve will be selected, a WorksheetInfoElement will be added
  */
-void CartesianPlot::addWorksheetInfoElement() {
-    m_marker = true;
+void CartesianPlot::addWorksheetInfoElement(const XYCurve* curve, double pos) {
+	WorksheetInfoElement* marker = new WorksheetInfoElement("Marker", this, curve, pos);
+	this->addChild(marker);
+	marker->setParentGraphicsItem(graphicsItem());
 }
 
 void CartesianPlot::addTextLabel() {
@@ -2519,6 +2520,12 @@ void CartesianPlot::mouseHoverZoomSelectionMode(QPointF logicPos) {
 void CartesianPlot::mouseHoverOutsideDataRect() {
 	Q_D(CartesianPlot);
 	d->mouseHoverOutsideDataRect();
+}
+
+void CartesianPlot::createWorksheetInfoElement(const XYCurve*, double pos) {
+		WorksheetInfoElement* marker = new WorksheetInfoElement("Marker", this, qobject_cast<const XYCurve*>(QObject::sender()),pos);
+		this->addChild(marker);
+		marker->setParentGraphicsItem(graphicsItem());
 }
 
 //##############################################################################

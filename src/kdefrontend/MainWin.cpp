@@ -74,6 +74,7 @@
 #include "kdefrontend/SettingsDialog.h"
 #include "kdefrontend/GuiObserver.h"
 #include "kdefrontend/widgets/FITSHeaderEditDialog.h"
+#include "kdefrontend/worksheet/WorksheetInfoElementDialog.h"
 
 #ifdef Q_OS_MAC
 #include "3rdparty/kdmactouchbar/src/kdmactouchbar.h"
@@ -1447,10 +1448,16 @@ void MainWin::handleAspectAdded(const AbstractAspect* aspect) {
 		connect(part, &AbstractPart::printRequested, this, &MainWin::print);
 		connect(part, &AbstractPart::printPreviewRequested, this, &MainWin::printPreview);
 		connect(part, &AbstractPart::showRequested, this, &MainWin::handleShowSubWindowRequested);
+	}
 
-		const auto* worksheet = dynamic_cast<const Worksheet*>(aspect);
-		if (worksheet)
-			connect(worksheet, &Worksheet::cartesianPlotMouseModeChanged, this, &MainWin::cartesianPlotMouseModeChanged);
+	const auto* worksheet = dynamic_cast<const Worksheet*>(aspect);
+	if (worksheet)
+		connect(worksheet, &Worksheet::cartesianPlotMouseModeChanged, this, &MainWin::cartesianPlotMouseModeChanged);
+
+	const auto* plot = dynamic_cast<const CartesianPlot*>(aspect);
+	if (plot) {
+		connect(plot, &CartesianPlot::openWorksheetInfoElementCreationDialogSignal, this, &MainWin::cartesianPlotWorksheetInfoElementCreationDialog);
+		connect(plot, &CartesianPlot::curveSelectedSignal, this, &MainWin::cartesianPlotCurveSelected);
 	}
 }
 
@@ -1783,6 +1790,22 @@ void MainWin::cartesianPlotMouseModeChanged(CartesianPlot::MouseMode mode) {
 		cursorWidget->setWorksheet(worksheet);
 		cursorDock->show();
 	}
+}
+
+void MainWin::cartesianPlotWorksheetInfoElementCreationDialog(CartesianPlot* plot) {
+	if (!m_worksheetInfoElementDialog)
+		m_worksheetInfoElementDialog = new WorksheetInfoElementDialog(this);
+	m_worksheetInfoElementDialog->setPlot(plot);
+	m_worksheetInfoElementDialog->show();
+}
+void MainWin::cartesianPlotCurveSelected(const XYCurve* curve, double pos) {
+	// if dialog does not exist, cartesianPlotWorksheetInfoElementCreationDialog() was never called
+	// which means, no worksheetinfoelement should be created --> ignore it
+	if (!m_worksheetInfoElementDialog)
+		return;
+
+	// if the dialog was already created previously. The dialog ignores the signal by it self
+	m_worksheetInfoElementDialog->setActiveCurve(curve, pos);
 }
 
 void MainWin::toggleFullScreen() {

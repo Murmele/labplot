@@ -78,6 +78,7 @@ class DatapickerImageWidget;
 class DatapickerCurveWidget;
 class MemoryWidget;
 class CartesianPlot;
+class WorksheetInfoElementDialog;
 
 #ifdef HAVE_CANTOR_LIBS
 class CantorWorksheet;
@@ -250,6 +251,11 @@ private:
 	friend class GuiObserver;
 	GuiObserver* m_guiObserver{nullptr};
 
+	// storing the pointer, because then it can be implemented also interactive clicking on a curve
+	// otherwise I have to do QDialog::excec and everything is blocked
+	// When saving, it is possible to use show
+	WorksheetInfoElementDialog* m_worksheetInfoElementDialog{nullptr};
+
 protected:
 	void closeEvent(QCloseEvent*) override;
 	void dragEnterEvent(QDragEnterEvent*) override;
@@ -321,6 +327,9 @@ private slots:
 	void cursorDockVisibilityChanged(bool);
 
 	void cartesianPlotMouseModeChanged(CartesianPlot::MouseMode);
+
+	void cartesianPlotWorksheetInfoElementCreationDialog(CartesianPlot *plot);
+	void cartesianPlotCurveSelected(const XYCurve* curve, double pos);
 };
 
 #endif

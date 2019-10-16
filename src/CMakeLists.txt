@@ -81,6 +81,7 @@ set(GUI_SOURCES
 	${KDEFRONTEND_DIR}/spreadsheet/SortDialog.cpp
 	${KDEFRONTEND_DIR}/spreadsheet/StatisticsDialog.cpp
 	${KDEFRONTEND_DIR}/worksheet/ExportWorksheetDialog.cpp
+        ${KDEFRONTEND_DIR}/worksheet/WorksheetInfoElementDialog.cpp
 	${KDEFRONTEND_DIR}/worksheet/GridDialog.cpp
 	${KDEFRONTEND_DIR}/worksheet/DynamicPresenterWidget.cpp
 	${KDEFRONTEND_DIR}/worksheet/PresenterWidget.cpp
@@ -165,6 +166,7 @@ set(UI_SOURCES
 	${KDEFRONTEND_DIR}/ui/spreadsheet/randomvalueswidget.ui
 	${KDEFRONTEND_DIR}/ui/spreadsheet/sortdialogwidget.ui
 	${KDEFRONTEND_DIR}/ui/worksheet/exportworksheetwidget.ui
+        ${KDEFRONTEND_DIR}/ui/worksheet/worksheetinfoelementdialog.ui
 	${KDEFRONTEND_DIR}/ui/datapickerimagewidget.ui
 	${KDEFRONTEND_DIR}/ui/datapickercurvewidget.ui
 	${KDEFRONTEND_DIR}/ui/fitsheadereditwidget.ui
