@@ -16,6 +16,7 @@ WorksheetInfoElementDialog::WorksheetInfoElementDialog(QWidget *parent) :
 	connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &WorksheetInfoElementDialog::createElement);
 	connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &WorksheetInfoElementDialog::removePlot); // reset m_plot
 	connect(ui->lst_useCurve, &QListWidget::currentItemChanged, this, &WorksheetInfoElementDialog::updateSelectedCurveLabel);
+	connect(ui->sb_Pos, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &WorksheetInfoElementDialog::validateSettings);
 }
 
 WorksheetInfoElementDialog::~WorksheetInfoElementDialog() {
