@@ -428,26 +428,32 @@ void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const Abst
 	Q_D(WorksheetInfoElement);
 
 	// when childs are reordered, don't remove them
+	// problem: when the order was changed the elements are deleted for a short time and recreated. This function will called then
 	if (m_suppressChildRemoved)
 		return;
 
 	if (parent != this) // why do I need this?
 		return;
-	// problem: when the order was changed the elements are deleted for a short time and recreated. This function will called then
+
+	// point removed
 	const CustomPoint* point = dynamic_cast<const CustomPoint*> (child);
 	if (point != nullptr){
 		for (int i =0; i< markerpoints.length(); i++) {
 			if (point == markerpoints[i].customPoint)
+				//markerpoints[i].customPoint->setParentGraphicsItem(d);
 				markerpoints.removeAt(i);
+				// no point->remove() needed, because it was already deleted
 		}
 	}
 
+	// textlabel was deleted
 	const TextLabel* textlabel = dynamic_cast<const TextLabel*>(child);
 	if (label != nullptr) {
 		if (label == textlabel)
 			label = nullptr;
 		for (int i = 0; i < markerpoints.length(); i++) { // why it's not working without?
 			m_suppressChildRemoved = true;
+			//markerpoints[i].customPoint->setParentGraphicsItem(d);
 			markerpoints[i].customPoint->remove();
 			markerpoints.removeAt(i);
 			m_suppressChildRemoved = false;
@@ -459,7 +465,7 @@ void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const Abst
 }
 
 void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
-	Q_D(const WorksheetInfoElement);
+	Q_D(WorksheetInfoElement);
 	const CustomPoint* point = dynamic_cast<const CustomPoint*>(child);
 	if (point) {
 		connect(point, &CustomPoint::positionChanged, this, &WorksheetInfoElement::pointPositionChanged);
@@ -467,7 +473,7 @@ void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
 		connect(point, &CustomPoint::moveEnd, this, &WorksheetInfoElement::moveElementEnd);
 
 		CustomPoint* p = const_cast<CustomPoint*>(point);
-		p->setParentGraphicsItem(d->plot->graphicsItem());
+		p->setParentGraphicsItem(d);
 		// otherwise Custom point must be patched to handle discrete curve points.
 		// This makes it much easier
 		p->graphicsItem()->setFlag(QGraphicsItem::ItemIsMovable, false);

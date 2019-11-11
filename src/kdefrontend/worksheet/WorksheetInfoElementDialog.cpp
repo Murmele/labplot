@@ -57,6 +57,9 @@ void WorksheetInfoElementDialog::setActiveCurve(const XYCurve* curve, double pos
  * This would be to complex for this simple dialog
  */
 void WorksheetInfoElementDialog::updateSettings() {
+
+	if (!m_plot) // why this ca occur?
+		return;
 	ui->lst_useCurve->clear();
 
 	auto curves = m_plot->children<const XYCurve>();
@@ -126,6 +129,7 @@ void WorksheetInfoElementDialog::validateSettings() {
 
 	if (ui->lst_useCurve->count() > 0 && m_plot) {
 		ui->buttonBox->button(QDialogButtonBox::StandardButton::Ok)->setEnabled(true);
+		return;
 	}
 
 	ui->buttonBox->button(QDialogButtonBox::StandardButton::Ok)->setEnabled(false);

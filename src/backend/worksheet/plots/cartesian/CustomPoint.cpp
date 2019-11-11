@@ -251,11 +251,10 @@ void CustomPointPrivate::retransform() {
 		m_visible = true;
 		positionScene = listScene.at(0);
 		suppressItemChangeEvent = true;
-		setPos(positionScene);
+		setPos(mapToParent(mapFromScene(positionScene))); // mapToParent, because the parent might be the worksheetinfoelement
 		suppressItemChangeEvent = false;
-	} else {
+	} else
 		m_visible = false;
-	}
 
 	recalcShapeAndBoundingRect();
 }
@@ -339,8 +338,9 @@ QVariant CustomPointPrivate::itemChange(GraphicsItemChange change, const QVarian
 	if (change == QGraphicsItem::ItemPositionChange) {
 		//emit the signals in order to notify the UI.
 		const auto* cSystem = dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
-		q->setPosition(cSystem->mapSceneToLogical(value.toPointF()));
-		emit q->positionChanged(cSystem->mapSceneToLogical(value.toPointF()));
+		QPointF scenePos = cSystem->mapSceneToLogical(mapToScene(value.toPointF()));
+		q->setPosition(scenePos);
+		emit q->positionChanged(scenePos);
 	}
 
 	return QGraphicsItem::itemChange(change, value);
