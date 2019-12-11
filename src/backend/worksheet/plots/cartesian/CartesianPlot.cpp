@@ -3742,7 +3742,7 @@ bool CartesianPlot::load(XmlStreamReader* reader, bool preview) {
                 WorksheetInfoElement* marker = new WorksheetInfoElement("Marker",this);
                 if (marker->load(reader,preview)) {
                     addChildFast(marker);
-                    marker->setParentGraphicsItem(graphicsItem());
+					marker->setParentGraphicsItem(graphicsItem());
                 } else {
                     delete marker;
                     return false;

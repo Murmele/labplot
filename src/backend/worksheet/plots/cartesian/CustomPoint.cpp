@@ -251,12 +251,28 @@ void CustomPointPrivate::retransform() {
 		m_visible = true;
 		positionScene = listScene.at(0);
 		suppressItemChangeEvent = true;
-		setPos(mapToParent(mapFromScene(positionScene))); // mapToParent, because the parent might be the worksheetinfoelement
+		setPos(mapSceneToParent(positionScene)); // mapToParent, because the parent might be the worksheetinfoelement
 		suppressItemChangeEvent = false;
 	} else
 		m_visible = false;
 
 	recalcShapeAndBoundingRect();
+}
+
+QPointF CustomPointPrivate::mapParentToScene(QPointF point) {
+	auto* plot = dynamic_cast<CartesianPlot*>(q->parentAspect());
+	if (plot)
+		return point;
+
+	return mapToScene(mapFromParent(point));
+}
+
+QPointF CustomPointPrivate::mapSceneToParent(QPointF point) {
+	auto* plot = dynamic_cast<CartesianPlot*>(q->parentAspect());
+	if (plot)
+		return point;
+
+	return mapToParent(mapFromScene(point));
 }
 
 bool CustomPointPrivate::swapVisible(bool on) {
@@ -338,9 +354,9 @@ QVariant CustomPointPrivate::itemChange(GraphicsItemChange change, const QVarian
 	if (change == QGraphicsItem::ItemPositionChange) {
 		//emit the signals in order to notify the UI.
 		const auto* cSystem = dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
-		QPointF scenePos = cSystem->mapSceneToLogical(mapToScene(value.toPointF()));
-		q->setPosition(scenePos);
-		emit q->positionChanged(scenePos);
+		QPointF logicalPos = cSystem->mapSceneToLogical(mapParentToScene(value.toPointF()));
+		q->setPosition(logicalPos);
+		emit q->positionChanged(logicalPos);
 	}
 
 	return QGraphicsItem::itemChange(change, value);
@@ -350,7 +366,7 @@ void CustomPointPrivate::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 	//position was changed -> set the position member variables
 	suppressRetransform = true;
 	const auto* cSystem = dynamic_cast<const CartesianCoordinateSystem*>(plot->coordinateSystem());
-	q->setPosition(cSystem->mapSceneToLogical(pos()));
+	q->setPosition(cSystem->mapSceneToLogical(mapParentToScene(pos())));
 	suppressRetransform = false;
 
 	QGraphicsItem::mouseReleaseEvent(event);

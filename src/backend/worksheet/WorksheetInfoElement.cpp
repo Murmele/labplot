@@ -161,7 +161,7 @@ QMenu* WorksheetInfoElement::createContextMenu() {
 		initMenus();
 
 	QMenu* menu = WorksheetElement::createContextMenu();
-	QAction* firstAction = menu->actions().at(1);
+	QAction* firstAction = menu->actions().at(0);
 
 	visibilityAction->setChecked(isVisible());
 	menu->insertAction(firstAction, visibilityAction);
@@ -440,7 +440,7 @@ void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const Abst
 	if (point != nullptr){
 		for (int i =0; i< markerpoints.length(); i++) {
 			if (point == markerpoints[i].customPoint)
-				//markerpoints[i].customPoint->setParentGraphicsItem(d);
+				markerpoints[i].customPoint->setParentGraphicsItem(graphicsItem());
 				markerpoints.removeAt(i);
 				// no point->remove() needed, because it was already deleted
 		}
@@ -453,7 +453,7 @@ void WorksheetInfoElement::childRemoved(const AbstractAspect* parent, const Abst
 			label = nullptr;
 		for (int i = 0; i < markerpoints.length(); i++) { // why it's not working without?
 			m_suppressChildRemoved = true;
-			//markerpoints[i].customPoint->setParentGraphicsItem(d);
+			markerpoints[i].customPoint->setParentGraphicsItem(graphicsItem());
 			markerpoints[i].customPoint->remove();
 			markerpoints.removeAt(i);
 			m_suppressChildRemoved = false;
@@ -473,7 +473,7 @@ void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
 		connect(point, &CustomPoint::moveEnd, this, &WorksheetInfoElement::moveElementEnd);
 
 		CustomPoint* p = const_cast<CustomPoint*>(point);
-		p->setParentGraphicsItem(d);
+		p->setParentGraphicsItem(graphicsItem());
 		// otherwise Custom point must be patched to handle discrete curve points.
 		// This makes it much easier
 		p->graphicsItem()->setFlag(QGraphicsItem::ItemIsMovable, false);
@@ -490,7 +490,7 @@ void WorksheetInfoElement::childAdded(const AbstractAspect* child) {
 		connect(label, &TextLabel::rotationAngleChanged, this, &WorksheetInfoElement::retransform);
 
 		TextLabel* l = const_cast<TextLabel*>(labelChild);
-		l->setParentGraphicsItem(d->plot->graphicsItem());
+		l->setParentGraphicsItem(graphicsItem());
 	}
 }
 /*!
@@ -920,7 +920,7 @@ void WorksheetInfoElementPrivate::mouseMoveEvent(QGraphicsSceneMouseEvent* event
 			q->markerpoints[i].y = y;
 			q->markerpoints[i].x = x_new;
 			q->m_suppressPointPositionChanged = true;
-			q->markerpoints[i].customPoint->setPosition(QPointF(x_new,y));
+			q->markerpoints[i].customPoint->setPosition(QPointF(x_new, y));
 			q->m_suppressPointPositionChanged = false;
 		} else
 			DEBUG("No value found for Logicalpoint" << i);

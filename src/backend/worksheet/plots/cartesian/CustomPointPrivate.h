@@ -46,6 +46,8 @@ public:
 	virtual void recalcShapeAndBoundingRect();
 	void updatePosition();
 	void updateData();
+	QPointF mapParentToScene(QPointF point);
+	QPointF mapSceneToParent(QPointF point);
 
 	bool suppressItemChangeEvent{false};
 	bool suppressRetransform{false};
