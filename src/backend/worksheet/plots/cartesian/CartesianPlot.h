@@ -54,6 +54,7 @@ class XYFourierTransformCurve;
 class XYConvolutionCurve;
 class XYCorrelationCurve;
 class KConfig;
+class InfoElementDialog;
 
 class CartesianPlot : public AbstractPlot {
 	Q_OBJECT
@@ -159,6 +160,7 @@ public:
 
 public slots:
 	void setTheme(const QString&);
+	void curveSelected(double pos);
 
 private:
 	void init();
@@ -199,6 +201,7 @@ private:
 	QAction* addLegendAction;
 	QAction* addTextLabelAction;
 	QAction* addImageAction;
+	QAction* addInfoElementAction;
 	QAction* addCustomPointAction;
 	QAction* addReferenceLineAction;
 
@@ -236,6 +239,11 @@ private:
 	QMenu* dataAnalysisMenu{nullptr};
 	QMenu* themeMenu{nullptr};
 
+	// storing the pointer, because then it can be implemented also interactive clicking on a curve
+	// otherwise I have to do QDialog::excec and everything is blocked
+	// When saving, it is possible to use show
+	InfoElementDialog* m_infoElementDialog{nullptr};
+
 	Q_DECLARE_PRIVATE(CartesianPlot)
 
 public slots:
@@ -258,6 +266,7 @@ public slots:
 	void addLegend();
 	void addTextLabel();
 	void addImage();
+	void addInfoElement(const XYCurve* curve, double pos);
 	void addCustomPoint();
 	void addReferenceLine();
 
@@ -296,6 +305,7 @@ private slots:
 	//SLOTs for changes triggered via QActions in the context menu
 	void visibilityChanged();
 	void loadTheme(const QString&);
+	void openInfoElementCreationDialog();
 
 protected:
 	CartesianPlot(const QString &name, CartesianPlotPrivate *dd);
@@ -339,6 +349,9 @@ signals:
 	void mouseModeChanged(CartesianPlot::MouseMode);
 	void cursor0EnableChanged(bool enable);
 	void cursor1EnableChanged(bool enable);
+
+	void openInfoElementCreationDialogSignal(CartesianPlot* plot);
+	void curveSelectedSignal(const XYCurve* curve, double pos); // called when a curve is selected in the plot and a worksheetelement should be created
 };
 
 #endif
