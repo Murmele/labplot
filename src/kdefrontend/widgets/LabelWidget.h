@@ -120,6 +120,8 @@ private slots:
 	void borderOpacityChanged(int);
 
 	void visibilityChanged(bool);
+	void bindingChanged(bool checked);
+	void showPlaceholderTextChanged(bool checked);
 
 	//SLOTs for changes triggered in TextLabel
 	void labelTextWrapperChanged(const TextLabel::TextWrapper&);
@@ -139,6 +141,7 @@ private slots:
 	void labelBorderOpacityChanged(float);
 
 	void labelVisibleChanged(bool);
+	void labelCartesianPlotParent(bool on);
 };
 
 #endif //LABELWIDGET_H

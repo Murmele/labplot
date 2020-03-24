@@ -790,11 +790,12 @@ void AbstractAspect::childSelected(const AbstractAspect* aspect) {
 	//e.g. axis of a plot was selected. Don't include parent aspects here that do not
 	//need to react on the selection of children: e.g. Folder or XYFitCurve with
 	//the child column for calculated residuals
-	if (aspect->parentAspect()
-		&& !aspect->parentAspect()->inherits(AspectType::Folder)
-		&& !aspect->parentAspect()->inherits(AspectType::XYFitCurve)
-		&& !aspect->parentAspect()->inherits(AspectType::CantorWorksheet))
-		emit aspect->parentAspect()->selected(aspect);
+	if (this->parentAspect()
+			&& !this->parentAspect()->inherits(AspectType::Folder) // highest elements in the parent-child hierarchy
+			&& !this->parentAspect()->inherits(AspectType::XYFitCurve)
+			&& !this->parentAspect()->inherits(AspectType::CantorWorksheet)) {
+		emit this->selected(aspect);
+	}
 }
 
 void AbstractAspect::childDeselected(const AbstractAspect* aspect) {
@@ -802,11 +803,12 @@ void AbstractAspect::childDeselected(const AbstractAspect* aspect) {
 	//e.g. axis of a plot was selected. Don't include parent aspects here that do not
 	//need to react on the deselection of children: e.g. Folder or XYFitCurve with
 	//the child column for calculated residuals
-	if (aspect->parentAspect()
-		&& !aspect->parentAspect()->inherits(AspectType::Folder)
-		&& !aspect->parentAspect()->inherits(AspectType::XYFitCurve)
-		&& !aspect->parentAspect()->inherits(AspectType::CantorWorksheet))
-		emit aspect->parentAspect()->deselected(aspect);
+	if (this->parentAspect()
+			&& !this->parentAspect()->inherits(AspectType::Folder)
+			&& !this->parentAspect()->inherits(AspectType::XYFitCurve)
+			&& !this->parentAspect()->inherits(AspectType::CantorWorksheet)) {
+		emit this->deselected(aspect);
+	}
 }
 
 /**
