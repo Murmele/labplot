@@ -265,9 +265,12 @@ bool CustomPointPrivate::swapVisible(bool on) {
 	//In this case we don't want to deselect the item in the project explorer.
 	//We need to supress the deselection in the view.
 	auto* worksheet = static_cast<Worksheet*>(q->parent(AspectType::Worksheet));
-	worksheet->suppressSelectionChangedEvent(true);
-	setVisible(on);
-	worksheet->suppressSelectionChangedEvent(false);
+    if (worksheet) {
+        worksheet->suppressSelectionChangedEvent(true);
+        setVisible(on);
+        worksheet->suppressSelectionChangedEvent(false);
+    } else
+        setVisible(on);
 
 	emit q->changed();
 	emit q->visibleChanged(on);
