@@ -259,7 +259,7 @@ void LabelWidget::updateBackground() const {
 	if (ui.tbTexUsed->isChecked())
 		return;
 
-	QColor color;
+    QColor color(Qt::white);
 	AspectType type = m_label->parentAspect()->type();
 	if (type == AspectType::Worksheet)
 		color = static_cast<const Worksheet*>(m_label->parentAspect())->backgroundFirstColor();
@@ -267,8 +267,12 @@ void LabelWidget::updateBackground() const {
 		color = static_cast<CartesianPlot*>(m_label->parentAspect())->plotArea()->backgroundFirstColor();
 	else if (type == AspectType::CartesianPlotLegend)
 		color = static_cast<const CartesianPlotLegend*>(m_label->parentAspect())->backgroundFirstColor();
-	if (type == AspectType::Axis)
+    else if (type == AspectType::InfoElement)
+        color = static_cast<CartesianPlot*>(m_label->parentAspect()->parentAspect())->plotArea()->backgroundFirstColor();
+    else if (type == AspectType::Axis)
 		color = static_cast<CartesianPlot*>(m_label->parentAspect()->parentAspect())->plotArea()->backgroundFirstColor();
+    else
+        DEBUG("Not handled type:" << static_cast<int>(type));
 
 	QPalette p = ui.teLabel->palette();
 	p.setColor(QPalette::Base, color);
