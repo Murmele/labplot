@@ -1554,9 +1554,8 @@ void XYCurvePrivate::updateLines() {
 						lastPoint.setX(NAN);
 						m_lines.append(QLineF(lastPoint, p1));
 					}
-					// add last line
-					if (overlap)
-						lines.append(QLineF(symbolPointsLogical[endIndex-1], symbolPointsLogical[endIndex]));
+                    if (!isnan(lastPoint.x()))	// last line
+                        m_lines.append(QLineF(m_logicalPoints[endIndex-1], m_logicalPoints[endIndex]));
 
 					break;
 				}
@@ -1671,6 +1670,7 @@ void XYCurvePrivate::updateLines() {
 			}
 		}
 	}
+    }
 
 	//map the lines to scene coordinates
 	{
@@ -1684,11 +1684,12 @@ void XYCurvePrivate::updateLines() {
 #ifdef PERFTRACE_CURVES
 		PERFTRACE(name().toLatin1() + ", XYCurvePrivate::updateLines(), calculate new line path");
 #endif
-	//new line path
-	for (const auto& line : qAsConst(m_lines)) {
-		linePath.moveTo(line.p1());
-		linePath.lineTo(line.p2());
-	}
+        //new line path
+        for (const auto& line : qAsConst(m_lines)) {
+            linePath.moveTo(line.p1());
+            linePath.lineTo(line.p2());
+        }
+    }
 
 	updateFilling();
 	recalcShapeAndBoundingRect();
@@ -2234,7 +2235,7 @@ double XYCurve::y(double x, bool &valueFound) const {
 
 	valueFound = true;
 	if (yColumnMode == AbstractColumn::ColumnMode::Numeric || yColumnMode == AbstractColumn::ColumnMode::Integer ||
-			yColumnMode == AbstractColumn::ColumnMode::BigInt) {
+            yColumnMode == AbstractColumn::ColumnMode::BigInt)
 		return yColumn()->valueAt(index);
 	else {
 		valueFound = false;

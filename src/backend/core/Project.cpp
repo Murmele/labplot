@@ -575,7 +575,7 @@ bool Project::load(XmlStreamReader* reader, bool preview) {
 		}
 
 		// assign to all markers the curves they need
-		QVector<InfoElement*> elements = children<InfoElement>(AbstractAspect::Recursive);
+        QVector<InfoElement*> elements = children<InfoElement>(ChildIndexFlag::Recursive);
 		for (auto element: elements) {
 			if (!element->assignCurve(curves)) {
 				reader->raiseWarning(i18n("Not all markerpoints have a curve assigned."));

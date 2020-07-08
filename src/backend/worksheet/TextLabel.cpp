@@ -303,7 +303,7 @@ void TextLabel::setPosition(QPointF point) {
 	if (point != d->position.point) {
 		d->position.point = point;
 		if(d->m_coordBindingEnable)
-			d->logicalPos = d->cSystem->mapSceneToLogical(point, AbstractCoordinateSystem::SuppressPageClipping);
+            d->logicalPos = d->cSystem->mapSceneToLogical(point, AbstractCoordinateSystem::MappingFlag::SuppressPageClipping);
 		retransform();
 	}
 }
@@ -625,25 +625,25 @@ void TextLabelPrivate::retransform() {
 	if(!m_coordBinding) {
 		//depending on the alignment, calculate the new GraphicsItem's position in parent's coordinate system
 		switch (horizontalAlignment) {
-		case TextLabel::hAlignLeft:
+        case WorksheetElement::HorizontalAlignment::Left:
 			itemPos.setX(x - w/2);
 			break;
-		case TextLabel::hAlignCenter:
+        case WorksheetElement::HorizontalAlignment::Center:
 			itemPos.setX(x);
 			break;
-		case TextLabel::hAlignRight:
+        case WorksheetElement::HorizontalAlignment::Right:
 			itemPos.setX(x + w/2);
 			break;
 		}
 
 		switch (verticalAlignment) {
-		case TextLabel::vAlignTop:
+        case WorksheetElement::VerticalAlignment::Top:
 			itemPos.setY(y - h/2);
 			break;
-		case TextLabel::vAlignCenter:
+        case WorksheetElement::VerticalAlignment::Center:
 			itemPos.setY(y);
 			break;
-		case TextLabel::vAlignBottom:
+        case WorksheetElement::VerticalAlignment::Bottom:
 			itemPos.setY(y + h/2);
 			break;
 		}
@@ -741,7 +741,7 @@ void TextLabelPrivate::updateBorder() {
 
 	borderShapePath = QPainterPath();
 	switch (borderShape) {
-	case (TextLabel::NoBorder): {
+    case (TextLabel::BorderShape::NoBorder): {
 			m_gluePoints.clear();
 			m_gluePoints.append(GluePoint(QPointF(boundingRectangle.x()+boundingRectangle.width()/2,boundingRectangle.y()), "top"));
 			m_gluePoints.append(GluePoint(QPointF(boundingRectangle.x()+boundingRectangle.width(),boundingRectangle.y()+boundingRectangle.height()/2), "right"));
