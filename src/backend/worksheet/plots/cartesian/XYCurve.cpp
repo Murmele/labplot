@@ -1165,6 +1165,14 @@ void XYCurvePrivate::retransform() {
 
 		RESET_CURSOR;
 	}
+
+    m_suppressRecalc = true;
+    updateLines();
+    updateDropLines();
+    updateSymbols();
+    updateValues();
+    m_suppressRecalc = false;
+    updateErrorBars();
 }
 
 /*!
