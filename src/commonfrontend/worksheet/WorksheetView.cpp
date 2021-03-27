@@ -278,6 +278,10 @@ void WorksheetView::initActions() {
 	cartesianPlotApplyToSelectionAction->setCheckable(true);
 	cartesianPlotApplyToAllAction = new QAction(i18n("All Plots"), cartesianPlotActionModeActionGroup);
 	cartesianPlotApplyToAllAction->setCheckable(true);
+    cartesianPlotApplyToAllXAction = new QAction(i18n("All Plots X"), cartesianPlotActionModeActionGroup);
+    cartesianPlotApplyToAllXAction->setCheckable(true);
+    cartesianPlotApplyToAllYAction = new QAction(i18n("All Plots Y"), cartesianPlotActionModeActionGroup);
+    cartesianPlotApplyToAllYAction->setCheckable(true);
 	setCartesianPlotActionMode(m_worksheet->cartesianPlotActionMode());
 	connect(cartesianPlotActionModeActionGroup, &QActionGroup::triggered, this, &WorksheetView::cartesianPlotActionModeChanged);
 
@@ -553,6 +557,8 @@ void WorksheetView::initMenus() {
 	m_cartesianPlotActionModeMenu->setIcon(QIcon::fromTheme("dialog-ok-apply"));
 	m_cartesianPlotActionModeMenu->addAction(cartesianPlotApplyToSelectionAction);
 	m_cartesianPlotActionModeMenu->addAction(cartesianPlotApplyToAllAction);
+    m_cartesianPlotActionModeMenu->addAction(cartesianPlotApplyToAllXAction);
+    m_cartesianPlotActionModeMenu->addAction(cartesianPlotApplyToAllYAction);
 
 	m_cartesianPlotCursorModeMenu = new QMenu(i18n("Apply Cursor to"), this);
 	m_cartesianPlotCursorModeMenu->addAction(cartesianPlotApplyToSelectionCursor);
@@ -757,6 +763,10 @@ void WorksheetView::setIsClosing() {
 void WorksheetView::setCartesianPlotActionMode(Worksheet::CartesianPlotActionMode mode) {
 	if (mode == Worksheet::CartesianPlotActionMode::ApplyActionToAll)
 		cartesianPlotApplyToAllAction->setChecked(true);
+    else if (mode == Worksheet::CartesianPlotActionMode::ApplyActionToAllX)
+        cartesianPlotApplyToAllXAction->setChecked(true);
+    else if (mode == Worksheet::CartesianPlotActionMode::ApplyActionToAllY)
+        cartesianPlotApplyToAllYAction->setChecked(true);
 	else
 		cartesianPlotApplyToSelectionAction->setChecked(true);
 }
@@ -1923,6 +1933,10 @@ void WorksheetView::unregisterShortcuts() {
 void WorksheetView::cartesianPlotActionModeChanged(QAction* action) {
 	if (action == cartesianPlotApplyToSelectionAction)
 		m_worksheet->setCartesianPlotActionMode(Worksheet::CartesianPlotActionMode::ApplyActionToSelection);
+    else if (action == cartesianPlotApplyToAllXAction)
+        m_worksheet->setCartesianPlotActionMode(Worksheet::CartesianPlotActionMode::ApplyActionToAllX);
+    else if (action == cartesianPlotApplyToAllYAction)
+        m_worksheet->setCartesianPlotActionMode(Worksheet::CartesianPlotActionMode::ApplyActionToAllY);
 	else
 		m_worksheet->setCartesianPlotActionMode(Worksheet::CartesianPlotActionMode::ApplyActionToAll);
 
