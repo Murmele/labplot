@@ -46,8 +46,6 @@ public:
 	~AbstractPlot() override = default;
 
 	void handleResize(double horizontalRatio, double verticalRatio, bool pageResize) override;
-	AbstractCoordinateSystem* coordinateSystem(int index) const;
-	QVector<AbstractCoordinateSystem*> coordinateSystems() const;
 	PlotArea* plotArea();
 	TextLabel* title();
 
@@ -61,7 +59,6 @@ public:
 
 protected:
 	AbstractPlot(const QString&, AbstractPlotPrivate*, AspectType);
-	QVector<AbstractCoordinateSystem*> m_coordinateSystems;
 	PlotArea* m_plotArea{nullptr};
 	TextLabel* m_title{nullptr};
 

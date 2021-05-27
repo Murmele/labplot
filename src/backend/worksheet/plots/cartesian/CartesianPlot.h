@@ -349,6 +349,7 @@ private slots:
 
 protected:
 	CartesianPlot(const QString &name, CartesianPlotPrivate *dd);
+	QVector<AbstractCoordinateSystem*> coordinateSystems() const;
 
 signals:
 	void rangeTypeChanged(CartesianPlot::RangeType);

@@ -112,9 +112,6 @@ CartesianPlot::~CartesianPlot() {
 		delete themeMenu;
 	}
 
-	while (!m_coordinateSystems.isEmpty())
-		delete m_coordinateSystems.takeFirst();
-
 	//no need to delete objects added with addChild()
 
 	//no need to delete the d-pointer here - it inherits from QGraphicsItem
@@ -127,7 +124,7 @@ CartesianPlot::~CartesianPlot() {
 void CartesianPlot::init() {
 	Q_D(CartesianPlot);
 
-	m_coordinateSystems.append( new CartesianCoordinateSystem(this) );
+	d->m_coordinateSystems.append( new CartesianCoordinateSystem(this) );
 	// TEST: second cSystem for testing
 	//d->coordinateSystems.append( new CartesianCoordinateSystem(this) );
 	//m_coordinateSystems.append( d->coordinateSystems.at(1) );
@@ -1447,39 +1444,44 @@ void CartesianPlot::setYRangeScale(const int index, const RangeT::Scale scale) {
 // coordinate systems
 
 int CartesianPlot::coordinateSystemCount() const {
-	return m_coordinateSystems.size();
+	Q_D(const CartesianPlot);
+	return d->m_coordinateSystems.size();
 }
 
 CartesianCoordinateSystem* CartesianPlot::coordinateSystem(int index) const {
+	Q_D(const CartesianPlot);
 	DEBUG(Q_FUNC_INFO << ", index = " << index)
-	DEBUG(Q_FUNC_INFO << ", nr of cSystems = " << m_coordinateSystems.size())
-	if (index > m_coordinateSystems.size())
+	DEBUG(Q_FUNC_INFO << ", nr of cSystems = " << coordinateSystemCount())
+	if (index > coordinateSystemCount())
 		return nullptr;
 
-	return dynamic_cast<CartesianCoordinateSystem*>(m_coordinateSystems.at(index));
+	return dynamic_cast<CartesianCoordinateSystem*>(d->m_coordinateSystems.at(index));
 }
 
 void CartesianPlot::addCoordinateSystem() {
 	DEBUG(Q_FUNC_INFO)
+	Q_D(CartesianPlot);
 	auto* cSystem{ new CartesianCoordinateSystem(this) };
-	m_coordinateSystems.append( cSystem );
+	d->m_coordinateSystems.append( cSystem );
 	if (project())
 		project()->setChanged(true);
 }
 void CartesianPlot::addCoordinateSystem(CartesianCoordinateSystem* s) {
 	DEBUG(Q_FUNC_INFO)
-	m_coordinateSystems.append(s);
+	Q_D(CartesianPlot);
+	d->m_coordinateSystems.append(s);
 	if (project())
 		project()->setChanged(true);
 }
 void CartesianPlot::removeCoordinateSystem(int index) {
 	DEBUG(Q_FUNC_INFO << ", index = " << index)
-	if (index < 0 || index > m_coordinateSystems.size()) {
+	Q_D(CartesianPlot);
+	if (index < 0 || index > coordinateSystemCount()) {
 		DEBUG(Q_FUNC_INFO << ", index " << index << " out of range")
 		return;
 	}
 
-	m_coordinateSystems.remove(index);
+	d->m_coordinateSystems.remove(index);
 	if (project())
 		project()->setChanged(true);
 }
@@ -1499,6 +1501,11 @@ void CartesianPlot::setDefaultCoordinateSystemIndex(int index) {
 CartesianCoordinateSystem* CartesianPlot::defaultCoordinateSystem() const {
 	Q_D(const CartesianPlot);
 	return d->defaultCoordinateSystem();
+}
+
+QVector<AbstractCoordinateSystem*> CartesianPlot::coordinateSystems() const {
+	Q_D(const CartesianPlot);
+	return d->coordinateSystems();
 }
 
 // range breaks
@@ -2994,6 +3001,11 @@ CartesianPlotPrivate::CartesianPlotPrivate(CartesianPlot* plot) : AbstractPlotPr
 	m_cursor1Text.prepare();
 }
 
+CartesianPlotPrivate::~CartesianPlotPrivate() {
+	while (!m_coordinateSystems.isEmpty())
+		delete m_coordinateSystems.takeFirst();
+}
+
 /*!
 	updates the position of plot rectangular in scene coordinates to \c r and recalculates the scales.
 	The size of the plot corresponds to the size of the plot area, the area which is filled with the background color etc.
@@ -3048,9 +3060,9 @@ void CartesianPlotPrivate::retransformScales() {
 
 	//////////// Create X-scales ////////////////
 	// loop over all cSystems and use the correct x/yRanges to set scales
-	DEBUG(Q_FUNC_INFO << ", number of coordinate systems = " << q->m_coordinateSystems.size())
+	DEBUG(Q_FUNC_INFO << ", number of coordinate systems = " << m_coordinateSystems.size())
 	i = 1; // debugging
-	for (const auto& cSystem : qAsConst(q->m_coordinateSystems)) {
+	for (const auto& cSystem : qAsConst(m_coordinateSystems)) {
 		const int xRangeIndex{ dynamic_cast<CartesianCoordinateSystem*>(cSystem)->xIndex() };	// use x range of current cSystem
 		const auto xRange{ xRanges.at(xRangeIndex) };
 		DEBUG(Q_FUNC_INFO << ", coordinate system " << i++ <<  ", x range is x range " << xRangeIndex+1)
@@ -3108,7 +3120,7 @@ void CartesianPlotPrivate::retransformScales() {
 
 	// loop over all cSystems
 	i = 1; // debugging
-	for (auto cSystem : qAsConst(q->m_coordinateSystems)) {
+	for (auto cSystem : qAsConst(m_coordinateSystems)) {
 		const int yRangeIndex{ dynamic_cast<CartesianCoordinateSystem*>(cSystem)->yIndex() };	// use y range of current cSystem
 		const auto yRange{ yRanges.at(yRangeIndex) };
 		DEBUG(Q_FUNC_INFO << ", coordinate system " << i++ <<  ", y range is y range " << yRangeIndex+1)
@@ -3265,6 +3277,18 @@ void CartesianPlotPrivate::updateDataRect() {
 	if (newWidth < 0)
 		newWidth = 0;
 	dataRect.setWidth(newWidth);
+}
+
+AbstractCoordinateSystem* CartesianPlotPrivate::coordinateSystem(const int index) const {
+	if (index < 0)
+	{
+		return defaultCoordinateSystem();
+	}
+	return m_coordinateSystems.at(index);
+}
+
+QVector<AbstractCoordinateSystem*> CartesianPlotPrivate::coordinateSystems() const {
+	return m_coordinateSystems;
 }
 
 void CartesianPlotPrivate::rangeChanged() {
@@ -4181,7 +4205,7 @@ void CartesianPlot::save(QXmlStreamWriter* writer) const {
 	writer->writeAttribute( "rightPadding", QString::number(d->rightPadding) );
 	writer->writeAttribute( "bottomPadding", QString::number(d->bottomPadding) );
 	writer->writeAttribute( "symmetricPadding", QString::number(d->symmetricPadding));
-	for (const auto& cSystem : m_coordinateSystems) {
+	for (const auto& cSystem : d->m_coordinateSystems) {
 		writer->writeStartElement( "coordinateSystem" );
 		writer->writeAttribute( "xIndex", QString::number(dynamic_cast<CartesianCoordinateSystem*>(cSystem)->xIndex()) );
 		writer->writeAttribute( "yIndex", QString::number(dynamic_cast<CartesianCoordinateSystem*>(cSystem)->yIndex()) );
@@ -4404,7 +4428,7 @@ bool CartesianPlot::load(XmlStreamReader* reader, bool preview) {
 			READ_INT_VALUE("symmetricPadding", symmetricPadding, bool);
 			hasCoordinateSystems = true;
 
-			m_coordinateSystems.clear();
+			d->m_coordinateSystems.clear();
 		} else if (!preview && reader->name() == "coordinateSystem") {
 			attribs = reader->attributes();
 			// new style

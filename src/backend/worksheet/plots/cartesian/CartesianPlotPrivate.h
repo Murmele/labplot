@@ -41,6 +41,7 @@
 class CartesianPlotPrivate : public AbstractPlotPrivate {
 public:
 	explicit CartesianPlotPrivate(CartesianPlot*);
+	~CartesianPlotPrivate();
 
 	void retransform() override;
 	void retransformScales();
@@ -112,12 +113,15 @@ public:
 
 	//cached values of minimum and maximum for all visible curves
 	bool curvesXMinMaxIsDirty{false}, curvesYMinMaxIsDirty{false};
+	QVector<AbstractCoordinateSystem*> m_coordinateSystems;
 	Range<double> curvesXRange{qInf(), -qInf()}, curvesYRange{qInf(), -qInf()};
 
 	CartesianPlot* const q;
 	int defaultCoordinateSystemIndex{0};
+	AbstractCoordinateSystem* coordinateSystem(int index) const;
+	QVector<AbstractCoordinateSystem*> coordinateSystems() const;
 	CartesianCoordinateSystem* defaultCoordinateSystem() const {
-		return dynamic_cast<CartesianCoordinateSystem*>(q->m_coordinateSystems.at(defaultCoordinateSystemIndex));
+		return dynamic_cast<CartesianCoordinateSystem*>(m_coordinateSystems.at(defaultCoordinateSystemIndex));
 	}
 
 	CartesianPlot::MouseMode mouseMode{CartesianPlot::MouseMode::Selection};

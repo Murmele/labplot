@@ -69,15 +69,6 @@ PlotArea* AbstractPlot::plotArea() {
 	return m_plotArea;
 }
 
-AbstractCoordinateSystem* AbstractPlot::coordinateSystem(const int index) const {
-	// TODO: use default when not specified?
-	return m_coordinateSystems.at(index);
-}
-
-QVector<AbstractCoordinateSystem*> AbstractPlot::coordinateSystems() const {
-	return m_coordinateSystems;
-}
-
 TextLabel* AbstractPlot::title() {
 	return m_title;
 }
