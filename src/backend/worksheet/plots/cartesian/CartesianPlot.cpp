@@ -1994,7 +1994,7 @@ void CartesianPlot::childAdded(const AbstractAspect* child) {
 		if (hist) {
 			connect(hist, &Histogram::dataChanged, this, &CartesianPlot::dataChanged);
 			connect(hist, &Histogram::visibilityChanged, this, &CartesianPlot::curveVisibilityChanged);
-			connect(curve, &BoxPlot::aspectDescriptionChanged, this, &CartesianPlot::updateLegend);
+			connect(hist, &BoxPlot::aspectDescriptionChanged, this, &CartesianPlot::updateLegend);
 
 			updateLegend();
 			d->curvesXMinMaxIsDirty = true;
@@ -2346,24 +2346,6 @@ void CartesianPlot::scaleAutoTriggered() {
 	else if (action == scaleAutoYAction)
 		setAutoScaleY();
 }
-
-bool CartesianPlot::scaleAutoX(int index, bool fullRange, bool suppressRetransform) {
-	if (index == -1) {
-		if (!defaultCoordinateSystem())
-			return false;
-		index = defaultCoordinateSystem()->xIndex();
-		DEBUG(Q_FUNC_INFO << ", set index")
-	}
-
-	DEBUG(Q_FUNC_INFO << ", index = " << index << " full range = " << fullRange)
-	Q_D(CartesianPlot);
-	if (d->curvesXMinMaxIsDirty) {
-		calculateCurvesXMinMax(index, fullRange);
-		d->curvesYMinMaxIsDirty = true;
-		d->curvesXMinMaxIsDirty = false;
-	}
-
-	if (index >= d->xRanges.size()) {
 		DEBUG(Q_FUNC_INFO << ", WARNING: index >= x ranges size:  " << index << " >= " <<  d->xRanges.size())
 		return false;
 	}
@@ -2406,24 +2388,6 @@ bool CartesianPlot::scaleAutoX(int index, bool fullRange, bool suppressRetransfo
 	return update;
 }
 
-// TODO: copy paste code?
-bool CartesianPlot::scaleAutoY(int index, bool fullRange, bool suppressRetransform) {
-	if (index == -1) {
-		if (!defaultCoordinateSystem())
-			return false;
-		index = defaultCoordinateSystem()->yIndex();
-	}
-
-	DEBUG(Q_FUNC_INFO << ", index = " << index << " full range = " << fullRange)
-	Q_D(CartesianPlot);
-
-	if (d->curvesYMinMaxIsDirty) {
-		calculateCurvesYMinMax(index, fullRange);
-		d->curvesXMinMaxIsDirty = true;
-		d->curvesYMinMaxIsDirty = false;
-	}
-
-	if (index >= d->yRanges.size()) {
 		DEBUG(Q_FUNC_INFO << ", WARNING: index >= y ranges size:  " << index << " >= " <<  d->yRanges.size())
 		return false;
 	}
@@ -3057,16 +3021,6 @@ void CartesianPlotPrivate::retransformScales() {
 	static const int breakGap = 20;
 	Range<double> sceneRange, logicalRange;
 	Range<double> plotSceneRange{dataRect.x(), dataRect.x() + dataRect.width()};
-
-	//////////// Create X-scales ////////////////
-	// loop over all cSystems and use the correct x/yRanges to set scales
-	DEBUG(Q_FUNC_INFO << ", number of coordinate systems = " << m_coordinateSystems.size())
-	i = 1; // debugging
-	for (const auto& cSystem : qAsConst(m_coordinateSystems)) {
-		const int xRangeIndex{ dynamic_cast<CartesianCoordinateSystem*>(cSystem)->xIndex() };	// use x range of current cSystem
-		const auto xRange{ xRanges.at(xRangeIndex) };
-		DEBUG(Q_FUNC_INFO << ", coordinate system " << i++ <<  ", x range is x range " << xRangeIndex+1)
-		DEBUG(Q_FUNC_INFO << ", x range = " << xRange.toStdString())
 		//TODO: check ranges for nonlinear scales
 		if (xRange.scale() != RangeT::Scale::Linear)
 			checkXRange();
@@ -3107,24 +3061,9 @@ void CartesianPlotPrivate::retransformScales() {
 
 			if (sceneRange.length() > 0)
 				scales << this->createScale(xRange.scale(), sceneRange, logicalRange);
-		}
-
-		//set x scales of cSystem
-		dynamic_cast<CartesianCoordinateSystem*>(cSystem)->setXScales(scales);
-		scales.clear();
-	}
-
 	//////// Create Y-scales /////////////
 
 	plotSceneRange.setRange(dataRect.y() + dataRect.height(), dataRect.y());
-
-	// loop over all cSystems
-	i = 1; // debugging
-	for (auto cSystem : qAsConst(m_coordinateSystems)) {
-		const int yRangeIndex{ dynamic_cast<CartesianCoordinateSystem*>(cSystem)->yIndex() };	// use y range of current cSystem
-		const auto yRange{ yRanges.at(yRangeIndex) };
-		DEBUG(Q_FUNC_INFO << ", coordinate system " << i++ <<  ", y range is y range " << yRangeIndex+1)
-		DEBUG(Q_FUNC_INFO << ", yrange = " << yRange.toStdString())
 		//TODO: check ranges for nonlinear scales
 		if (yRange.scale() != RangeT::Scale::Linear)
 			checkYRange();
@@ -3163,13 +3102,6 @@ void CartesianPlotPrivate::retransformScales() {
 
 			if (sceneRange.length() > 0)
 				scales << this->createScale(yRange.scale(), sceneRange, logicalRange);
-		}
-
-		//set y scales of cSystem
-		dynamic_cast<CartesianCoordinateSystem*>(cSystem)->setYScales(scales);
-		scales.clear();
-	}
-
 	//TODO: what to do with these?
 	// also check delta* usage later
 
@@ -3276,34 +3208,6 @@ void CartesianPlotPrivate::updateDataRect() {
 	double newWidth = dataRect.width() - paddingRight;
 	if (newWidth < 0)
 		newWidth = 0;
-	dataRect.setWidth(newWidth);
-}
-
-AbstractCoordinateSystem* CartesianPlotPrivate::coordinateSystem(const int index) const {
-	if (index < 0)
-	{
-		return defaultCoordinateSystem();
-	}
-	return m_coordinateSystems.at(index);
-}
-
-QVector<AbstractCoordinateSystem*> CartesianPlotPrivate::coordinateSystems() const {
-	return m_coordinateSystems;
-}
-
-void CartesianPlotPrivate::rangeChanged() {
-	DEBUG(Q_FUNC_INFO)
-	curvesXMinMaxIsDirty = true;
-	curvesYMinMaxIsDirty = true;
-	if (autoScaleX() && autoScaleY())
-		q->scaleAuto();
-	else if (autoScaleX())
-		q->scaleAutoX();
-	else if (autoScaleY())
-		q->scaleAutoY();
-}
-
-void CartesianPlotPrivate::xRangeFormatChanged() {
 	DEBUG(Q_FUNC_INFO)
 	const auto& axes = q->children<Axis>();
 	for (auto* axis : axes) {
