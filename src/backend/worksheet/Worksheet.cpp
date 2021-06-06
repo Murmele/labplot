@@ -360,11 +360,11 @@ void Worksheet::setItemSelectedInView(const QGraphicsItem* item, const bool b) {
  * helper function:  checks whether \c aspect or one of its children has the \c GraphicsItem \c item
  * Returns a pointer to \c WorksheetElement having this item.
  */
-WorksheetElement* Worksheet::aspectFromGraphicsItem(const WorksheetElement* aspect, const QGraphicsItem* item) const {
-	if ( aspect->graphicsItem() == item )
-		return const_cast<WorksheetElement*>(aspect);
+WorksheetElement* Worksheet::aspectFromGraphicsItem(const WorksheetElement* parent, const QGraphicsItem* item) const {
+	if ( parent->graphicsItem() == item )
+		return const_cast<WorksheetElement*>(parent);
 	else {
-		for (const auto* child : aspect->children<WorksheetElement>(AbstractAspect::ChildIndexFlag::IncludeHidden) ) {
+		for (const auto* child : parent->children<WorksheetElement>(AbstractAspect::ChildIndexFlag::IncludeHidden) ) {
 			WorksheetElement* a = this->aspectFromGraphicsItem(child, item);
 			if (a)
 				return a;
@@ -747,6 +747,7 @@ void Worksheet::setTheme(const QString& theme) {
 }
 
 void Worksheet::cartesianPlotMousePressZoomSelectionMode(QPointF logicPos) {
+	m_view->
 	auto senderPlot = static_cast<CartesianPlot*>(QObject::sender());
 	auto mouseMode = senderPlot->mouseMode();
 	auto actionMode = cartesianPlotActionMode();

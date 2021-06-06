@@ -82,6 +82,7 @@ public:
 	Worksheet::CartesianPlotActionMode getCartesianPlotActionMode();
 	void registerShortcuts();
 	void unregisterShortcuts();
+	AbstractAspect* selectedAspect() const;
 
 private:
 	void initBasicActions();
@@ -120,6 +121,7 @@ private:
 	QGraphicsPixmapItem* m_magnificationWindow{nullptr};
 	GridSettings m_gridSettings;
 	QList<QGraphicsItem*> m_selectedItems;
+	QGraphicsItem* m_selectedItem{nullptr}; // used to determine which range should be used for navigation
 	bool m_suppressSelectionChangedEvent{false};
 	WorksheetElement* lastAddedWorksheetElement{nullptr};
 	QTimeLine* m_fadeInTimeLine{nullptr};

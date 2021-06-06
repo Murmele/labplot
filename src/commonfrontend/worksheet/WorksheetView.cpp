@@ -30,6 +30,7 @@
 #include "backend/core/AbstractColumn.h"
 #include "backend/core/Project.h"
 #include "backend/worksheet/plots/cartesian/Axis.h"
+#include "backend/worksheet/plots/cartesian/AxisPrivate.h"
 #include "backend/worksheet/plots/cartesian/XYCurve.h"
 #include "backend/worksheet/plots/cartesian/XYCurvePrivate.h"
 #include "backend/worksheet/Image.h"
@@ -1450,6 +1451,7 @@ void WorksheetView::deleteElement() {
 	m_worksheet->beginMacro(i18n("%1: Remove selected worksheet elements.", m_worksheet->name()));
 	for (auto* item : m_selectedItems)
 		m_worksheet->deleteAspectFromGraphicsItem(item);
+	m_selectedItem = nullptr;
 	m_worksheet->endMacro();
 	m_suppressSelectionChangedEvent = false;
 }
@@ -1654,13 +1656,25 @@ void WorksheetView::handleCartesianPlotActions() {
 	if (!m_menusInitialized)
 		return;
 
-	bool plot = false;
+	m_selectedItem = nullptr;
+
+	bool plot = false, curve = false, axis = false;
 	if (m_worksheet->cartesianPlotActionMode() == Worksheet::CartesianPlotActionMode::ApplyActionToSelection) {
 		//check whether we have cartesian plots selected
 		for (auto* item : m_selectedItems) {
 			//TODO: or if a children of a plot is selected
-			if (item->data(0).toInt() == static_cast<int>(WorksheetElement::WorksheetElementName::NameCartesianPlot)) {
+			int key = item->data(0).toInt();
+			if (key == static_cast<int>(WorksheetElement::WorksheetElementName::NameCartesianPlot)) {
 				plot = true;
+				m_selectedItem = item;
+				break;
+			} else if (key == static_cast<int>(WorksheetElement::WorksheetElementName::XYCurve)) {
+				curve = true;
+				m_selectedItem = item;
+				break;
+			} else if (key == static_cast<int>(WorksheetElement::WorksheetElementName::Axis)) {
+				axis = true;
+				m_selectedItem = item;
 				break;
 			}
 		}
@@ -1669,10 +1683,22 @@ void WorksheetView::handleCartesianPlotActions() {
 		plot = (m_worksheet->children<CartesianPlot>().size() != 0);
 	}
 
+	if (axis) {
+		auto a = static_cast<AxisPrivate*>(m_selectedItem)->q;
+		cartesianPlotZoomSelectionModeAction->setEnabled(false);
+		if (a->orientation() == Axis::Orientation::Horizontal) {
+			cartesianPlotZoomXSelectionModeAction->setEnabled(true);
+			cartesianPlotZoomYSelectionModeAction->setEnabled(false);
+		} else {
+			cartesianPlotZoomXSelectionModeAction->setEnabled(false);
+			cartesianPlotZoomYSelectionModeAction->setEnabled(true);
+		}
+	} else {
+		cartesianPlotZoomSelectionModeAction->setEnabled(plot || curve);
+		cartesianPlotZoomXSelectionModeAction->setEnabled(plot || curve);
+		cartesianPlotZoomYSelectionModeAction->setEnabled(plot || curve);
+	}
 	cartesianPlotSelectionModeAction->setEnabled(plot);
-	cartesianPlotZoomSelectionModeAction->setEnabled(plot);
-	cartesianPlotZoomXSelectionModeAction->setEnabled(plot);
-	cartesianPlotZoomYSelectionModeAction->setEnabled(plot);
 	cartesianPlotCursorModeAction->setEnabled(plot);
 
 	m_cartesianPlotAddNewMenu->setEnabled(plot);
@@ -1961,6 +1987,7 @@ void WorksheetView::cartesianPlotMouseModeChanged(QAction* action) {
 		return;
 
 	m_cartesianPlotMouseMode = static_cast<CartesianPlot::MouseMode>(action->data().toInt());
+	// TODO: find out, which element is selected. So the corresponding range can be modified
 
 	for (auto* plot : m_worksheet->children<CartesianPlot>() )
 		plot->setMouseMode(m_cartesianPlotMouseMode);
@@ -2101,6 +2128,8 @@ void WorksheetView::cartesianPlotAdd(CartesianPlot* plot, QAction* action) {
 }
 
 void WorksheetView::cartesianPlotNavigationChanged(QAction* action) {
+	// TODO: find out, which element was selected to find out which range should be changed
+	//Project().projectExplorer().currentAspect()
 	CartesianPlot::NavigationOperation op = (CartesianPlot::NavigationOperation)action->data().toInt();
 	if (m_worksheet->cartesianPlotActionMode() == Worksheet::CartesianPlotActionMode::ApplyActionToSelection) {
 		for (auto* plot : m_worksheet->children<CartesianPlot>() ) {

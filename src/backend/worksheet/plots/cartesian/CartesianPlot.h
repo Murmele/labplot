@@ -330,7 +330,7 @@ public slots:
 	void cursor();
 
 	bool autoScale(int cSystemIndex = -1, bool fullRange = true);
-	void dataChanged();
+	void dataChanged(int rangeIndex);
 
 private slots:
 	void updateLegend();
