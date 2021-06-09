@@ -531,7 +531,7 @@ void PlotDataDialog::addCurvesToPlot(CartesianPlot* plot) {
 	}
 	}
 
-	plot->dataChanged();
+	plot->dataChanged(plot->defaultCoordinateSystemIndex());
 }
 
 /*!

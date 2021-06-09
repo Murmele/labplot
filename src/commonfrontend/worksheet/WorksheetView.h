@@ -121,7 +121,7 @@ private:
 	QGraphicsPixmapItem* m_magnificationWindow{nullptr};
 	GridSettings m_gridSettings;
 	QList<QGraphicsItem*> m_selectedItems;
-	QGraphicsItem* m_selectedItem{nullptr}; // used to determine which range should be used for navigation
+	AbstractAspect* m_selectedAspect{nullptr}; // used to determine which range should be used for navigation
 	bool m_suppressSelectionChangedEvent{false};
 	WorksheetElement* lastAddedWorksheetElement{nullptr};
 	QTimeLine* m_fadeInTimeLine{nullptr};

@@ -70,7 +70,7 @@ void WorksheetElement::finalizeAdd() {
 	DEBUG(Q_FUNC_INFO)
 	m_plot = dynamic_cast<CartesianPlot*>(parentAspect());
 	if (m_plot) {
-		cSystem = dynamic_cast<const CartesianCoordinateSystem*>(m_plot->coordinateSystem(m_cSystemIndex));
+		cSystem = dynamic_cast<const CartesianCoordinateSystem*>(m_plot->defaultCoordinateSystem());
 		emit plotRangeListChanged();
 	} else
 		DEBUG(Q_FUNC_INFO << ", WARNING: no plot available.")

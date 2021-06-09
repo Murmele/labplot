@@ -746,8 +746,46 @@ void Worksheet::setTheme(const QString& theme) {
 	}
 }
 
+void selectedRanges(AbstractAspect* a, int& rangeXIndex, int& rangeYIndex) {
+	// Index -2: invalid range
+	//		 -1: all ranges
+	//		 >0: specific range index
+	switch (a->type()) {
+	case AspectType::Axis: {
+		auto axis = static_cast<Axis*>(a);
+		if (axis->orientation() == Axis::Orientation::Horizontal) {
+			rangeXIndex = axis->coordinateSystemIndex();
+			rangeYIndex = -2;
+		} else {
+			rangeYIndex = axis->coordinateSystemIndex();
+			rangeXIndex = -2;
+		}
+		break;
+	}
+	case AspectType::XYCurve: {
+		auto c = static_cast<XYCurve*>(a);
+		rangeXIndex = c->coordinateSystemIndex();
+		rangeYIndex = rangeXIndex;
+		break;
+	}
+	case AspectType::CartesianPlot: {
+		auto p = static_cast<CartesianPlot*>(a);
+		rangeXIndex = -1;
+		rangeYIndex = -1;
+		break;
+	}
+	default:
+		rangeXIndex = -2;
+		rangeYIndex = -2;
+		qDebug() << "selectedRanges(): Unhandled AspectType" << QString::number(static_cast<int>(a->type()));
+	}
+}
+
 void Worksheet::cartesianPlotMousePressZoomSelectionMode(QPointF logicPos) {
-	m_view->
+
+	int xIndex, yIndex;
+	selectedRanges(m_view->selectedAspect(), xIndex, yIndex);
+
 	auto senderPlot = static_cast<CartesianPlot*>(QObject::sender());
 	auto mouseMode = senderPlot->mouseMode();
 	auto actionMode = cartesianPlotActionMode();
@@ -760,6 +798,7 @@ void Worksheet::cartesianPlotMousePressZoomSelectionMode(QPointF logicPos) {
 		auto plots = children<CartesianPlot>(AbstractAspect::ChildIndexFlag::Recursive | AbstractAspect::ChildIndexFlag::IncludeHidden);
 		for (auto* plot : plots) {
 			if (plot != senderPlot) {
+				// Set the action mode of all other plots to the current one
 				if (actionMode == CartesianPlotActionMode::ApplyActionToAllX)
 					plot->setMouseMode(CartesianPlot::MouseMode::ZoomXSelection);
 				else if (actionMode == CartesianPlotActionMode::ApplyActionToAllY)

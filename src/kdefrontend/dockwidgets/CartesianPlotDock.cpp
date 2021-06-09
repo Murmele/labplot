@@ -1416,7 +1416,7 @@ void CartesianPlotDock::PlotRangeXChanged(const int index) {
 		}
 	}
 
-	m_plot->dataChanged(-1);	// update plot
+	m_plot->dataChanged(plotRangeIndex);
 }
 void CartesianPlotDock::PlotRangeYChanged(const int index) {
 	const int plotRangeIndex{ sender()->property("row").toInt() };
@@ -1440,7 +1440,7 @@ void CartesianPlotDock::PlotRangeYChanged(const int index) {
 		}
 	}
 
-	m_plot->dataChanged();	// update plot
+	m_plot->dataChanged(plotRangeIndex);	// update plot
 }
 
 // "Range Breaks"-tab
